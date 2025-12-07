@@ -1,0 +1,32 @@
+# Data files (may be large)
+data/*.csv
+data/*.rds
+data/*.parquet
+
+# Output files
+outputs/**/*.json
+outputs/**/*.csv
+outputs/**/*.rds
+
+# Environment
+.env
+*.log
+
+# OS
+.DS_Store
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Julia
+*.jl.cov
+*.jl.mem
+Manifest.toml
