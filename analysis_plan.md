@@ -113,7 +113,7 @@ Each reference solution will include:
 | **Syntactic validity** | Does the code parse without errors? (0/1) |
 | **Execution** | Does the model run on the test data? (0/1) |
 | **Convergence** | Does MCMC sampling converge? (R-hat < 1.05, ESS > 400) (0/1) |
-| **Plausibility** | Are posterior Rt estimates within [0.1, 10]? (0/1) |
+| **Plausibility** | Are Rt estimates plausible? (0/1) - bounded (e.g., 0.1-10), smooth over time (no implausible jumps), consistent with epidemic dynamics |
 
 ### Expert Review (Departure-Based Assessment)
 
