@@ -80,6 +80,55 @@ Real data is used to test whether generated models can handle actual epidemic dy
 
 Reference solutions serve two purposes: (1) providing a gold standard for expert review of departures, and (2) enabling visual/quantitative comparison of Rt estimates.
 
+#### Mathematical Specification
+
+The core renewal equation model is:
+
+**Infection process (renewal equation):**
+$$I_t = R_t \sum_{s=1}^{S} I_{t-s} \cdot g_s$$
+
+where:
+- $I_t$ is the number of infections at time $t$
+- $R_t$ is the instantaneous reproduction number at time $t$
+- $g_s$ is the generation interval PMF (probability that generation interval = $s$ days)
+
+**Observation process:**
+$$\mathbb{E}[C_t] = \alpha_t \sum_{d=0}^{D} I_{t-d} \cdot f_d$$
+
+where:
+- $C_t$ is observed cases at time $t$
+- $\alpha_t$ is the ascertainment rate (proportion of infections observed)
+- $f_d$ is the delay PMF (probability of delay = $d$ days from infection to report)
+
+**Observation model:**
+$$C_t \sim \text{NegBin}(\mu = \mathbb{E}[C_t], \phi)$$
+
+where $\phi$ is the overdispersion parameter.
+
+**Temporal smoothness on $R_t$:**
+
+Some form of smoothness constraint on $R_t$ is necessary to avoid overfitting. Acceptable approaches include:
+- **AR(1):** $\log R_t = \rho \log R_{t-1} + \epsilon_t$ (used in EpiAware reference)
+- **Random walk:** $\log R_t = \log R_{t-1} + \epsilon_t$
+- **Gaussian process:** $\log R_t \sim \text{GP}(0, k)$ (EpiNow2 default)
+- **Splines:** $\log R_t = \sum_j \beta_j B_j(t)$
+
+All are considered equivalent alternatives (departure category A) provided they enforce reasonable smoothness.
+
+#### Inference Approach
+
+The prompts request Bayesian inference with posterior samples, but LLM-generated solutions may use:
+- **Bayesian MCMC** (as requested)
+- **Variational inference**
+- **Maximum likelihood / optimisation**
+- **Other approaches**
+
+Non-Bayesian approaches are acceptable if they:
+- Provide point estimates of $R_t$ over time
+- Include some measure of uncertainty (confidence intervals, bootstrap, etc.)
+
+Lack of uncertainty quantification is a departure (category B or C depending on context).
+
 #### Package Baseline: EpiNow2
 
 EpiNow2 (R package) will be run on the same data to provide a "package baseline" estimate of Rt. This allows:
@@ -87,9 +136,11 @@ EpiNow2 (R package) will be run on the same data to provide a "package baseline"
 - Quantification of how errors in model specification affect Rt estimates
 - A practical benchmark that reviewers and readers can relate to
 
+Note: EpiNow2 uses a Gaussian process prior on $R_t$ by default, which differs from the AR(1) used in EpiAware reference solutions. Both are valid smoothness choices.
+
 #### Custom Reference Solutions
 
-For each scenario, a reference solution will be written implementing the renewal equation approach:
+For each scenario, a reference solution is provided implementing the renewal equation approach:
 
 | Scenario | Reference Implementation |
 |----------|-------------------------|
@@ -97,12 +148,7 @@ For each scenario, a reference solution will be written implementing the renewal
 | 2 | EpiAware: As above + day-of-week effects + time-varying ascertainment |
 | 3 | EpiAware: As above + StackObservationModels for multiple streams |
 
-Each reference solution will include:
-- Correct generation interval convolution
-- Appropriate delay distribution handling
-- Suitable observation model (negative binomial)
-- Reasonable prior specifications
-- Proper initial condition handling
+Reference solution code is in `reference_solutions/`.
 
 ## Evaluation Criteria
 
