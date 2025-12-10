@@ -36,13 +36,11 @@ You are provided with:
    - Load the data
    - Define and fit the model
    - Extract Rt estimates for each time point
-4. Include uncertainty quantification (e.g., confidence/credible intervals)
 
 ## Output
 
 Your code should produce:
 - Rt estimates for each time point
-- A measure of uncertainty (e.g., 90% intervals)
 - A summary or plot of Rt over time
 
 ## Language

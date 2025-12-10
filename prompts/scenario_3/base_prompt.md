@@ -71,13 +71,12 @@ You are provided with:
    - Load the data
    - Define and fit the model
    - Extract Rt estimates and stream-specific parameters
-4. Include uncertainty quantification for all estimated quantities
-5. Handle the initial infection seeding period appropriately
+4. Handle the initial infection seeding period appropriately
 
 ## Output
 
 Your code should produce:
-- Rt estimates for each time point with uncertainty
+- Rt estimates for each time point
 - Stream-specific ascertainment rate estimates
 - A summary or plot showing results
 

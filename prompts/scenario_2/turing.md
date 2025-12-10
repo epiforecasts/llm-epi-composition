@@ -54,13 +54,12 @@ You are provided with:
    - Load the data
    - Define and fit the model
    - Extract estimates of Rt, day-of-week effects, and ascertainment over time
-4. Include uncertainty quantification for all estimated quantities
-5. Handle the initial infection seeding period appropriately
+4. Handle the initial infection seeding period appropriately
 
 ## Output
 
 Your code should produce:
-- Rt estimates for each time point with uncertainty
+- Rt estimates for each time point
 - Day-of-week effect estimates
 - Time-varying ascertainment estimates
 - A summary or plot showing results

@@ -123,11 +123,9 @@ The prompts request Bayesian inference with posterior samples, but LLM-generated
 - **Maximum likelihood / optimisation**
 - **Other approaches**
 
-Non-Bayesian approaches are acceptable if they:
-- Provide point estimates of $R_t$ over time
-- Include some measure of uncertainty (confidence intervals, bootstrap, etc.)
+Non-Bayesian approaches are acceptable if they provide point estimates of $R_t$ over time.
 
-Lack of uncertainty quantification is a departure (category B or C depending on context).
+**Note:** Prompts do not explicitly request uncertainty quantification. Whether models provide uncertainty is recorded as an automated evaluation criterion. This tests whether LLMs recognise that uncertainty is essential for epidemiological inference, and whether validated components naturally produce it.
 
 #### Package Baseline: EpiNow2
 
@@ -160,6 +158,7 @@ Reference solution code is in `reference_solutions/`.
 | **Execution** | Does the model run on the test data? (0/1) |
 | **Convergence** | Does MCMC sampling converge? (R-hat < 1.05, ESS > 400) (0/1) |
 | **Plausibility** | Are Rt estimates plausible? (0/1) - bounded (e.g., 0.1-10), smooth over time (no implausible jumps), consistent with epidemic dynamics |
+| **Uncertainty quantification** | Does the model provide uncertainty estimates? (0/1) - credible/confidence intervals, posterior samples, or similar |
 
 ### Expert Review (Departure-Based Assessment)
 
