@@ -264,7 +264,7 @@ If an LLM asks clarifying questions rather than producing code:
 - Each reviewer independently assesses each code sample
 - Departures are documented and classified
 - Inter-rater reliability will be assessed (Cohen's kappa or similar)
-- All disagreements resolved by discussion between reviewers until consensus is reached
+- Disagreements resolved by discussion between reviewers; a third reviewer may be consulted if resources permit
 - Summary scores computed after reconciliation
 
 ### Analysis
