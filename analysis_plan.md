@@ -8,8 +8,8 @@ Can large language models correctly compose epidemic models from first principle
 
 1. Assess the ability of LLMs to generate correct, runnable epidemic models when prompted with epidemiological scenarios
 2. Characterise the types of errors that occur when models are generated without domain-specific tooling
-3. Evaluate whether providing validated composable components (EpiAware) improves model correctness
-4. Compare performance across different LLMs, including open-source models relevant to low- and middle-income country (LMIC) settings
+3. Evaluate whether providing validated composable components improves model correctness
+4. Compare performance across different LLMs, including open-source models relevant to low- and middle-income country (LMIC) settings, in order to test the robustness of findings.
 
 ## Study Design
 
@@ -74,7 +74,35 @@ UK COVID-19 data from the UKHSA dashboard:
 - Hospital admissions
 - Deaths
 
-Real data is used to test whether generated models can handle actual epidemic dynamics. No numerical benchmark is required; evaluation focuses on model correctness and plausibility of outputs.
+Real data is used to test whether generated models can handle actual epidemic dynamics.
+
+### Reference Solutions
+
+Reference solutions serve two purposes: (1) providing a gold standard for expert review of departures, and (2) enabling visual/quantitative comparison of Rt estimates.
+
+#### Package Baseline: EpiNow2
+
+EpiNow2 (R package) will be run on the same data to provide a "package baseline" estimate of Rt. This allows:
+- Visual comparison of LLM-generated model outputs against an established tool
+- Quantification of how errors in model specification affect Rt estimates
+- A practical benchmark that reviewers and readers can relate to
+
+#### Custom Reference Solutions
+
+For each scenario, a reference solution will be written implementing the renewal equation approach:
+
+| Scenario | Reference Implementation |
+|----------|-------------------------|
+| 1a/1b | EpiAware: Renewal + AR(1) latent + NegBin obs with delay |
+| 2 | EpiAware: As above + day-of-week effects + time-varying ascertainment |
+| 3 | EpiAware: As above + StackObservationModels for multiple streams |
+
+Each reference solution will include:
+- Correct generation interval convolution
+- Appropriate delay distribution handling
+- Suitable observation model (negative binomial)
+- Reasonable prior specifications
+- Proper initial condition handling
 
 ## Evaluation Criteria
 
@@ -89,16 +117,7 @@ Real data is used to test whether generated models can handle actual epidemic dy
 
 ### Expert Review (Departure-Based Assessment)
 
-Independent infectious disease modeller, blinded to condition, assesses each submission against a reference solution.
-
-#### Reference Solutions
-
-A reference solution will be provided for each scenario, implementing the renewal equation approach with:
-- Correct generation interval convolution
-- Appropriate delay distribution handling
-- Suitable observation model
-- Reasonable prior specifications
-- Proper initial condition handling
+Two independent infectious disease modellers, blinded to condition, assess each submission against the reference solutions defined above.
 
 #### Assessment Process
 
@@ -149,11 +168,13 @@ For Condition D (with EpiAware), the prompt will additionally include:
 
 ### Expert Review Protocol
 
-- Reviewer is an infectious disease modeller not involved in prompt construction
-- Reviewer is blinded to: which LLM generated the code, which condition it belongs to
-- Reviewer assesses each code sample against the reference solution
+- **Two independent reviewers**, both infectious disease modellers not involved in prompt construction
+- Reviewers are blinded to: which LLM generated the code, which condition it belongs to
+- Each reviewer independently assesses each code sample against the reference solution
 - Departures are documented and classified
-- Summary scores computed
+- Inter-rater reliability will be assessed (Cohen's kappa or similar)
+- Disagreements resolved by discussion or third reviewer if necessary
+- Summary scores computed after reconciliation
 
 ### Analysis
 
