@@ -277,13 +277,73 @@ If an LLM asks clarifying questions rather than producing code:
 6. Develop taxonomy of error types observed
 7. Qualitative analysis of failure modes and their epidemiological implications
 
-## Outputs
+## Pre-Specified Results
 
-1. Summary statistics and visualisations of performance across conditions
-2. Categorised examples of model outputs (successes and failures)
-3. Error taxonomy with representative examples
-4. Method choice analysis (Scenario 1a)
-5. Reproducible analysis code and logged prompts/responses
+### Tables
+
+**Table 1: Automated evaluation results by condition and LLM**
+- Rows: LLM × Condition (12 rows)
+- Columns: Syntactic validity, Execution, Plausibility, Uncertainty quantification, Asked clarifying questions, Appropriate parameters
+- Cells: Pass rate (n/3 runs)
+- Aggregated rows for "From scratch" (A+B+C) vs "EpiAware" (D)
+
+**Table 2: Expert review summary by condition and LLM**
+- Rows: LLM × Condition (12 rows)
+- Columns: Departures by category (A/B/C/D counts), Overall assessment distribution
+- Aggregated rows for "From scratch" vs "EpiAware"
+
+**Table 3: Method selection in Scenario 1a**
+- Rows: LLM × Condition (12 rows)
+- Columns: Renewal/Cori, Wallinga-Teunis, Bettencourt-Ribeiro, Naive ratio, Other
+- Cells: Count of runs using each method
+
+**Table 4: Common error types (error taxonomy)**
+- Rows: Error type (e.g., "naive discretisation", "missing delay convolution", "incorrect likelihood")
+- Columns: Description, Category (B/C/D), Frequency by condition, Example
+
+### Figures
+
+**Figure 1: Primary comparison - automated pass rates**
+- Bar chart comparing "From scratch" (A+B+C pooled) vs "EpiAware" (D)
+- Grouped by automated criterion
+- Error bars showing 95% CI (Wilson score interval)
+
+**Figure 2: Rt estimates comparison**
+- Panel per scenario (1a, 1b, 2, 3)
+- Each panel shows: EpiNow2 baseline (where available), reference solution, and LLM-generated estimates (colour by condition)
+- Ribbon for uncertainty where available
+- Subset to representative examples (1 success, 1 failure per condition)
+
+**Figure 3: Departure category distribution**
+- Stacked bar chart
+- X-axis: Condition (A, B, C, D)
+- Y-axis: Proportion of departures
+- Colours: Category A (green), B (yellow), C (orange), D (red)
+- Faceted by scenario
+
+**Figure 4: Effect of method specification (1a vs 1b)**
+- Paired comparison showing pass rates for same LLM × Condition across 1a and 1b
+- Highlights whether specifying "renewal equation" improves correctness
+
+### Key Results Paragraphs
+
+**Primary finding (A/B/C vs D):**
+"Of [n] code samples generated without validated components (conditions A-C), [x]% passed all automated checks compared to [y]% with EpiAware components (condition D). Expert review identified [mean] category C/D departures per sample in conditions A-C versus [mean] in condition D (p = [value], [test])."
+
+**Language comparison (A vs B vs C):**
+"Performance was [similar/varied] across probabilistic programming languages: Stan [x]%, PyMC [y]%, Turing.jl [z]% passed all automated checks. The language-controlled comparison (C vs D, both Julia) showed [description]."
+
+**Method selection (Scenario 1a):**
+"When not constrained to the renewal equation, LLMs selected [most common method] in [x]% of cases. [y]% chose methods rated 'not recommended' or 'not acceptable' per Gostic et al. (2020)."
+
+**Effect of method specification (1a vs 1b):**
+"Specifying the renewal equation [improved/did not improve] correctness: [x]% of 1b samples passed automated checks versus [y]% for 1a (p = [value])."
+
+**Uncertainty quantification:**
+"[x]% of samples provided uncertainty estimates. This was [higher/similar/lower] for EpiAware ([y]%) compared to from-scratch conditions ([z]%), suggesting validated components [do/do not] naturally encourage uncertainty quantification."
+
+**Common errors:**
+"The most frequent errors were [top 3 from taxonomy], occurring in [x]%, [y]%, [z]% of from-scratch samples respectively. These errors were [absent/rare] in EpiAware samples."
 
 ## Ethical Considerations
 
