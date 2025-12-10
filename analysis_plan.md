@@ -171,11 +171,13 @@ Two independent infectious disease modellers, blinded to condition, assess each 
 For each submission, the reviewer:
 
 1. **Identifies the method used** (for Scenario 1a only)
-   - Renewal equation - **Acceptable**
-   - Bettencourt-Ribeiro / SIR-based - **Acceptable** (established method, though less flexible)
-   - Wallinga-Teunis / case-based - **Acceptable**
-   - Naive ratio-based (e.g., $R_t = C_t / C_{t-1}$) - **Not acceptable** (ignores generation interval, biased)
-   - EpiEstim-style instantaneous Rt - **Acceptable**
+
+   Based on Gostic et al. (2020) "Practical considerations for measuring the effective reproductive number, Rt":
+
+   - Renewal equation / Cori / EpiEstim-style instantaneous Rt - **Recommended** (accurate, uses only past data)
+   - Wallinga-Teunis / case reproductive number - **Acceptable for retrospective analysis** (uses future data, underestimates at end of time series without adjustment)
+   - Bettencourt-Ribeiro / SIR-based - **Not recommended** (assumes exponential generation interval, biased when Rt >> 1)
+   - Naive ratio-based (e.g., $R_t = C_t / C_{t-1}$) - **Not acceptable** (ignores generation interval, fundamentally biased)
    - Other (describe and assess appropriateness)
 
 2. **Lists departures from reference solution**
