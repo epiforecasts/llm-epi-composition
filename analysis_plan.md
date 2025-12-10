@@ -159,6 +159,8 @@ Reference solution code is in `reference_solutions/`.
 | **Convergence** | Does MCMC sampling converge? (R-hat < 1.05, ESS > 400) (0/1) |
 | **Plausibility** | Are Rt estimates plausible? (0/1) - bounded (e.g., 0.1-10), smooth over time (no implausible jumps), consistent with epidemic dynamics |
 | **Uncertainty quantification** | Does the model provide uncertainty estimates? (0/1) - credible/confidence intervals, posterior samples, or similar |
+| **Asked clarifying questions** | Did the LLM ask about epidemiological parameters before producing code? (0/1) |
+| **Appropriate parameters** | If not asked, did the model use reasonable epidemiological parameters? (0/1) - generation interval ~3-7 days, delay ~2-7 days for COVID-19 |
 
 ### Expert Review (Departure-Based Assessment)
 
@@ -194,15 +196,37 @@ For each submission, the reviewer:
 Standardised prompts will be constructed for each scenario containing:
 - Clear problem statement (epidemiological question or method specification)
 - Data description and format
-- Required outputs (posterior samples for Rt, predictions)
 - Language/framework constraint (e.g., "use Stan", "use PyMC", "use EpiAware components")
 
-Prompts will be identical across LLMs within each condition.
+**Prompts do not provide epidemiological parameters** (generation interval, delay distributions). This tests whether LLMs:
+- Recognise these parameters are needed
+- Ask appropriate clarifying questions
+- Make reasonable assumptions if not asking
 
 For Condition D (with EpiAware), the prompt will additionally include:
 - Package overview and component descriptions
 - Type hierarchy and interfaces
 - 2-3 worked examples from documentation
+
+### Handling Clarifying Questions
+
+If an LLM asks clarifying questions rather than producing code:
+
+1. **Standard responses are provided** for common questions (see below)
+2. **Maximum 3 rounds** of back-and-forth before final code expected
+3. **Record whether** the LLM asked clarifying questions (evaluation criterion)
+4. **Record what** questions were asked (qualitative analysis)
+
+#### Standard Responses to Clarifying Questions
+
+| Question | Response |
+|----------|----------|
+| Generation interval? | "Use a gamma distribution with mean 5 days and SD 1.5 days, or an equivalent discrete PMF" |
+| Reporting delay? | "Use a gamma distribution with mean 4 days and SD 2 days, or an equivalent discrete PMF" |
+| What time period? | "The data covers [start date] to [end date]" |
+| What priors? | "Use your best judgement for reasonable priors" |
+| Bayesian or frequentist? | "Use whatever approach you think is most appropriate" |
+| Other questions | "Make reasonable assumptions based on your knowledge of COVID-19 epidemiology" |
 
 ### Execution
 
