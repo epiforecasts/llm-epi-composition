@@ -325,7 +325,7 @@ If an LLM asks clarifying questions rather than producing code:
 - Paired comparison showing pass rates for same LLM × Condition across 1a and 1b
 - Highlights whether specifying "renewal equation" improves correctness
 
-### Key Results Sentences
+### Key Results
 
 **Primary finding (A/B/C vs D):**
 "Of [n] code samples generated without validated components (conditions A-C), [x]% passed all automated checks compared to [y]% with EpiAware components (condition D). Expert review identified a mean of [mean] category C/D departures per sample in conditions A-C versus [mean] in condition D."
