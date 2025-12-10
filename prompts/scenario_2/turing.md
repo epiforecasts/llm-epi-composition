@@ -43,27 +43,27 @@ You are provided with:
 
 ## Requirements
 
-1. Write a complete, runnable Bayesian model that estimates Rt over time using the renewal equation
+1. Write complete, runnable code that estimates Rt over time using the renewal equation
 2. The model should include:
    - The renewal equation for infection dynamics
    - Convolution with the delay distribution
    - **Day-of-week effects**: A multiplicative effect on reported cases for each day of the week
-   - **Time-varying ascertainment**: A smoothly varying proportion of infections that are reported (use a random walk or similar process)
-   - **Negative binomial observation model**: To account for overdispersion
+   - **Time-varying ascertainment**: A smoothly varying proportion of infections that are reported
+   - **Overdispersion**: Account for greater variance than Poisson in observations
 3. Provide code to:
    - Load the data
    - Define and fit the model
-   - Extract posterior samples of Rt, day-of-week effects, and ascertainment over time
-4. Include reasonable prior distributions for all parameters
+   - Extract estimates of Rt, day-of-week effects, and ascertainment over time
+4. Include uncertainty quantification for all estimated quantities
 5. Handle the initial infection seeding period appropriately
 
 ## Output
 
 Your code should produce:
-- Posterior samples for Rt at each time point
-- Posterior samples for day-of-week effects
-- Posterior samples for time-varying ascertainment
-- A summary showing posterior means and 90% credible intervals
+- Rt estimates for each time point with uncertainty
+- Day-of-week effect estimates
+- Time-varying ascertainment estimates
+- A summary or plot showing results
 
 ## Language
 

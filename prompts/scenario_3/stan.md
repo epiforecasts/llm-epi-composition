@@ -60,27 +60,26 @@ You are provided with:
 
 ## Requirements
 
-1. Write a complete, runnable Bayesian model that estimates a single shared Rt over time using the renewal equation
+1. Write complete, runnable code that estimates a single shared Rt over time using the renewal equation
 2. The model should include:
    - The renewal equation for infection dynamics with a **shared Rt**
    - **Stream-specific delay convolutions**: Each observation type has its own delay
-   - **Stream-specific ascertainment**: Each stream has a (potentially time-varying) proportion of infections observed
-   - **Appropriate observation models**: Negative binomial for each stream with stream-specific overdispersion
-   - **Smoothness constraint on Rt**: Use an AR(1) or random walk prior on log(Rt)
+   - **Stream-specific ascertainment**: Each stream has a proportion of infections observed
+   - **Overdispersion**: Account for greater variance than Poisson in observations
+   - **Smoothness constraint on Rt**: Rt should vary smoothly over time
 3. Provide code to:
    - Load the data
    - Define and fit the model
-   - Extract posterior samples of Rt and stream-specific parameters
-4. Include reasonable prior distributions for all parameters
+   - Extract Rt estimates and stream-specific parameters
+4. Include uncertainty quantification for all estimated quantities
 5. Handle the initial infection seeding period appropriately
 
 ## Output
 
 Your code should produce:
-- Posterior samples for Rt at each time point
-- Posterior samples for stream-specific ascertainment rates
-- Posterior samples for stream-specific overdispersion parameters
-- A summary showing posterior means and 90% credible intervals
+- Rt estimates for each time point with uncertainty
+- Stream-specific ascertainment rate estimates
+- A summary or plot showing results
 
 ## Language
 

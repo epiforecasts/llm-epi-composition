@@ -30,19 +30,20 @@ You are provided with:
 
 ## Requirements
 
-1. Write a complete, runnable Bayesian model that estimates Rt over time
+1. Write complete, runnable code that estimates Rt over time
 2. The model should account for the observation process (cases are not infections)
 3. Provide code to:
    - Load the data
    - Define and fit the model
-   - Extract posterior samples of Rt for each time point
-4. Include reasonable prior distributions for all parameters
+   - Extract Rt estimates for each time point
+4. Include uncertainty quantification (e.g., confidence/credible intervals)
 
 ## Output
 
 Your code should produce:
-- Posterior samples for Rt at each time point
-- A summary showing posterior mean and 90% credible intervals for Rt
+- Rt estimates for each time point
+- A measure of uncertainty (e.g., 90% intervals)
+- A summary or plot of Rt over time
 
 ## Language
 
