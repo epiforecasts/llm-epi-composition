@@ -63,7 +63,7 @@ Estimate Rt using the renewal equation, accounting for:
 Joint model of cases, hospitalisations, and deaths using the renewal equation, with:
 - Stream-specific delays
 - Stream-specific ascertainment processes
-- Shared underlying Rt with autoregressive dynamics
+- Shared underlying Rt that varies smoothly over time
 
 The comparison of 1a vs 1b tests whether specifying the method improves correctness and documents what methods LLMs choose when unconstrained.
 
@@ -145,12 +145,12 @@ Non-Bayesian approaches are acceptable if they provide point estimates of $R_t$ 
 
 #### Package Baseline: EpiNow2
 
-EpiNow2 (R package) will be run on the same data to provide a "package baseline" estimate of Rt. This allows:
+EpiNow2 (R package) will be run on the same data to provide a "package baseline" estimate of Rt for Scenarios 1a, 1b, and 2. This allows:
 - Visual comparison of LLM-generated model outputs against an established tool
 - Quantification of how errors in model specification affect Rt estimates
 - A practical benchmark that reviewers and readers can relate to
 
-Note: EpiNow2 uses a Gaussian process prior on $R_t$ by default, which differs from the AR(1) used in EpiAware reference solutions. Both are valid smoothness choices.
+Note: EpiNow2 uses a Gaussian process prior on $R_t$ by default, which differs from the AR(1) used in EpiAware reference solutions. Both are valid smoothness choices. EpiNow2 does not natively support multiple observation streams, so no package baseline is provided for Scenario 3.
 
 #### Custom Reference Solutions
 
@@ -179,7 +179,7 @@ Reference solution code is in `reference_solutions/`.
 
 ### Expert Review (Departure-Based Assessment)
 
-Two independent infectious disease modellers, blinded to condition, assess each submission against the reference solutions defined above.
+Two independent infectious disease modellers, blinded to condition, assess each submission against the reference solutions defined above. Reviewers may use LLMs to streamline the review process.
 
 #### Assessment Process
 
@@ -207,6 +207,8 @@ For each submission, the reviewer:
 4. **Summary scores**
    - Count of departures by category (A/B/C/D)
    - Overall assessment: Acceptable / Minor issues / Major issues / Incorrect
+
+**Note:** Code that fails automated checks (syntax, execution) is still reviewed to assess the underlying approach. This distinguishes "correct approach with implementation bugs" from "fundamentally flawed approach".
 
 ## Protocol
 
@@ -257,8 +259,7 @@ If an LLM asks clarifying questions rather than producing code:
 
 ### Expert Review Protocol
 
-- **Two independent reviewers** assess each code sample against the reference solution
-- Reviewers may be human infectious disease modellers or LLMs prompted with the reference solution and departure categories
+- **Two independent reviewers** (infectious disease modellers) assess each code sample against the reference solution
 - Reviewers are blinded to: which LLM generated the code, which condition it belongs to
 - Each reviewer independently assesses each code sample
 - Departures are documented and classified
