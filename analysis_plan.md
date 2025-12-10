@@ -271,7 +271,7 @@ If an LLM asks clarifying questions rather than producing code:
 
 1. Tabulate pass rates for each automated criterion by condition and LLM
 2. Tabulate departure counts by category (A/B/C/D) by condition and LLM
-3. Compare success rates across conditions (Fisher's exact test or similar)
+3. Compare success rates across conditions descriptively
 4. For Scenario 1a: document method choices by LLM and condition
 5. Compare 1a vs 1b to assess effect of method specification
 6. Develop taxonomy of error types observed
@@ -325,10 +325,10 @@ If an LLM asks clarifying questions rather than producing code:
 - Paired comparison showing pass rates for same LLM × Condition across 1a and 1b
 - Highlights whether specifying "renewal equation" improves correctness
 
-### Key Results Paragraphs
+### Key Results Sentences
 
 **Primary finding (A/B/C vs D):**
-"Of [n] code samples generated without validated components (conditions A-C), [x]% passed all automated checks compared to [y]% with EpiAware components (condition D). Expert review identified [mean] category C/D departures per sample in conditions A-C versus [mean] in condition D (p = [value], [test])."
+"Of [n] code samples generated without validated components (conditions A-C), [x]% passed all automated checks compared to [y]% with EpiAware components (condition D). Expert review identified a mean of [mean] category C/D departures per sample in conditions A-C versus [mean] in condition D."
 
 **Language comparison (A vs B vs C):**
 "Performance was [similar/varied] across probabilistic programming languages: Stan [x]%, PyMC [y]%, Turing.jl [z]% passed all automated checks. The language-controlled comparison (C vs D, both Julia) showed [description]."
@@ -337,7 +337,7 @@ If an LLM asks clarifying questions rather than producing code:
 "When not constrained to the renewal equation, LLMs selected [most common method] in [x]% of cases. [y]% chose methods rated 'not recommended' or 'not acceptable' per Gostic et al. (2020)."
 
 **Effect of method specification (1a vs 1b):**
-"Specifying the renewal equation [improved/did not improve] correctness: [x]% of 1b samples passed automated checks versus [y]% for 1a (p = [value])."
+"Specifying the renewal equation [improved/did not improve] correctness: [x]% of 1b samples passed automated checks versus [y]% for 1a."
 
 **Uncertainty quantification:**
 "[x]% of samples provided uncertainty estimates. This was [higher/similar/lower] for EpiAware ([y]%) compared to from-scratch conditions ([z]%), suggesting validated components [do/do not] naturally encourage uncertainty quantification."
