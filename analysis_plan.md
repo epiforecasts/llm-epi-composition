@@ -115,6 +115,22 @@ Some form of smoothness constraint on $R_t$ is necessary to avoid overfitting. A
 
 All are considered equivalent alternatives (departure category A) provided they enforce reasonable smoothness.
 
+#### Discretisation and Censoring
+
+The renewal equation operates on discrete time steps (typically days), requiring continuous distributions for generation intervals and delays to be discretised to probability mass functions (PMFs). Proper discretisation should account for **double interval censoring**:
+
+- **Primary censoring**: The primary event (e.g., infection) occurs at an unknown time within its observation interval
+- **Secondary censoring**: The secondary event (e.g., symptom onset, reporting) also occurs at an unknown time within its interval
+
+Naive discretisation (e.g., evaluating the PDF at integer points, or simple CDF differences) does not account for this and can introduce bias, particularly for distributions with short means relative to the discretisation interval.
+
+**Acceptable approaches:**
+- Double interval censoring (as implemented in EpiAware's `censored_pmf()`)
+- Midpoint discretisation with appropriate justification
+- Any method that explicitly acknowledges and addresses the censoring problem
+
+**Potential error source:** LLMs generating code from scratch may use naive discretisation without considering censoring. This is recorded as a departure if it occurs.
+
 #### Inference Approach
 
 The prompts request Bayesian inference with posterior samples, but LLM-generated solutions may use:
