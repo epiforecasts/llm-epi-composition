@@ -48,10 +48,10 @@ Note: The primary comparison is partially confounded by language (D uses Julia),
 | **3** | Method specified | Multiple data streams | Multi-component implementation |
 
 **Scenario 1a - Epidemiological question (open method)**
-Estimate the time-varying reproduction number (Rt) from daily case counts. You are provided with a generation interval distribution and a reporting delay distribution.
+Estimate the time-varying reproduction number (Rt) from daily case counts.
 
 **Scenario 1b - Method specified (renewal equation)**
-Estimate the time-varying reproduction number (Rt) from daily case counts using the renewal equation framework. You are provided with a generation interval distribution and a reporting delay distribution.
+Estimate the time-varying reproduction number (Rt) from daily case counts using the renewal equation framework.
 
 **Scenario 2 - Structured Rt with observation processes (method specified)**
 Estimate Rt using the renewal equation, accounting for:
@@ -133,8 +133,8 @@ Naive discretisation (e.g., evaluating the PDF at integer points, or simple CDF 
 
 #### Inference Approach
 
-The prompts request Bayesian inference with posterior samples, but LLM-generated solutions may use:
-- **Bayesian MCMC** (as requested)
+The prompts do not specify an inference approach. LLM-generated solutions may use:
+- **Bayesian MCMC**
 - **Variational inference**
 - **Maximum likelihood / optimisation**
 - **Other approaches**
@@ -172,7 +172,6 @@ Reference solution code is in `reference_solutions/`.
 |-----------|-------------|
 | **Syntactic validity** | Does the code parse without errors? (0/1) |
 | **Execution** | Does the model run on the test data? (0/1) |
-| **Convergence** | Does MCMC sampling converge? (R-hat < 1.05, ESS > 400) (0/1) |
 | **Plausibility** | Are Rt estimates plausible? (0/1) - bounded (e.g., 0.1-10), smooth over time (no implausible jumps), consistent with epidemic dynamics |
 | **Uncertainty quantification** | Does the model provide uncertainty estimates? (0/1) - credible/confidence intervals, posterior samples, or similar |
 | **Asked clarifying questions** | Did the LLM ask about epidemiological parameters before producing code? (0/1) |
@@ -234,8 +233,9 @@ If an LLM asks clarifying questions rather than producing code:
 
 1. **Standard responses are provided** for common questions (see below)
 2. **Maximum 3 rounds** of back-and-forth before final code expected
-3. **Record whether** the LLM asked clarifying questions (evaluation criterion)
-4. **Record what** questions were asked (qualitative analysis)
+3. **Only final code is evaluated** - intermediate outputs are not assessed
+4. **Record whether** the LLM asked clarifying questions (evaluation criterion)
+5. **Record what** questions were asked (qualitative analysis)
 
 #### Standard Responses to Clarifying Questions
 
@@ -257,9 +257,10 @@ If an LLM asks clarifying questions rather than producing code:
 
 ### Expert Review Protocol
 
-- **Two independent reviewers**, both infectious disease modellers not involved in prompt construction
+- **Two independent reviewers** assess each code sample against the reference solution
+- Reviewers may be human infectious disease modellers or LLMs prompted with the reference solution and departure categories
 - Reviewers are blinded to: which LLM generated the code, which condition it belongs to
-- Each reviewer independently assesses each code sample against the reference solution
+- Each reviewer independently assesses each code sample
 - Departures are documented and classified
 - Inter-rater reliability will be assessed (Cohen's kappa or similar)
 - Disagreements resolved by discussion or third reviewer if necessary
@@ -283,26 +284,11 @@ If an LLM asks clarifying questions rather than producing code:
 4. Method choice analysis (Scenario 1a)
 5. Reproducible analysis code and logged prompts/responses
 
-## Limitations
-
-- EpiAware comparison is confounded with language (Julia only), though C vs D controls for this
-- Scenarios assume known epidemiological parameters (e.g., generation interval); joint inference of these parameters is out of scope
-- Number of runs per condition (3) may be insufficient to characterise variability
-- Departure classification involves judgement despite structured categories
-- Results may not generalise to future model versions
-
 ## Ethical Considerations
 
 - No human subjects involved
 - All data publicly available
 - LLM outputs will be reviewed before any public release
-
-## Timeline
-
-- Week 1: Finalise scenarios, construct prompts, obtain data, write reference solutions
-- Week 2: Run experiments across models and conditions
-- Week 3: Evaluation (automated + expert review)
-- Week 4: Analysis and write-up
 
 ---
 
