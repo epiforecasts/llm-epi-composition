@@ -171,10 +171,12 @@ Two independent infectious disease modellers, blinded to condition, assess each 
 For each submission, the reviewer:
 
 1. **Identifies the method used** (for Scenario 1a only)
-   - Renewal equation
-   - Bettencourt-Ribeiro / SIR-based
-   - Naive ratio-based
-   - Other (describe)
+   - Renewal equation - **Acceptable**
+   - Bettencourt-Ribeiro / SIR-based - **Acceptable** (established method, though less flexible)
+   - Wallinga-Teunis / case-based - **Acceptable**
+   - Naive ratio-based (e.g., $R_t = C_t / C_{t-1}$) - **Not acceptable** (ignores generation interval, biased)
+   - EpiEstim-style instantaneous Rt - **Acceptable**
+   - Other (describe and assess appropriateness)
 
 2. **Lists departures from reference solution**
    - Each departure documented with description
