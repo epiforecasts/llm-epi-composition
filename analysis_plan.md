@@ -345,6 +345,23 @@ If an LLM asks clarifying questions rather than producing code:
 **Common errors:**
 "The most frequent errors were [top 3 from taxonomy], occurring in [x]%, [y]%, [z]% of from-scratch samples respectively. These errors were [absent/rare] in EpiAware samples."
 
+## Discussion Points
+
+### Functions vs DSL
+
+This study compares "from scratch" (no tooling) with EpiAware (validated components with a DSL). This conflates two potential benefits:
+
+1. **Nothing → Functions**: Having access to validated building blocks (e.g., renewal equation implementation, delay convolution)
+2. **Functions → DSL**: Having a composable domain-specific language that enforces correct composition
+
+We cannot disentangle these effects without an intermediate condition providing functions without the DSL structure. This would be difficult to construct fairly - one would need to provide equivalent functionality (e.g., standalone Julia functions for renewal equations, delays, observation models) without the compositional interface.
+
+Future work could explore this distinction, potentially using the cross-language delay estimation ecosystem (primarycensoreddist) which provides functions but not a full DSL for model composition.
+
+### DSL vs Task-Specific Packages
+
+A related comparison is between a composable DSL (EpiAware) and task-specific packages (e.g., EpiEstim, EpiNow2). Task-specific packages may be easier for LLMs to use correctly (fewer choices to make) but offer less flexibility. This study does not directly test this comparison, though the EpiNow2 baseline provides a reference point for what established packages produce.
+
 ## Ethical Considerations
 
 - No human subjects involved
