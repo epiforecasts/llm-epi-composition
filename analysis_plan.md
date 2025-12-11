@@ -356,7 +356,7 @@ This study compares "from scratch" (no tooling) with EpiAware (validated compone
 
 We cannot disentangle these effects without an intermediate condition providing functions without the DSL structure. This would be difficult to construct fairly - one would need to provide equivalent functionality (e.g., standalone Julia functions for renewal equations, delays, observation models) without the compositional interface.
 
-Future work could explore this distinction, potentially using the cross-language delay estimation ecosystem (primarycensoreddist) which provides functions but not a full DSL for model composition.
+Future work could explore this distinction using delay distribution estimation as a test case. The `primarycensoreddist` ecosystem provides validated functions across multiple languages (R, Python, Stan, Julia) without a compositional DSL, enabling a cleaner comparison: (1) from scratch, (2) with `primarycensoreddist` functions, (3) with a DSL like `epidist` if available. This would isolate the benefit of composable structure from the benefit of validated components.
 
 ### DSL vs Task-Specific Packages
 
