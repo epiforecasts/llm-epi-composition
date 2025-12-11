@@ -48,6 +48,19 @@ call_openai <- function(prompt, model = "gpt-4o", max_tokens = 8192) {
     resp_body_json()
 }
 
+# Function to call Ollama API (for local Llama)
+call_ollama <- function(prompt, model = "llama3.1:8b") {
+  request("http://localhost:11434/api/generate") |>
+    req_body_json(list(
+      model = model,
+      prompt = prompt,
+      stream = FALSE
+    )) |>
+    req_timeout(600) |>  # 10 minute timeout for local inference
+    req_perform() |>
+    resp_body_json()
+}
+
 # Function to run a single experiment
 run_experiment <- function(
   scenario,
@@ -79,6 +92,14 @@ run_experiment <- function(
     response <- call_openai(prompt, model = llm)
     content <- response$choices[[1]]$message$content
     usage <- response$usage
+  } else if (grepl("^llama", llm)) {
+    response <- call_ollama(prompt, model = llm)
+    content <- response$response
+    usage <- list(
+      total_duration = response$total_duration,
+      eval_count = response$eval_count,
+      prompt_eval_count = response$prompt_eval_count
+    )
   } else {
     stop("Unknown LLM: ", llm)
   }
@@ -112,8 +133,8 @@ run_experiment <- function(
   return(result)
 }
 
-# Main execution
-if (!interactive()) {
+# Main execution - only run if this script is called directly (not sourced)
+if (!interactive() && sys.nframe() == 0L) {
   args <- commandArgs(trailingOnly = TRUE)
   if (length(args) < 4) {
     message("Usage: Rscript run_experiment.R <scenario> <condition> <llm> <run_id>")
