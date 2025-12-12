@@ -21,22 +21,26 @@ Can large language models correctly compose epidemic models from first principle
 | **B: PyMC** | Python | From scratch | Generate PyMC model code |
 | **C: Turing.jl** | Julia | From scratch | Generate Turing.jl code |
 | **D: EpiAware** | Julia | Validated components | Generate model using EpiAware, documentation provided |
+| **E: R** | R | Open choice | Generate R code (LLM chooses approach: packages, custom code, or combination) |
 
 **Primary comparison:**
 - A/B/C vs D: Effect of validated components on model correctness
 
-**Secondary comparison:**
+**Secondary comparisons:**
 - A vs B vs C: Consistency of performance across probabilistic programming languages
+- E vs A: Effect of open-choice R vs constrained Stan+R (tests whether R's ecosystem helps LLMs)
+- E vs D: Open-choice R vs composable DSL (tests whether LLMs naturally find good approaches)
 
-Note: The primary comparison is partially confounded by language (D uses Julia), but C vs D provides a language-controlled comparison.
+Note: The primary comparison is partially confounded by language (D uses Julia), but C vs D provides a language-controlled comparison. Condition E provides an interesting test of what LLMs naturally do with R's rich ecosystem when given freedom to choose their approach.
 
 ### Models Under Evaluation
 
 | Model | Type | Rationale |
 |-------|------|-----------|
-| Claude Sonnet | Commercial | Current frontier capability, cost-effective |
-| GPT-4o | Commercial | Generalisability across providers |
-| Llama 3.1 70B | Open-source | LMIC accessibility, reproducibility |
+| Claude Sonnet 4 | Commercial | Current frontier capability, cost-effective |
+| Llama 3.1 8B | Open-source | LMIC accessibility (runs locally), reproducibility |
+
+Note: GPT-4o was originally planned but excluded due to API rate limiting constraints. Llama 3.1 8B (rather than 70B) was chosen to demonstrate local inference on consumer hardware, more relevant to LMIC resource constraints.
 
 ### Scenarios
 
@@ -358,9 +362,24 @@ We cannot disentangle these effects without an intermediate condition providing 
 
 Future work could explore this distinction using delay distribution estimation as a test case. The `primarycensoreddist` ecosystem provides validated functions across multiple languages (R, Python, Stan, Julia) without a compositional DSL, enabling a cleaner comparison: (1) from scratch, (2) with `primarycensoreddist` functions, (3) with a DSL like `epidist` if available. This would isolate the benefit of composable structure from the benefit of validated components.
 
+### R Packages vs Raw Modelling Languages
+
+The "Stan" condition (A) requires the LLM to write both raw Stan model code and R interface code (using cmdstanr or rstan). The "R" condition (E) simply instructs "Use R" - giving the LLM complete freedom to choose its approach. This tests what LLMs naturally do when given a familiar, well-documented language with a rich ecosystem of statistical and epidemiological packages.
+
+The conditions create an interesting gradient of abstraction:
+- **Stan (A)**: Must write probabilistic model in Stan syntax + R interface
+- **PyMC (B)**: Must write probabilistic model in Python/PyMC
+- **Turing.jl (C)**: Must write probabilistic model in Julia/Turing
+- **EpiAware (D)**: Guided to use specific composable components with documentation
+- **R (E)**: Open choice - LLM may use EpiEstim, EpiNow2, custom code, or any combination
+
+The comparison E vs A tests whether the R ecosystem's richer training data and package ecosystem improves LLM outputs compared to the more specialised Stan requirement. The E vs D comparison tests whether LLMs naturally gravitate toward good epidemiological approaches (e.g., using EpiNow2) or need explicit guidance toward validated components. This also reveals what approaches LLMs choose when unconstrained - recording whether they use existing packages, write custom models, or combine both.
+
 ### DSL vs Task-Specific Packages
 
-A related comparison is between a composable DSL (EpiAware) and task-specific packages (e.g., EpiEstim, EpiNow2). Task-specific packages may be easier for LLMs to use correctly (fewer choices to make) but offer less flexibility. This study does not directly test this comparison, though the EpiNow2 baseline provides a reference point for what established packages produce.
+Condition E (R) enables comparison between what LLMs naturally produce in R (which may include task-specific packages like EpiEstim, EpiNow2) and a composable DSL (EpiAware, condition D). Task-specific packages may be easier for LLMs to use correctly (fewer choices to make) but offer less flexibility for complex scenarios. The comparison E vs D across scenarios 1-3 tests whether the composable DSL provides advantages as scenario complexity increases, where monolithic packages may not cover all required functionality.
+
+For simpler scenarios (1a, 1b), R packages like EpiEstim provide direct solutions, but for complex scenarios (2, 3) with day-of-week effects, time-varying ascertainment, or multiple data streams, LLMs using R packages may need to compose multiple packages or write custom code, reducing the abstraction benefit.
 
 ## Ethical Considerations
 
