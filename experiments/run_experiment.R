@@ -5,26 +5,58 @@ library(httr2)
 library(jsonlite)
 library(readr)
 
+# Retry wrapper with exponential backoff
+retry_with_backoff <- function(fn, max_retries = 5, initial_delay = 30) {
+  delay <- initial_delay
+  for (attempt in 1:max_retries) {
+    result <- tryCatch({
+      list(success = TRUE, value = fn())
+    }, error = function(e) {
+      list(success = FALSE, error = e$message)
+    })
+
+    if (result$success) {
+      return(result$value)
+    }
+
+    # Check if it's a rate limit error
+    if (grepl("429|rate|limit", result$error, ignore.case = TRUE)) {
+      if (attempt < max_retries) {
+        message(sprintf("  Rate limited. Waiting %d seconds (attempt %d/%d)...",
+                        delay, attempt, max_retries))
+        Sys.sleep(delay)
+        delay <- delay * 2  # Exponential backoff
+      }
+    } else {
+      # Non-rate-limit error - stop immediately
+      stop(result$error)
+    }
+  }
+  stop("Max retries exceeded due to rate limiting")
+}
+
 # Function to call Claude API
 call_claude <- function(prompt, model = "claude-sonnet-4-20250514", max_tokens = 8192) {
   api_key <- Sys.getenv("ANTHROPIC_API_KEY")
   if (api_key == "") stop("ANTHROPIC_API_KEY not set")
 
-  request("https://api.anthropic.com/v1/messages") |>
-    req_headers(
-      `x-api-key` = api_key,
-      `anthropic-version` = "2023-06-01",
-      `content-type` = "application/json"
-    ) |>
-    req_body_json(list(
-      model = model,
-      max_tokens = max_tokens,
-      messages = list(
-        list(role = "user", content = prompt)
-      )
-    )) |>
-    req_perform() |>
-    resp_body_json()
+  retry_with_backoff(function() {
+    request("https://api.anthropic.com/v1/messages") |>
+      req_headers(
+        `x-api-key` = api_key,
+        `anthropic-version` = "2023-06-01",
+        `content-type` = "application/json"
+      ) |>
+      req_body_json(list(
+        model = model,
+        max_tokens = max_tokens,
+        messages = list(
+          list(role = "user", content = prompt)
+        )
+      )) |>
+      req_perform() |>
+      resp_body_json()
+  })
 }
 
 # Function to call OpenAI API (for GPT-4o)
@@ -32,20 +64,22 @@ call_openai <- function(prompt, model = "gpt-4o", max_tokens = 8192) {
   api_key <- Sys.getenv("OPENAI_API_KEY")
   if (api_key == "") stop("OPENAI_API_KEY not set")
 
-  request("https://api.openai.com/v1/chat/completions") |>
-    req_headers(
-      `Authorization` = paste("Bearer", api_key),
-      `content-type` = "application/json"
-    ) |>
-    req_body_json(list(
-      model = model,
-      max_tokens = max_tokens,
-      messages = list(
-        list(role = "user", content = prompt)
-      )
-    )) |>
-    req_perform() |>
-    resp_body_json()
+  retry_with_backoff(function() {
+    request("https://api.openai.com/v1/chat/completions") |>
+      req_headers(
+        `Authorization` = paste("Bearer", api_key),
+        `content-type` = "application/json"
+      ) |>
+      req_body_json(list(
+        model = model,
+        max_tokens = max_tokens,
+        messages = list(
+          list(role = "user", content = prompt)
+        )
+      )) |>
+      req_perform() |>
+      resp_body_json()
+  })
 }
 
 # Function to call Ollama API (for local Llama)

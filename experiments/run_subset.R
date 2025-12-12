@@ -1,32 +1,35 @@
-# Run all experiments
-# This script runs the full experiment matrix
+# Run subset of experiments
+# This script runs a specific set of experiments
 
 source("experiments/run_experiment.R")
+
+# Parse command-line arguments
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args) < 1) {
+  llms_to_run <- c("claude-sonnet-4-20250514", "llama3.1:8b")  # Default: skip GPT-4o
+} else {
+  llms_to_run <- strsplit(args[1], ",")[[1]]
+}
 
 # Experiment configuration
 scenarios <- c("1a", "1b", "2", "3")
 conditions <- c("stan", "pymc", "turing", "epiaware")
-llms <- c(
-  "claude-sonnet-4-20250514",
-  "gpt-4o",
-  "llama3.1:8b"  # Local via ollama - LMIC-relevant open source option
-)
 n_runs <- 3
 
 # Track progress
-total <- length(scenarios) * length(conditions) * length(llms) * n_runs
+total <- length(scenarios) * length(conditions) * length(llms_to_run) * n_runs
 completed <- 0
 failed <- list()
 
 message(sprintf("Starting %d experiments...", total))
 message(sprintf("Scenarios: %s", paste(scenarios, collapse = ", ")))
 message(sprintf("Conditions: %s", paste(conditions, collapse = ", ")))
-message(sprintf("LLMs: %s", paste(llms, collapse = ", ")))
+message(sprintf("LLMs: %s", paste(llms_to_run, collapse = ", ")))
 message("")
 
 for (scenario in scenarios) {
   for (condition in conditions) {
-    for (llm in llms) {
+    for (llm in llms_to_run) {
       for (run_id in 1:n_runs) {
         completed <- completed + 1
         message(sprintf("\n[%d/%d] scenario=%s, condition=%s, llm=%s, run=%d",
