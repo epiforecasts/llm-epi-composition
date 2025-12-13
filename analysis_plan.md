@@ -261,6 +261,38 @@ If an LLM asks clarifying questions rather than producing code:
 3. All prompts and responses will be logged verbatim
 4. Code outputs will be executed in isolated environments with standardised package versions
 
+### Handling Execution Failures
+
+Code may fail to execute for two distinct reasons:
+
+1. **Trivial implementation errors**: Missing imports, typos in function names, incorrect file paths, package installation issues
+2. **Methodological errors**: Incorrect model structure, wrong distributions, missing components
+
+We use a **two-tier evaluation** to separate these concerns:
+
+**Tier 1: "Runs as-is"**
+- Execute the original code without modification
+- Record success/failure and any error messages
+- This captures overall code quality and whether an end-user who cannot code could use the output directly
+
+**Tier 2: "With minimal fixes"**
+- For code that fails Tier 1, apply minimal fixes to enable execution
+- **Allowed fixes** (record each fix applied):
+  - Adding missing `library()` / `import` / `using` statements
+  - Correcting obvious typos in function or variable names
+  - Fixing file paths to match data location
+  - Adding package installation commands
+- **Not allowed** (these are methodological and should not be fixed):
+  - Changing model structure or parameters
+  - Adding missing model components (e.g., delay convolution)
+  - Correcting distribution choices
+  - Any change that affects the epidemiological approach
+- This allows evaluation of methodological correctness even when there are trivial bugs
+
+**Rationale**: A user who cannot code would be unable to fix trivial errors, so Tier 1 captures real-world usability. However, we also want to evaluate methodological understanding separately from implementation skill, which Tier 2 enables. Both metrics are informative.
+
+**Timeout**: Each execution attempt is limited to 10 minutes. Models that exceed this are recorded as "timeout".
+
 ### Expert Review Protocol
 
 - **Two independent reviewers** (infectious disease modellers) assess each code sample against the reference solution
