@@ -36,7 +36,7 @@ try
     println("  EpiAware: already installed")
 catch
     println("  Installing EpiAware...")
-    Pkg.add(url="https://github.com/CDCgov/Rt-without-renewal", subdir="EpiAware")
+    Pkg.add(Pkg.PackageSpec(url="https://github.com/CDCgov/Rt-without-renewal", subdir="EpiAware"))
 end
 
 # Precompile packages
