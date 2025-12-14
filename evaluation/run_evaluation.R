@@ -37,12 +37,15 @@ extract_code_blocks <- function(response, condition) {
     code <- matches[i, 3]
 
     # Normalize language names
-    lang <- switch(lang,
-      "py" = "python",
-      "jl" = "julia",
-      "" = guess_language(code, condition),
-      lang
-    )
+    if (lang == "") {
+      lang <- guess_language(code, condition)
+    } else {
+      lang <- switch(lang,
+        "py" = "python",
+        "jl" = "julia",
+        lang
+      )
+    }
 
     code_blocks[[length(code_blocks) + 1]] <- list(
       language = lang,
