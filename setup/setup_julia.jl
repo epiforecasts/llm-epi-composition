@@ -30,25 +30,13 @@ for pkg in registry_packages
 end
 
 # EpiAware from GitHub (not in General registry)
-# Note: EpiAware may have compatibility issues with newer Julia versions
 println("\nInstalling EpiAware from GitHub...")
 try
     @eval using EpiAware
     println("  EpiAware: already installed")
 catch
-    println("  Attempting to install EpiAware...")
-    try
-        Pkg.add(url="https://github.com/CDCgov/Rt-without-renewal", subdir="EpiAware")
-    catch e1
-        try
-            # Try without subdir
-            Pkg.add(url="https://github.com/CDCgov/Rt-without-renewal")
-        catch e2
-            println("  WARNING: Could not install EpiAware. EpiAware experiments will fail.")
-            println("  Error: $(e2)")
-            println("  Continuing with other packages...")
-        end
-    end
+    println("  Installing EpiAware...")
+    Pkg.add(url="https://github.com/CDCgov/Rt-without-renewal")
 end
 
 # Precompile packages
