@@ -161,8 +161,18 @@ os.chdir("%s")
 
   writeLines(paste0(setup_code, "\n", code), code_file)
 
-  # Use venv if available
-  python_cmd <- if (file.exists("venv_pymc/bin/python")) {
+  # Find Python: check conda envs first, then venv, then system
+  conda_paths <- c(
+    path.expand("~/miniforge3/envs/pymc/bin/python"),
+    path.expand("~/mambaforge/envs/pymc/bin/python"),
+    path.expand("~/miniconda3/envs/pymc/bin/python"),
+    path.expand("~/anaconda3/envs/pymc/bin/python")
+  )
+  conda_python <- Find(file.exists, conda_paths)
+
+  python_cmd <- if (!is.null(conda_python)) {
+    conda_python
+  } else if (file.exists("venv_pymc/bin/python")) {
     "venv_pymc/bin/python"
   } else {
     "python3"
