@@ -31,16 +31,11 @@ end
 
 # EpiAware from GitHub (not in General registry)
 println("\nInstalling EpiAware from GitHub...")
-try
-    @eval using EpiAware
-    println("  EpiAware: already installed")
-catch
+if Base.find_package("EpiAware") === nothing
     println("  Installing EpiAware...")
-    epiaware_path = joinpath(tempdir(), "Rt-without-renewal")
-    if !isdir(epiaware_path)
-        run(`git clone --depth 1 https://github.com/CDCgov/Rt-without-renewal $epiaware_path`)
-    end
-    Pkg.develop(path=joinpath(epiaware_path, "EpiAware"))
+    Pkg.add(url="https://github.com/CDCgov/Rt-without-renewal", subdir="EpiAware")
+else
+    println("  EpiAware: already installed")
 end
 
 # Precompile packages
