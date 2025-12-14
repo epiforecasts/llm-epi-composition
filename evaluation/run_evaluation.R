@@ -333,11 +333,59 @@ run_single_experiment <- function(experiment_path, results_dir) {
                   if (result$tier1_success) "SUCCESS" else "FAILED",
                   result$tier1_duration))
 
+  # Show diagnostic info on failure
+  if (!result$tier1_success) {
+    if (result$tier1_timed_out) {
+      message("  >> TIMEOUT after 10 minutes")
+    } else {
+      # Show first few lines of stderr
+      stderr_lines <- strsplit(result$tier1_stderr, "\n")[[1]]
+      if (length(stderr_lines) > 0) {
+        message("  >> Error (first 5 lines):")
+        for (line in head(stderr_lines, 5)) {
+          message("     ", line)
+        }
+      }
+    }
+  }
+
   result
+}
+
+# Print diagnostic info about execution environment
+print_diagnostics <- function() {
+  message("\n=== Execution Environment ===")
+  message(sprintf("Working directory: %s", getwd()))
+  message(sprintf("PROJECT_DIR: %s", PROJECT_DIR))
+  message(sprintf("DATA_DIR: %s (exists: %s)", DATA_DIR, dir.exists(DATA_DIR)))
+  message(sprintf("EXPERIMENTS_DIR: %s (exists: %s)", EXPERIMENTS_DIR, dir.exists(EXPERIMENTS_DIR)))
+
+  # Check R
+  message(sprintf("R: %s", R.version.string))
+
+  # Check Python
+  conda_paths <- c(
+    path.expand("~/miniforge3/envs/pymc/bin/python"),
+    path.expand("~/mambaforge/envs/pymc/bin/python"),
+    path.expand("~/miniconda3/envs/pymc/bin/python"),
+    path.expand("~/anaconda3/envs/pymc/bin/python")
+  )
+  conda_python <- Find(file.exists, conda_paths)
+  python_cmd <- if (!is.null(conda_python)) conda_python else if (file.exists("venv_pymc/bin/python")) "venv_pymc/bin/python" else "python3"
+  python_version <- tryCatch(system2(python_cmd, "--version", stdout = TRUE, stderr = TRUE), error = function(e) "NOT FOUND")
+  message(sprintf("Python: %s (%s)", python_version, python_cmd))
+
+  # Check Julia
+  julia_version <- tryCatch(system2("julia", "--version", stdout = TRUE, stderr = TRUE), error = function(e) "NOT FOUND")
+  message(sprintf("Julia: %s", julia_version))
+
+  message("=============================\n")
 }
 
 # Main function
 run_all_evaluations <- function() {
+  print_diagnostics()
+
   # Create results directory
   dir.create(RESULTS_DIR, recursive = TRUE, showWarnings = FALSE)
 

@@ -21,6 +21,8 @@ test_files <- sapply(conditions, function(cond) {
 
 test_files <- test_files[!is.na(test_files)]
 
+print_diagnostics()
+
 message(sprintf("Running test on %d experiments (one per condition)...\n", length(test_files)))
 
 dir.create(RESULTS_DIR, recursive = TRUE, showWarnings = FALSE)
