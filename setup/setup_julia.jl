@@ -5,33 +5,21 @@ using Pkg
 
 println("Setting up Julia environment...")
 
-# Packages needed for Turing.jl experiments
-turing_packages = [
+# Packages from General registry (for Turing.jl experiments)
+registry_packages = [
     "Turing",
     "Distributions",
     "StatsPlots",
     "DataFrames",
     "CSV",
     "MCMCChains",
-    "Random"
-]
-
-# EpiAware and dependencies
-epiaware_packages = [
-    "EpiAware",
-    "Turing",
-    "Distributions",
-    "DataFrames",
-    "CSV",
+    "Random",
     "Plots",
     "Dates"
 ]
 
-# Combine unique packages
-all_packages = unique(vcat(turing_packages, epiaware_packages))
-
-println("Installing packages...")
-for pkg in all_packages
+println("Installing packages from registry...")
+for pkg in registry_packages
     try
         @eval using $(Symbol(pkg))
         println("  $pkg: already installed")
@@ -41,18 +29,18 @@ for pkg in all_packages
     end
 end
 
+# EpiAware from GitHub (not in General registry)
+println("\nInstalling EpiAware from GitHub...")
+try
+    @eval using EpiAware
+    println("  EpiAware: already installed")
+catch
+    println("  Installing EpiAware...")
+    Pkg.add(url="https://github.com/CDCgov/Rt-without-renewal")
+end
+
 # Precompile packages
 println("\nPrecompiling packages...")
 Pkg.precompile()
 
 println("\nJulia environment setup complete!")
-println("Installed packages:")
-for pkg in all_packages
-    try
-        version = Pkg.dependencies()[Base.UUID(Pkg.project().dependencies[pkg])].version
-        println("  $pkg: $version")
-    catch
-        # Package might be a stdlib or have different lookup
-        println("  $pkg: installed")
-    end
-end
