@@ -36,7 +36,11 @@ try
     println("  EpiAware: already installed")
 catch
     println("  Installing EpiAware...")
-    Pkg.add(Pkg.PackageSpec(url="https://github.com/CDCgov/Rt-without-renewal", subdir="EpiAware"))
+    epiaware_path = joinpath(tempdir(), "Rt-without-renewal")
+    if !isdir(epiaware_path)
+        run(`git clone --depth 1 https://github.com/CDCgov/Rt-without-renewal $epiaware_path`)
+    end
+    Pkg.develop(path=joinpath(epiaware_path, "EpiAware"))
 end
 
 # Precompile packages
