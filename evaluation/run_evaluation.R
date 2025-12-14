@@ -6,9 +6,10 @@ library(stringr)
 
 # Configuration
 TIMEOUT_SECONDS <- 600  # 10 minutes
-DATA_DIR <- "data"
-EXPERIMENTS_DIR <- "experiments"
-RESULTS_DIR <- "evaluation/results"
+PROJECT_DIR <- getwd()
+DATA_DIR <- file.path(PROJECT_DIR, "data")
+EXPERIMENTS_DIR <- file.path(PROJECT_DIR, "experiments")
+RESULTS_DIR <- file.path(PROJECT_DIR, "evaluation/results")
 
 # Extract code blocks from markdown response
 extract_code_blocks <- function(response, condition) {

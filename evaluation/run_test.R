@@ -4,7 +4,7 @@
 source("evaluation/run_evaluation.R")
 
 # Override results dir for test
-RESULTS_DIR <<- "evaluation/test_results"
+RESULTS_DIR <<- file.path(PROJECT_DIR, "evaluation/test_results")
 
 # Find one experiment per condition
 conditions <- c("stan", "pymc", "turing", "epiaware", "r")
