@@ -5,6 +5,9 @@ using Pkg
 
 println("Setting up Julia environment...")
 
+# Activate default environment
+Pkg.activate()
+
 # Packages from General registry (for Turing.jl experiments)
 registry_packages = [
     "Turing",
