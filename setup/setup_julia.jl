@@ -46,4 +46,13 @@ end
 println("\nPrecompiling packages...")
 Pkg.precompile()
 
+# Warm up packages to avoid segfaults on first use
+println("\nWarming up packages...")
+try
+    @eval using Turing, Distributions, DataFrames, CSV, MCMCChains, Plots
+    println("  Packages loaded successfully")
+catch e
+    println("  Warning: Could not load all packages: $e")
+end
+
 println("\nJulia environment setup complete!")

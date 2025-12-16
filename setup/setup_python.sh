@@ -15,7 +15,7 @@ if command -v mamba &> /dev/null; then
         echo "Environment '$ENV_NAME' already exists"
     else
         echo "Creating conda environment..."
-        mamba create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn -y
+        mamba create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn seaborn -y
     fi
     echo ""
     echo "Python environment setup complete!"
@@ -29,7 +29,7 @@ if command -v conda &> /dev/null; then
         echo "Environment '$ENV_NAME' already exists"
     else
         echo "Creating conda environment..."
-        conda create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn -y
+        conda create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn seaborn -y
     fi
     echo ""
     echo "Python environment setup complete!"

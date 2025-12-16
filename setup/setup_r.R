@@ -6,12 +6,15 @@ message("Setting up R environment...")
 # CRAN packages
 cran_packages <- c(
   "tidyverse",
+  "tidyr",
   "EpiEstim",
   "readr",
   "dplyr",
   "ggplot2",
   "lubridate",
-  "jsonlite"
+  "jsonlite",
+  "bayesplot",
+  "posterior"
 )
 
 # Install CRAN packages
