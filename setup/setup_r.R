@@ -14,7 +14,8 @@ cran_packages <- c(
   "lubridate",
   "jsonlite",
   "bayesplot",
-  "posterior"
+  "posterior",
+  "httr2"
 )
 
 # Install CRAN packages
