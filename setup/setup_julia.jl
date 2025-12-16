@@ -5,8 +5,10 @@ using Pkg
 
 println("Setting up Julia environment...")
 
-# Activate default environment
-Pkg.activate()
+# Activate default environment (create if needed)
+default_env = joinpath(homedir(), ".julia", "environments", "v$(VERSION.major).$(VERSION.minor)")
+mkpath(default_env)
+Pkg.activate(default_env)
 
 # Packages from General registry (for Turing.jl experiments)
 registry_packages = [
