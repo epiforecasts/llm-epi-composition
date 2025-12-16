@@ -11,15 +11,14 @@ mkpath(default_env)
 Pkg.activate(default_env)
 
 # Packages from General registry (for Turing.jl experiments)
+# Note: Plots/StatsPlots excluded due to Qt6 library issues on some systems
 registry_packages = [
     "Turing",
     "Distributions",
-    "StatsPlots",
     "DataFrames",
     "CSV",
     "MCMCChains",
     "Random",
-    "Plots",
     "Dates"
 ]
 
@@ -49,7 +48,7 @@ Pkg.precompile()
 # Warm up packages to avoid segfaults on first use
 println("\nWarming up packages...")
 try
-    @eval using Turing, Distributions, DataFrames, CSV, MCMCChains, Plots
+    @eval using Turing, Distributions, DataFrames, CSV, MCMCChains
     println("  Packages loaded successfully")
 catch e
     println("  Warning: Could not load all packages: $e")
