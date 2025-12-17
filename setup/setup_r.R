@@ -15,7 +15,9 @@ cran_packages <- c(
   "jsonlite",
   "bayesplot",
   "posterior",
-  "httr2"
+  "httr2",
+  "brms",
+  "bsts"
 )
 
 # Install CRAN packages
