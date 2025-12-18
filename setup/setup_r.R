@@ -17,7 +17,11 @@ cran_packages <- c(
   "posterior",
   "httr2",
   "brms",
-  "bsts"
+  "bsts",
+  "forecast",
+  "lme4",
+  "magrittr",
+  "purrr"
 )
 
 # Install CRAN packages
