@@ -7,9 +7,19 @@
 library(jsonlite)
 library(dplyr)
 
-# Source the fixes and execution functions
+# Source the fixes
 source("evaluation/tier2_fixes.R")
-source("evaluation/run_evaluation.R")
+
+# Define paths (same as run_evaluation.R)
+PROJECT_DIR <- getwd()
+DATA_DIR <- file.path(PROJECT_DIR, "data")
+EXPERIMENTS_DIR <- file.path(PROJECT_DIR, "experiments")
+RESULTS_DIR <- file.path(PROJECT_DIR, "evaluation", "results")
+
+# Helper to write JSON
+write_json_file <- function(x, path) {
+  writeLines(toJSON(x, pretty = TRUE, auto_unbox = TRUE), path)
+}
 
 # Determine language from condition
 get_language <- function(condition) {
@@ -163,7 +173,7 @@ run_tier2_experiment <- function(experiment_file, tier1_result_dir, tier2_result
     error_preview = if (!result$success) substr(error_msg, 1, 500) else ""
   )
 
-  write_json(result_data, file.path(tier2_work_dir, "result.json"), pretty = TRUE, auto_unbox = TRUE)
+  write_json_file(result_data, file.path(tier2_work_dir, "result.json"))
 
   return(result_data)
 }
