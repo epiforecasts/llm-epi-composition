@@ -84,7 +84,7 @@ This is fix attempt %d of %d.",
 }
 
 # Execute code and capture output
-execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
+execute_code <- function(code, language, work_dir, attempt_num = 0, timeout = TIMEOUT_SECONDS) {
   # Write code to file
   ext <- switch(language,
     "r" = "R",
@@ -173,8 +173,9 @@ execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
 
   duration <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
-  # Save output to file for reference
-  writeLines(result$output, output_file)
+  # Save output to attempt-specific file for reference
+  output_file_attempt <- file.path(work_dir, sprintf("output_attempt_%d.txt", attempt_num))
+  writeLines(result$output, output_file_attempt)
 
   exit_code <- result$exit_code
   output_content <- result$output
@@ -268,7 +269,7 @@ run_tier3_single <- function(scenario, condition, llm, run_id) {
 
   # Attempt 0: Run original code
   message("  Running original code (attempt 0)...")
-  exec_result <- execute_code(current_code, language, work_dir)
+  exec_result <- execute_code(current_code, language, work_dir, attempt_num = 0)
   output_produced <- check_output_produced(work_dir)
 
   results$attempts[[1]] <- list(
@@ -346,7 +347,7 @@ run_tier3_single <- function(scenario, condition, llm, run_id) {
 
         # Execute fixed code
         message("    Executing fixed code...")
-        exec_result <- execute_code(fixed_code, language, work_dir)
+        exec_result <- execute_code(fixed_code, language, work_dir, attempt_num = attempt)
         output_produced <- check_output_produced(work_dir)
 
         attempt_result <- list(
