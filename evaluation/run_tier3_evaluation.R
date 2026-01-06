@@ -123,10 +123,18 @@ execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
 
   result <- tryCatch({
     if (language == "julia") {
-      # For Julia, use system2 with timeout wrapper
+      # For Julia, use env -i to clear R's environment which can conflict with Julia libraries
+      # Only keep essential vars like PATH and HOME
       out <- system2(
-        "timeout",
-        args = c(as.character(timeout), "julia", "--project=@.", script_path),
+        "env",
+        args = c(
+          "-i",
+          paste0("PATH=", Sys.getenv("PATH")),
+          paste0("HOME=", Sys.getenv("HOME")),
+          paste0("JULIA_DEPOT_PATH=", Sys.getenv("JULIA_DEPOT_PATH", unset = "~/.julia")),
+          "timeout", as.character(timeout),
+          "julia", "--project=@.", script_path
+        ),
         stdout = TRUE,
         stderr = TRUE,
         timeout = timeout + 30
