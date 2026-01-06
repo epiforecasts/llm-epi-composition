@@ -1,0 +1,48 @@
+Loading required package: StanHeaders
+
+rstan version 2.32.7 (Stan version 2.32.2)
+
+For execution on a local, multicore CPU with excess RAM we recommend calling
+options(mc.cores = parallel::detectCores()).
+To avoid recompilation of unchanged Stan programs, we recommend calling
+rstan_options(auto_write = TRUE)
+For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
+change `threads_per_chain` option:
+rstan_options(threads_per_chain = 1)
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘tidyr’
+
+The following object is masked from ‘package:rstan’:
+
+    extract
+
+Rows: 212 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (4): cases, hospitalisations, deaths, day_of_week
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+Running the chains for more iterations may help. See
+https://mc-stan.org/misc/warnings.html#bulk-ess
+Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+Running the chains for more iterations may help. See
+https://mc-stan.org/misc/warnings.html#tail-ess
+Error in UseMethod("extract") : 
+  no applicable method for 'extract' applied to an object of class "stanfit"
+Calls: extract
+Execution halted

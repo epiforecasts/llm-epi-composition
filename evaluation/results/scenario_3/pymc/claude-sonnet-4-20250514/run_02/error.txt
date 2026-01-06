@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_02/script.py", line 471, in <module>
+    model, results, data = main()
+                           ^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_02/script.py", line 439, in main
+    delay_distributions = create_delay_distributions()
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_02/script.py", line 117, in create_delay_distributions
+    'dist': stats.gamma(a=2, scale=1.5).pmf(np.arange(15)),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'rv_continuous_frozen' object has no attribute 'pmf'. Did you mean: 'pdf'?

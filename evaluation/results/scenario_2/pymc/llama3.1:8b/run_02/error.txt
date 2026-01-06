@@ -1,0 +1,4 @@
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_2/pymc/llama3.1:8b/run_02/script.py", line 34
+    sum([cases[i-day] * ascertainment**i for i in range(1, data.shape[0]+1)])
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SyntaxError: invalid syntax. Perhaps you forgot a comma?

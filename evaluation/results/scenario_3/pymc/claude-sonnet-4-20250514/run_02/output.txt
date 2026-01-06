@@ -1,0 +1,4 @@
+Multi-Stream Rt Estimation
+========================================
+Loaded 212 days of data from 2020-09-01 00:00:00 to 2021-03-31 00:00:00
+Cases: 3587760, Hospitalizations: 279966, Deaths: 81580

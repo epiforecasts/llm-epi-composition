@@ -1,0 +1,15 @@
+{
+  "scenario": "1b",
+  "condition": "r",
+  "llm": "llama3.1:8b",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 0.9096,
+  "tier1_stdout": "",
+  "tier1_stderr": "Rows: 212 Columns: 2\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl  (1): cases\ndate (1): date\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.\nError in estimate_rt(case_data, beta) : object 's' not found\nCalls: estimate_rt -> gen_interval_pmf\nExecution halted",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

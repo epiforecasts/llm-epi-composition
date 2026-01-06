@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "pymc",
+  "llm": "llama3.1:8b",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.3053,
+  "tier1_stdout": "",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/llama3.1:8b/run_01/script.py\", line 38, in <module>\n    logp_Rt = logp_Rt(data['cases'].values, data['cases'].values, R)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/llama3.1:8b/run_01/script.py\", line 30, in logp_Rt\n    return pm.Deterministic('logp_Rt', np.sum(np.log(R**N - 1) * cases))\n                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/numpy/_core/fromnumeric.py\", line 2466, in sum\n    return _wrapreduction(\n           ^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/numpy/_core/fromnumeric.py\", line 84, in _wrapreduction\n    return reduction(axis=axis, out=out, **passkwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: _tensor_py_operators.sum() got an unexpected keyword argument 'out'",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

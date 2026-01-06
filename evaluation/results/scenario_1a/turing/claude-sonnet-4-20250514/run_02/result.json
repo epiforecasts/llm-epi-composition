@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "turing",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "julia",
+  "tier1_success": true,
+  "tier1_exit_code": 0,
+  "tier1_timed_out": false,
+  "tier1_duration": 7.315,
+  "tier1_stdout": "",
+  "tier1_stderr": "",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

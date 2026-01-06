@@ -1,0 +1,2 @@
+Fixed 'sd=' -> 'sigma=' in Normal
+Fixed 'sd=' -> 'sigma=' in HalfNormal

@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/llama3.1:8b/run_02/script.py", line 21, in <module>
+    rt = pm.Deterministic('rt', pm.math.exp(pm.Normal('log_rt', mu=0, sd=2.0)))
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/distributions/distribution.py", line 529, in __new__
+    rv_out = cls.dist(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/distributions/continuous.py", line 491, in dist
+    return super().dist([mu, sigma], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/distributions/distribution.py", line 598, in dist
+    return cls.rv_op(*dist_params, size=create_size, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/basic.py", line 282, in __call__
+    return super().__call__(loc, scale, size=size, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/op.py", line 334, in __call__
+    return new_op.__call__(
+           ^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/basic.py", line 282, in __call__
+    return super().__call__(loc, scale, size=size, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/op.py", line 338, in __call__
+    res = super().__call__(rng, size, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/op.py", line 294, in __call__
+    node = self.make_node(*inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: RandomVariable.make_node() got an unexpected keyword argument 'sd'

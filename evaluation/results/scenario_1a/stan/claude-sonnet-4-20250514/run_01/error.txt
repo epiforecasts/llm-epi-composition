@@ -1,0 +1,54 @@
+This is cmdstanr version 0.8.0
+- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1
+- CmdStan version: 2.34.1
+
+A newer version of CmdStan is available. See ?install_cmdstan() to install it.
+To disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+This is posterior version 1.6.1
+
+Attaching package: ‘posterior’
+
+The following objects are masked from ‘package:stats’:
+
+    mad, sd, var
+
+The following objects are masked from ‘package:base’:
+
+    %in%, match
+
+This is bayesplot version 1.15.0
+- Online documentation and vignettes at mc-stan.org/bayesplot
+- bayesplot theme set to bayesplot::theme_default()
+   * Does _not_ affect other ggplot2 plots
+   * See ?bayesplot_theme_set for details on theme setting
+
+Attaching package: ‘bayesplot’
+
+The following object is masked from ‘package:posterior’:
+
+    rhat
+
+Rows: 212 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (1): cases
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Error in initialize(...) : 
+  Assertion on 'stan_file' failed: File does not exist: 'rt_estimation.stan'.
+Calls: cmdstan_model ... initialize -> assert_file_exists -> <Anonymous> -> mstop
+Execution halted

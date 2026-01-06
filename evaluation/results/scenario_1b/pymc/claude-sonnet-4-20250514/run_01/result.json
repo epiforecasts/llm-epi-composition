@@ -1,0 +1,15 @@
+{
+  "scenario": "1b",
+  "condition": "pymc",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 3.908,
+  "tier1_stdout": "=== COVID-19 Rt Estimation using Renewal Equation ===\n\nData loaded: 212 days from 2020-09-01 00:00:00 to 2021-03-31 00:00:00\nTotal cases: 3,587,760\nMax daily cases: 74,058\n\n==================================================\nSetting up epidemiological parameters...\nGeneration interval: mean=5.20, std=1.71\nReporting delay: mean=5.10, std=3.14\n\n==================================================\nCreating PyMC model...",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1b/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 351, in <module>\n    rt_results, trace, model = main()\n                               ^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1b/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 274, in main\n    model, seed_days = create_rt_model(cases, generation_interval, reporting_delay)\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1b/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 160, in create_rt_model\n    model.add_coord('time', values=range(n_days), mutable=True)\nTypeError: Model.add_coord() got an unexpected keyword argument 'mutable'",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

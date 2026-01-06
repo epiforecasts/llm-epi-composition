@@ -1,0 +1,13 @@
+Loading required package: Rcpp
+Loading 'brms' package (version 2.23.0). Useful instructions
+can be found by typing help('brms'). A more detailed introduction
+to the package is available through vignette('brms_overview').
+
+Attaching package: ‘brms’
+
+The following object is masked from ‘package:stats’:
+
+    ar
+
+Error: object 'negative_binomial' not found
+Execution halted

@@ -1,0 +1,15 @@
+{
+  "scenario": "2",
+  "condition": "r",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 3,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": true,
+  "tier1_exit_code": 0,
+  "tier1_timed_out": false,
+  "tier1_duration": 3.3105,
+  "tier1_stdout": "",
+  "tier1_stderr": "Loading required package: StanHeaders\n\nrstan version 2.32.7 (Stan version 2.32.2)\n\nFor execution on a local, multicore CPU with excess RAM we recommend calling\noptions(mc.cores = parallel::detectCores()).\nTo avoid recompilation of unchanged Stan programs, we recommend calling\nrstan_options(auto_write = TRUE)\nFor within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,\nchange `threads_per_chain` option:\nrstan_options(threads_per_chain = 1)\n\n\nAttaching package: ‘dplyr’\n\nThe following objects are masked from ‘package:stats’:\n\n    filter, lag\n\nThe following objects are masked from ‘package:base’:\n\n    intersect, setdiff, setequal, union\n\n\nAttaching package: ‘tidyr’\n\nThe following object is masked from ‘package:rstan’:\n\n    extract\n\n\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

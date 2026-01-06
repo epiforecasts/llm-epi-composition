@@ -1,0 +1,15 @@
+{
+  "scenario": "3",
+  "condition": "pymc",
+  "llm": "llama3.1:8b",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.309,
+  "tier1_stdout": "",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/llama3.1:8b/run_02/script.py\", line 21, in <module>\n    rt = pm.Deterministic('rt', pm.math.exp(pm.Normal('log_rt', mu=0, sd=2.0)))\n                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/distributions/distribution.py\", line 529, in __new__\n    rv_out = cls.dist(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/distributions/continuous.py\", line 491, in dist\n    return super().dist([mu, sigma], **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/distributions/distribution.py\", line 598, in dist\n    return cls.rv_op(*dist_params, size=create_size, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/basic.py\", line 282, in __call__\n    return super().__call__(loc, scale, size=size, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/op.py\", line 334, in __call__\n    return new_op.__call__(\n           ^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/basic.py\", line 282, in __call__\n    return super().__call__(loc, scale, size=size, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/random/op.py\", line 338, in __call__\n    res = super().__call__(rng, size, *args, **kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/op.py\", line 294, in __call__\n    node = self.make_node(*inputs, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nTypeError: RandomVariable.make_node() got an unexpected keyword argument 'sd'",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

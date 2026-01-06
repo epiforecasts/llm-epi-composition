@@ -1,0 +1,15 @@
+{
+  "scenario": "1b",
+  "condition": "pymc",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 124,
+  "tier1_timed_out": true,
+  "tier1_duration": 600.181,
+  "tier1_stdout": "=== COVID-19 Rt Estimation using Renewal Equation ===\n\n1. Loading data...\n   Loaded 212 days of case data from cases.csv\n\n2. Setting up model parameters...\n   Generation interval mean: 4.9 days\n   Reporting delay mean: 6.0 days\n\n3. Building renewal equation model...\n4. Fitting model using MCMC...\n   This may take a few minutes...",
+  "tier1_stderr": "Initializing NUTS using jitter+adapt_diag...\nMultiprocess sampling (2 chains in 2 jobs)\nNUTS: [I_seed, rt_init, rt_noise, alpha]",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

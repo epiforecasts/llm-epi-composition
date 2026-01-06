@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/claude-sonnet-4-20250514/run_02/script.py", line 319, in <module>
+    summary_df, trace = main()
+                        ^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/claude-sonnet-4-20250514/run_02/script.py", line 250, in main
+    model = create_rt_model(df['cases'].values, generation_pmf)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/claude-sonnet-4-20250514/run_02/script.py", line 89, in create_rt_model
+    expected_cases = pt.set_subtensor(expected_cases[t], 
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/subtensor.py", line 1461, in set_subtensor
+    return inc_subtensor(
+           ^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/subtensor.py", line 1530, in inc_subtensor
+    raise TypeError(
+TypeError: Trying to increment a 0-dimensional subtensor with a 1-dimensional value.

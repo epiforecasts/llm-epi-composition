@@ -1,0 +1,4 @@
+Loaded data: 212 time points
+Cases range: 1722 - 74058
+Hospitalizations range: 58 - 4134
+Deaths range: 6 - 1328

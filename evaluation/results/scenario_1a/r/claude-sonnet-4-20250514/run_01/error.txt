@@ -1,0 +1,30 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Rows: 212 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (1): cases
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Error in complete(., date = seq.Date(min(date), max(date), by = "day")) : 
+  could not find function "complete"
+Calls: main -> estimate_rt -> %>% -> mutate -> mutate
+Execution halted

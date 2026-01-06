@@ -1,0 +1,11 @@
+Rows: 212 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (1): cases
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Error in estimate_rt(case_data, beta) : object 's' not found
+Calls: estimate_rt -> gen_interval_pmf
+Execution halted

@@ -1,0 +1,133 @@
+Loading and preparing data...
+Data loaded: 212 days from 2020-09-01 to 2021-03-31
+Total cases: 3587760
+
+Estimating Rt...
+Compiling Stan model...
+Fitting model...
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
+Chain 1: 
+Chain 1: Gradient evaluation took 0.000541 seconds
+Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 5.41 seconds.
+Chain 1: Adjust your expectations accordingly!
+Chain 1: 
+Chain 1: 
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
+Chain 2: 
+Chain 2: Gradient evaluation took 0.000564 seconds
+Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 5.64 seconds.
+Chain 2: Adjust your expectations accordingly!
+Chain 2: 
+Chain 2: 
+Chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain 3: 
+Chain 3: Gradient evaluation took 0.0006 seconds
+Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 6 seconds.
+Chain 3: Adjust your expectations accordingly!
+Chain 3: 
+Chain 3: 
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
+Chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain 3: Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain 4: 
+Chain 4: Gradient evaluation took 0.000543 seconds
+Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 5.43 seconds.
+Chain 4: Adjust your expectations accordingly!
+Chain 4: 
+Chain 4: 
+Chain 4: Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 4: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 3: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 4: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 3: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 4: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 3: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 4: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 3: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 4: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 4: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 3: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 3: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 4: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 3: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 4: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 3: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 4: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 3: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain 4: 
+Chain 4:  Elapsed Time: 8.164 seconds (Warm-up)
+Chain 4:                7.083 seconds (Sampling)
+Chain 4:                15.247 seconds (Total)
+Chain 4: 
+Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain 3: 
+Chain 3:  Elapsed Time: 8.69 seconds (Warm-up)
+Chain 3:                6.972 seconds (Sampling)
+Chain 3:                15.662 seconds (Total)
+Chain 3: 
+Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain 2: 
+Chain 2:  Elapsed Time: 8.71 seconds (Warm-up)
+Chain 2:                7.096 seconds (Sampling)
+Chain 2:                15.806 seconds (Total)
+Chain 2: 
+Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain 1: 
+Chain 1:  Elapsed Time: 9.245 seconds (Warm-up)
+Chain 1:                7.289 seconds (Sampling)
+Chain 1:                16.534 seconds (Total)
+Chain 1: 
+
+Checking convergence...
+[1] "Rhat summary:"
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.9991  0.9995  0.9997  0.9997  0.9999  1.0028 
+
+Parameters with Rhat > 1.1:
+None - good convergence!
+
+Generating plots...
+
+Rt Summary:
+      date               rt_mean         rt_median         rt_lower     
+ Min.   :2020-09-08   Min.   :0.9319   Min.   :0.9123   Min.   :0.6164  
+ 1st Qu.:2020-10-29   1st Qu.:0.9675   1st Qu.:0.9496   1st Qu.:0.6460  
+ Median :2020-12-19   Median :1.0530   Median :1.0315   Median :0.6961  
+ Mean   :2020-12-19   Mean   :1.1322   Mean   :1.1081   Mean   :0.7382  
+ 3rd Qu.:2021-02-08   3rd Qu.:1.1242   3rd Qu.:1.1032   3rd Qu.:0.7310  
+ Max.   :2021-03-31   Max.   :9.5742   Max.   :9.4484   Max.   :5.9068  
+    rt_upper       rt_lower_50      rt_upper_50    
+ Min.   : 1.318   Min.   :0.7986   Min.   : 1.041  
+ 1st Qu.: 1.396   1st Qu.:0.8323   1st Qu.: 1.085  
+ Median : 1.520   Median :0.9013   Median : 1.181  
+ Mean   : 1.666   Mean   :0.9629   Mean   : 1.274  
+ 3rd Qu.: 1.645   3rd Qu.:0.9561   3rd Qu.: 1.266  
+ Max.   :14.274   Max.   :8.0540   Max.   :10.889  

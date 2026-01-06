@@ -1,0 +1,39 @@
+This is cmdstanr version 0.8.0
+- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1
+- CmdStan version: 2.34.1
+
+A newer version of CmdStan is available. See ?install_cmdstan() to install it.
+To disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Syntax error in '/tmp/Rtmpr3HcLo/model-ce3be628c86db.stan', line 2, column 0 to column 1, parsing error:
+   -------------------------------------------------
+     1:  
+     2:  [Insert the Stan code from above here]
+         ^
+     3:  
+   -------------------------------------------------
+
+Expected "functions {" or "data {" or "transformed data {" or "parameters {" or "transformed parameters {" or "model {" or "generated quantities {".
+
+make: *** [make/program:50: /tmp/Rtmpr3HcLo/model-ce3be628c86db.hpp] Error 1
+
+Error: An error occured during compilation! See the message above for more information.
+Execution halted

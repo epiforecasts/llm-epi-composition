@@ -1,0 +1,12 @@
+{
+  "scenario": "scenario_2",
+  "condition": "pymc",
+  "llm": "llama3.1:8b",
+  "run_id": 3,
+  "tier2_attempted": true,
+  "tier2_success": false,
+  "tier2_timed_out": false,
+  "tier2_duration": 0.1128,
+  "fixes_applied": "Fixed 'sd=' -> 'sigma=' in Normal",
+  "error_preview": ""
+}

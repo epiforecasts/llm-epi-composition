@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/llama3.1:8b/run_01/script.py", line 33, in <module>
+    cases_asc = gamma.rvs(ascertainment_rates['cases'] * 100, size=len(data))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py", line 1101, in rvs
+    cond = logical_and(self._argcheck(*args), (scale >= 0))
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py", line 1003, in _argcheck
+    cond = logical_and(cond, (asarray(arg) > 0))
+                              ^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/variable.py", line 31, in __bool__
+    raise TypeError(
+TypeError: TensorVariable cannot be converted to Python boolean. Call `.astype(bool)` for the symbolic equivalent.

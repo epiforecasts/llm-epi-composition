@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "pymc",
+  "llm": "llama3.1:8b",
+  "run_id": 3,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.3078,
+  "tier1_stdout": "",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/llama3.1:8b/run_03/script.py\", line 32, in <module>\n    rt_samples = pm.sample_posterior_predictive(rt_model(d, n_cases), samples=10000)\n                                                ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/llama3.1:8b/run_03/script.py\", line 24, in rt_model\n    beta = pm.Deterministic('beta', 1 / (d + tau))  # Deterministic for computational efficiency\n                                         ~~^~~~~\nnumpy._core._exceptions._UFuncBinaryResolutionError: ufunc 'add' cannot use operands with types dtype('<M8[ns]') and dtype('float64')",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

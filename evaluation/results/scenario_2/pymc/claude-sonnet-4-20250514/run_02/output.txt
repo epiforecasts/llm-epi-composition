@@ -1,0 +1,14 @@
+COVID-19 Rt Estimation with Complex Observation Processes
+============================================================
+
+1. Loading data...
+   Loaded 212 days of case data from file
+   Date range: 2020-09-01 00:00:00 to 2021-03-31 00:00:00
+   Total cases: 3,587,760
+   Daily average: 16923.4
+
+2. Setting up epidemiological distributions...
+   Generation interval mean: 5.5 days
+   Reporting delay mean: 7.5 days
+
+3. Building PyMC model...

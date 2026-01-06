@@ -1,0 +1,20 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+This is bayesplot version 1.15.0
+- Online documentation and vignettes at mc-stan.org/bayesplot
+- bayesplot theme set to bayesplot::theme_default()
+   * Does _not_ affect other ggplot2 plots
+   * See ?bayesplot_theme_set for details on theme setting
+Error in `-.Date`(as.numeric(as.Date(data$date)), min(as.Date(data$date))) : 
+  can only subtract from "Date" objects
+Calls: data_preparation_function -> -.Date
+Execution halted

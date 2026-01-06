@@ -1,0 +1,139 @@
+Initializing NUTS using jitter+adapt_diag...
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: local_subtensor_merge
+ERROR (pytensor.graph.rewriting.basic): node: Subtensor{i}(Subtensor{start:stop}.0, 0)
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 416, in local_subtensor_merge
+    merge_two_slices(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/subtensor.py", line 869, in merge_two_slices
+    n_val = sl1.stop - 1 - sl2 * sl1.step
+            ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+OverflowError: Python integer 213 out of bounds for int8
+
+Sequential sampling (2 chains in 1 job)
+NUTS: [rt_mean, rt_sigma, log_rt_raw, alpha]

@@ -1,0 +1,172 @@
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: constant_folding
+ERROR (pytensor.graph.rewriting.basic): node: Cast{int64}([nan nan n ... n nan nan])
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/basic.py", line 1172, in constant_folding
+    return unconditional_constant_folding.transform(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/basic.py", line 1118, in unconditional_constant_folding
+    required = thunk()
+               ^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/op.py", line 545, in rval
+    r = p(n, [x[0] for x in i], o)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/elemwise.py", line 711, in perform
+    variables = ufunc(*ufunc_args, **ufunc_kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/scalar/basic.py", line 2567, in impl
+    return self.ctor(input)
+           ^^^^^^^^^^^^^^^^
+ValueError: cannot convert float NaN to integer
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: constant_folding
+ERROR (pytensor.graph.rewriting.basic): node: Cast{int64}([nan nan n ... n nan nan])
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/basic.py", line 1172, in constant_folding
+    return unconditional_constant_folding.transform(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/basic.py", line 1118, in unconditional_constant_folding
+    required = thunk()
+               ^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/op.py", line 545, in rval
+    r = p(n, [x[0] for x in i], o)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/elemwise.py", line 711, in perform
+    variables = ufunc(*ufunc_args, **ufunc_kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/scalar/basic.py", line 2567, in impl
+    return self.ctor(input)
+           ^^^^^^^^^^^^^^^^
+ValueError: cannot convert float NaN to integer
+
+ERROR (pytensor.graph.rewriting.basic): Rewrite failure due to: constant_folding
+ERROR (pytensor.graph.rewriting.basic): node: Cast{int64}([nan nan n ... n nan nan])
+ERROR (pytensor.graph.rewriting.basic): TRACEBACK:
+ERROR (pytensor.graph.rewriting.basic): Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 1920, in process_node
+    replacements = node_rewriter.transform(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/basic.py", line 1172, in constant_folding
+    return unconditional_constant_folding.transform(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/rewriting/basic.py", line 993, in transform
+    return self.fn(fgraph, node)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/rewriting/basic.py", line 1118, in unconditional_constant_folding
+    required = thunk()
+               ^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/op.py", line 545, in rval
+    r = p(n, [x[0] for x in i], o)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/elemwise.py", line 711, in perform
+    variables = ufunc(*ufunc_args, **ufunc_kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/scalar/basic.py", line 2567, in impl
+    return self.ctor(input)
+           ^^^^^^^^^^^^^^^^
+ValueError: cannot convert float NaN to integer
+
+Traceback (most recent call last):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/link/vm.py", line 406, in __call__
+    thunk()
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/op.py", line 545, in rval
+    r = p(n, [x[0] for x in i], o)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/elemwise.py", line 711, in perform
+    variables = ufunc(*ufunc_args, **ufunc_kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/scalar/basic.py", line 2567, in impl
+    return self.ctor(input)
+           ^^^^^^^^^^^^^^^^
+ValueError: cannot convert float NaN to integer
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1b/pymc/llama3.1:8b/run_03/script.py", line 51, in <module>
+    step = pm.NUTS(tune=1000, target_accept=0.9)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/step_methods/hmc/nuts.py", line 199, in __init__
+    super().__init__(vars, **kwargs)
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/step_methods/hmc/base_hmc.py", line 141, in __init__
+    super().__init__(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/step_methods/arraystep.py", line 193, in __init__
+    logp_dlogp_func = model.logp_dlogp_function(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/model/core.py", line 565, in logp_dlogp_function
+    initial_point = self.initial_point(0)
+                    ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/model/core.py", line 1053, in initial_point
+    return Point(fn(random_seed), model=self)
+                 ^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/initial_point.py", line 193, in inner
+    values = func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/compile/function/types.py", line 1038, in __call__
+    outputs = vm() if output_subset is None else vm(output_subset=output_subset)
+              ^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/link/vm.py", line 410, in __call__
+    raise_with_op(self.fgraph, node, thunk)
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/link/utils.py", line 526, in raise_with_op
+    raise exc_value.with_traceback(exc_trace)
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/link/vm.py", line 406, in __call__
+    thunk()
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/graph/op.py", line 545, in rval
+    r = p(n, [x[0] for x in i], o)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/elemwise.py", line 711, in perform
+    variables = ufunc(*ufunc_args, **ufunc_kwargs)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/scalar/basic.py", line 2567, in impl
+    return self.ctor(input)
+           ^^^^^^^^^^^^^^^^
+ValueError: cannot convert float NaN to integer
+Apply node that caused the error: Cast{int64}([nan nan n ... n nan nan])
+Toposort index: 0
+Inputs types: [TensorType(float64, shape=(409,))]
+Inputs shapes: [(409,)]
+Inputs strides: [(8,)]
+Inputs values: ['not shown']
+Outputs clients: [[output[3](Cast{int64}.0)]]
+
+Backtrace when the node is created (use PyTensor flag traceback__limit=N to make it longer):
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/step_methods/hmc/nuts.py", line 199, in __init__
+    super().__init__(vars, **kwargs)
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/step_methods/hmc/base_hmc.py", line 141, in __init__
+    super().__init__(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/step_methods/arraystep.py", line 193, in __init__
+    logp_dlogp_func = model.logp_dlogp_function(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/model/core.py", line 565, in logp_dlogp_function
+    initial_point = self.initial_point(0)
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/model/core.py", line 1052, in initial_point
+    fn = make_initial_point_fn(model=self, return_transformed=True)
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/initial_point.py", line 164, in make_initial_point_fn
+    initial_values = make_initial_point_expression(
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/initial_point.py", line 284, in make_initial_point_expression
+    value = support_point(variable)
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pymc/distributions/distribution.py", line 631, in support_point
+    return _support_point(rv.owner.op, rv, *rv.owner.inputs).astype(rv.dtype)
+
+HINT: Use the PyTensor flag `exception_verbosity=high` for a debug print-out and storage map footprint of this Apply node.

@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "pymc",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": true,
+  "tier1_exit_code": 0,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.4064,
+  "tier1_stdout": "Loading and preparing data...\nData loaded: 212 days of case data\nDate range: 2020-09-01T00:00:00.000000000 to 2021-03-31T00:00:00.000000000\nTotal cases: 3587760\nSetting up generation time distribution...\nGeneration time - Mean: 5.10 days\nEstimating Rt using PyMC...\nThis may take a few minutes...\nError in sampling: object of type 'TensorVariable' has no len()",
+  "tier1_stderr": "",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

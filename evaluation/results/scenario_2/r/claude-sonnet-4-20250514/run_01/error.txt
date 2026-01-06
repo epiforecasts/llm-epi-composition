@@ -1,0 +1,60 @@
+Loading required package: StanHeaders
+
+rstan version 2.32.7 (Stan version 2.32.2)
+
+For execution on a local, multicore CPU with excess RAM we recommend calling
+options(mc.cores = parallel::detectCores()).
+To avoid recompilation of unchanged Stan programs, we recommend calling
+rstan_options(auto_write = TRUE)
+For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
+change `threads_per_chain` option:
+rstan_options(threads_per_chain = 1)
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘tidyr’
+
+The following object is masked from ‘package:rstan’:
+
+    extract
+
+Rows: 212 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (1): cases
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Error in `mutate()`:
+ℹ In argument: `day_of_week = ifelse(is.na(day_of_week),
+  as.numeric(format(date, "%u")), day_of_week)`.
+Caused by error:
+! object 'day_of_week' not found
+Backtrace:
+     ▆
+  1. ├─global run_rt_analysis("cases.csv")
+  2. │ └─global load_and_prepare_data(file_path)
+  3. │   └─... %>% ...
+  4. ├─dplyr::mutate(...)
+  5. ├─dplyr:::mutate.data.frame(...)
+  6. │ └─dplyr:::mutate_cols(.data, dplyr_quosures(...), by)
+  7. │   ├─base::withCallingHandlers(...)
+  8. │   └─dplyr:::mutate_col(dots[[i]], data, mask, new_columns)
+  9. │     └─mask$eval_all_mutate(quo)
+ 10. │       └─dplyr (local) eval()
+ 11. ├─base::ifelse(...)
+ 12. └─base::.handleSimpleError(...)
+ 13.   └─dplyr (local) h(simpleError(msg, call))
+ 14.     └─rlang::abort(message, class = error_class, parent = parent, call = error_call)
+Execution halted

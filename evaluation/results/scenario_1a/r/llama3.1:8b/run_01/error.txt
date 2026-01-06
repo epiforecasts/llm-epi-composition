@@ -1,0 +1,94 @@
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/dplyr_1.1.4.tar.gz'
+Content type 'application/x-gzip' length 1207521 bytes (1.2 MB)
+==================================================
+downloaded 1.2 MB
+
+* installing *source* package ‘dplyr’ ...
+** this is package ‘dplyr’ version ‘1.1.4’
+** package ‘dplyr’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C++ compiler: ‘g++ (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-dplyr/00new/dplyr/libs
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (dplyr)
+
+The downloaded source packages are in
+	‘/tmp/Rtmp4M3jVN/downloaded_packages’
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/ggplot2_4.0.1.tar.gz'
+Content type 'application/x-gzip' length 6343443 bytes (6.0 MB)
+==================================================
+downloaded 6.0 MB
+
+* installing *source* package ‘ggplot2’ ...
+** this is package ‘ggplot2’ version ‘4.0.1’
+** package ‘ggplot2’ successfully unpacked and MD5 sums checked
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (ggplot2)
+
+The downloaded source packages are in
+	‘/tmp/Rtmp4M3jVN/downloaded_packages’
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Error in `summarise()`:
+ℹ In argument: `rts = estimate_rt(.$cases)`.
+ℹ In group 1: `date = 2020-09-01`.
+Caused by error in `auto.arima()`:
+! could not find function "auto.arima"
+Backtrace:
+     ▆
+  1. ├─cases %>% group_by(date) %>% ...
+  2. ├─dplyr::summarise(., rts = estimate_rt(.$cases))
+  3. ├─dplyr:::summarise.grouped_df(., rts = estimate_rt(.$cases))
+  4. │ └─dplyr:::summarise_cols(.data, dplyr_quosures(...), by, "summarise")
+  5. │   ├─base::withCallingHandlers(...)
+  6. │   └─dplyr:::map(quosures, summarise_eval_one, mask = mask)
+  7. │     └─base::lapply(.x, .f, ...)
+  8. │       └─dplyr (local) FUN(X[[i]], ...)
+  9. │         └─mask$eval_all_summarise(quo)
+ 10. │           └─dplyr (local) eval()
+ 11. ├─global estimate_rt(.$cases)
+ 12. └─base::.handleSimpleError(...)
+ 13.   └─dplyr (local) h(simpleError(msg, call))
+ 14.     └─dplyr (local) handler(cnd)
+ 15.       └─rlang::abort(message, class = error_class, parent = parent, call = error_call)
+Execution halted

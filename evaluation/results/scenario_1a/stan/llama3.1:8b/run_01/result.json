@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "stan",
+  "llm": "llama3.1:8b",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 0.8089,
+  "tier1_stdout": "",
+  "tier1_stderr": "This is cmdstanr version 0.8.0\n- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr\n- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1\n- CmdStan version: 2.34.1\n\nA newer version of CmdStan is available. See ?install_cmdstan() to install it.\nTo disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.\nRows: 212 Columns: 2\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl  (1): cases\ndate (1): date\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.\nError: 'sample' is not an exported object from 'namespace:cmdstanr'\nExecution halted",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

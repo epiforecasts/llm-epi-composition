@@ -1,0 +1,15 @@
+{
+  "scenario": "3",
+  "condition": "pymc",
+  "llm": "llama3.1:8b",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.3085,
+  "tier1_stdout": "",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/llama3.1:8b/run_01/script.py\", line 33, in <module>\n    cases_asc = gamma.rvs(ascertainment_rates['cases'] * 100, size=len(data))\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py\", line 1101, in rvs\n    cond = logical_and(self._argcheck(*args), (scale >= 0))\n                       ^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/scipy/stats/_distn_infrastructure.py\", line 1003, in _argcheck\n    cond = logical_and(cond, (asarray(arg) > 0))\n                              ^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/variable.py\", line 31, in __bool__\n    raise TypeError(\nTypeError: TensorVariable cannot be converted to Python boolean. Call `.astype(bool)` for the symbolic equivalent.",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

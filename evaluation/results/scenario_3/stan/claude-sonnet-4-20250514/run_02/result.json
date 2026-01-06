@@ -1,0 +1,15 @@
+{
+  "scenario": "3",
+  "condition": "stan",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.5067,
+  "tier1_stdout": "",
+  "tier1_stderr": "This is cmdstanr version 0.8.0\n- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr\n- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1\n- CmdStan version: 2.34.1\n\nA newer version of CmdStan is available. See ?install_cmdstan() to install it.\nTo disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.\nThis is bayesplot version 1.15.0\n- Online documentation and vignettes at mc-stan.org/bayesplot\n- bayesplot theme set to bayesplot::theme_default()\n   * Does _not_ affect other ggplot2 plots\n   * See ?bayesplot_theme_set for details on theme setting\nThis is posterior version 1.6.1\n\nAttaching package: ‘posterior’\n\nThe following object is masked from ‘package:bayesplot’:\n\n    rhat\n\nThe following objects are masked from ‘package:stats’:\n\n    mad, sd, var\n\nThe following objects are masked from ‘package:base’:\n\n    %in%, match\n\nSyntax error in '/tmp/RtmpncZSue/model-cea1e4864204e.stan', line 8, column 15 to column 16, parsing error:\n   -------------------------------------------------\n     6:    \n     7:    // Observations\n     8:    int obs_cases[n_days];\n                        ^\n     9:    int obs_hosp[n_days];\n    10:    int obs_deaths[n_days];\n   -------------------------------------------------\n\n\";\" expected after variable declaration.\n\nmake: *** [make/program:50: /tmp/RtmpncZSue/model-cea1e4864204e.hpp] Error 1\n\nError: An error occured during compilation! See the message above for more information.\nExecution halted",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

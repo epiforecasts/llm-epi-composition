@@ -1,0 +1,4 @@
+Loaded 212 days of data
+Cases: 3587760 total
+Hospitalisations: 279966 total
+Deaths: 81580 total

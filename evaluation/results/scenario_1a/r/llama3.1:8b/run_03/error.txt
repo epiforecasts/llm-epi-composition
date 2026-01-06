@@ -1,0 +1,118 @@
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/dplyr_1.1.4.tar.gz'
+Content type 'application/x-gzip' length 1207521 bytes (1.2 MB)
+==================================================
+downloaded 1.2 MB
+
+* installing *source* package ‘dplyr’ ...
+** this is package ‘dplyr’ version ‘1.1.4’
+** package ‘dplyr’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C++ compiler: ‘g++ (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-dplyr/00new/dplyr/libs
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (dplyr)
+
+The downloaded source packages are in
+	‘/tmp/RtmpcG3RqQ/downloaded_packages’
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/lubridate_1.9.4.tar.gz'
+Content type 'application/x-gzip' length 429341 bytes (419 KB)
+==================================================
+downloaded 419 KB
+
+* installing *source* package ‘lubridate’ ...
+** this is package ‘lubridate’ version ‘1.9.4’
+** package ‘lubridate’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-lubridate/00new/lubridate/libs
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (lubridate)
+
+The downloaded source packages are in
+	‘/tmp/RtmpcG3RqQ/downloaded_packages’
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/deSolve_1.40.tar.gz'
+Content type 'application/x-gzip' length 2007247 bytes (1.9 MB)
+==================================================
+downloaded 1.9 MB
+
+* installing *source* package ‘deSolve’ ...
+** this is package ‘deSolve’ version ‘1.40’
+** package ‘deSolve’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+using Fortran compiler: ‘GNU Fortran (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-deSolve/00new/deSolve/libs
+** R
+** data
+*** moving datasets to lazyload DB
+** demo
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (deSolve)
+
+The downloaded source packages are in
+	‘/tmp/RtmpcG3RqQ/downloaded_packages’
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Error in Ops.Date(del, by) : / not defined for "Date" objects
+Calls: solve -> seq -> seq.default -> Ops.Date
+Execution halted

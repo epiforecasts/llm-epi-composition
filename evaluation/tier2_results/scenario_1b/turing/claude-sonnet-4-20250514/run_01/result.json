@@ -1,0 +1,12 @@
+{
+  "scenario": "scenario_1b",
+  "condition": "turing",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 1,
+  "tier2_attempted": true,
+  "tier2_success": false,
+  "tier2_timed_out": false,
+  "tier2_duration": 22.9233,
+  "fixes_applied": "Added 'using Dates'",
+  "error_preview": ""
+}

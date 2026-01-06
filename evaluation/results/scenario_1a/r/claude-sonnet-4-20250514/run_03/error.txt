@@ -1,0 +1,33 @@
+Loading required package: EpiEstim
+Loading required package: ggplot2
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: lubridate
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Default config will estimate R on weekly sliding windows.
+    To change this change the t_start and t_end arguments. 
+Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+
+Attaching package: ‘gridExtra’
+
+The following object is masked from ‘package:dplyr’:
+
+    combine
+

@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py", line 367, in <module>
+    results, trace, model = main()
+                            ^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py", line 332, in main
+    model = build_model(data, generation_pmf, delay_pmfs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py", line 206, in build_model
+    expected_cases = convolve_delays(infections, delay_pmfs['cases'], asc_cases)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py", line 197, in convolve_delays
+    for t in range(n_days_local):
+             ^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/variable.py", line 37, in __index__
+    raise TypeError(
+TypeError: TensorVariable cannot be converted to Python integer. Call `.astype(int)` for the symbolic equivalent.

@@ -1,0 +1,22 @@
+This is cmdstanr version 0.8.0
+- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1
+- CmdStan version: 2.34.1
+
+A newer version of CmdStan is available. See ?install_cmdstan() to install it.
+To disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Error in lme4::glFormula(formula = cases ~ day_of_week + (day_of_week |  : 
+  "quasi" families cannot be used in glmer
+Calls: <Anonymous> -> eval -> eval -> <Anonymous>
+Execution halted

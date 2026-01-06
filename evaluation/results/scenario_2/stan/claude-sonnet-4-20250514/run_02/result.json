@@ -1,0 +1,15 @@
+{
+  "scenario": "2",
+  "condition": "stan",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.5098,
+  "tier1_stdout": "[1] \"Data spans 2020-09-01 to 2021-03-31\"\n[1] \"Total cases: 3587760\"",
+  "tier1_stderr": "This is cmdstanr version 0.8.0\n- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr\n- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1\n- CmdStan version: 2.34.1\n\nA newer version of CmdStan is available. See ?install_cmdstan() to install it.\nTo disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.\n\nAttaching package: ‘dplyr’\n\nThe following objects are masked from ‘package:stats’:\n\n    filter, lag\n\nThe following objects are masked from ‘package:base’:\n\n    intersect, setdiff, setequal, union\n\n\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\nSyntax error in '/tmp/Rtmpr3HcLo/model-ce3be628c86db.stan', line 2, column 0 to column 1, parsing error:\n   -------------------------------------------------\n     1:  \n     2:  [Insert the Stan code from above here]\n         ^\n     3:  \n   -------------------------------------------------\n\nExpected \"functions {\" or \"data {\" or \"transformed data {\" or \"parameters {\" or \"transformed parameters {\" or \"model {\" or \"generated quantities {\".\n\nmake: *** [make/program:50: /tmp/Rtmpr3HcLo/model-ce3be628c86db.hpp] Error 1\n\nError: An error occured during compilation! See the message above for more information.\nExecution halted",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

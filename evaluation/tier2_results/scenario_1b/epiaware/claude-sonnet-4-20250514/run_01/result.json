@@ -1,0 +1,12 @@
+{
+  "scenario": "scenario_1b",
+  "condition": "epiaware",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 1,
+  "tier2_attempted": true,
+  "tier2_success": false,
+  "tier2_timed_out": false,
+  "tier2_duration": 20.1333,
+  "fixes_applied": "Added 'using Dates'",
+  "error_preview": ""
+}

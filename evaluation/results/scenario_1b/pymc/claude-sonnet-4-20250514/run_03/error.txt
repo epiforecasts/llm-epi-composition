@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1b/pymc/claude-sonnet-4-20250514/run_03/script.py", line 403, in <module>
+    rt_results, trace, model = main()
+                               ^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1b/pymc/claude-sonnet-4-20250514/run_03/script.py", line 358, in main
+    model = build_renewal_model(df['cases'].values, generation_interval, reporting_delay)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1b/pymc/claude-sonnet-4-20250514/run_03/script.py", line 189, in build_renewal_model
+    pm.ConstantData('infectiousness_matrix', infectiousness_matrix)
+    ^^^^^^^^^^^^^^^
+AttributeError: module 'pymc' has no attribute 'ConstantData'

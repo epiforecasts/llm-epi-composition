@@ -1,0 +1,8 @@
+=== Rt Estimation Using Renewal Equation ===
+
+Loading data...
+Loaded 212 days of data from 2020-09-01 to 2021-03-31
+Total cases: 3587760
+Mean daily cases: 16923.4
+
+Compiling Stan model...

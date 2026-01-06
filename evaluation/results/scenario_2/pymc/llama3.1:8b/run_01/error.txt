@@ -1,0 +1,4 @@
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_2/pymc/llama3.1:8b/run_01/script.py", line 20
+    day_of_week Effects = pm.Normal('day_of_week_effects', mu=1, sigma=0.2,
+                ^^^^^^^
+SyntaxError: invalid syntax

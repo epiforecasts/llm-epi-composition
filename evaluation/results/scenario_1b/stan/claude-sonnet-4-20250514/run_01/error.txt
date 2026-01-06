@@ -1,0 +1,65 @@
+This is cmdstanr version 0.8.0
+- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1
+- CmdStan version: 2.34.1
+
+A newer version of CmdStan is available. See ?install_cmdstan() to install it.
+To disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.
+This is posterior version 1.6.1
+
+Attaching package: ‘posterior’
+
+The following objects are masked from ‘package:stats’:
+
+    mad, sd, var
+
+The following objects are masked from ‘package:base’:
+
+    %in%, match
+
+This is bayesplot version 1.15.0
+- Online documentation and vignettes at mc-stan.org/bayesplot
+- bayesplot theme set to bayesplot::theme_default()
+   * Does _not_ affect other ggplot2 plots
+   * See ?bayesplot_theme_set for details on theme setting
+
+Attaching package: ‘bayesplot’
+
+The following object is masked from ‘package:posterior’:
+
+    rhat
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Syntax error in '/tmp/RtmpP0ohIz/model-108d6f20958fef.stan', line 4, column 11 to column 12, parsing error:
+   -------------------------------------------------
+     2:  data {
+     3:    int<lower=1> T;                    // Number of time points
+     4:    int cases[T];                      // Observed case counts
+                    ^
+     5:    int<lower=1> G;                    // Generation interval length
+     6:    vector[G] generation_pmf;          // Generation interval PMF
+   -------------------------------------------------
+
+";" expected after variable declaration.
+
+make: *** [make/program:50: /tmp/RtmpP0ohIz/model-108d6f20958fef.hpp] Error 1
+
+Error: An error occured during compilation! See the message above for more information.
+Execution halted

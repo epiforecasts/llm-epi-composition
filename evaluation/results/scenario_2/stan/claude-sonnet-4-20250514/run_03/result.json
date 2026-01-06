@@ -1,0 +1,15 @@
+{
+  "scenario": "2",
+  "condition": "stan",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 3,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.2092,
+  "tier1_stdout": "",
+  "tier1_stderr": "This is cmdstanr version 0.8.0\n- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr\n- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1\n- CmdStan version: 2.34.1\n\nA newer version of CmdStan is available. See ?install_cmdstan() to install it.\nTo disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.\nThis is posterior version 1.6.1\n\nAttaching package: ‘posterior’\n\nThe following objects are masked from ‘package:stats’:\n\n    mad, sd, var\n\nThe following objects are masked from ‘package:base’:\n\n    %in%, match\n\nThis is bayesplot version 1.15.0\n- Online documentation and vignettes at mc-stan.org/bayesplot\n- bayesplot theme set to bayesplot::theme_default()\n   * Does _not_ affect other ggplot2 plots\n   * See ?bayesplot_theme_set for details on theme setting\n\nAttaching package: ‘bayesplot’\n\nThe following object is masked from ‘package:posterior’:\n\n    rhat\n\n\nAttaching package: ‘dplyr’\n\nThe following objects are masked from ‘package:stats’:\n\n    filter, lag\n\nThe following objects are masked from ‘package:base’:\n\n    intersect, setdiff, setequal, union\n\n\nAttaching package: ‘lubridate’\n\nThe following objects are masked from ‘package:base’:\n\n    date, intersect, setdiff, union\n\nError in initialize(...) : \n  Assertion on 'stan_file' failed: File does not exist: 'rt_model.stan'.\nCalls: cmdstan_model ... initialize -> assert_file_exists -> <Anonymous> -> mstop\nExecution halted",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

@@ -1,0 +1,20 @@
+Loading case data...
+Loaded 212 days of case data from 2020-09-01 to 2021-03-31
+Estimating Rt...
+
+=== Rt Estimation Summary ===
+Number of Rt estimates: 193
+Mean Rt: 1.01
+Median Rt: 0.99
+Range: 0.76 - 1.39
+Days with Rt > 1: 95 (49.2%)
+Days with Rt < 1: 98 (50.8%)
+
+Results saved to 'rt_estimates.csv'
+
+=== Transmission Phase Summary ===
+                      rt_trend  n percentage
+1   Declining (0.8 < Rt ≤ 1.0) 88  45.595855
+2     Growing (1.0 < Rt ≤ 1.2) 57  29.533679
+3 High transmission (Rt > 1.2) 38  19.689119
+4  Low transmission (Rt ≤ 0.8) 10   5.181347

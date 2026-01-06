@@ -1,0 +1,52 @@
+[1] "=== Rt Estimation Summary ==="
+[1] "Data period: 2020-09-01 to 2021-03-31"
+[1] "Total days: 212"
+[1] "Rt estimates available from: 2020-09-08"
+[1] "Serial interval - Mean: 5.2 days, SD: 5.1 days"
+[1] ""
+[1] "First 10 Rt estimates:"
+         date  Rt_mean Rt_lower Rt_upper
+1  2020-09-08 1.987486 1.959273 2.015898
+2  2020-09-09 1.669828 1.646247 1.693575
+3  2020-09-10 1.508331 1.487263 1.529545
+4  2020-09-11 1.395311 1.375948 1.414808
+5  2020-09-12 1.301928 1.283871 1.320109
+6  2020-09-13 1.212125 1.195161 1.229206
+7  2020-09-14 1.133247 1.117142 1.149465
+8  2020-09-15 1.108613 1.092853 1.124485
+9  2020-09-16 1.142304 1.126432 1.158287
+10 2020-09-17 1.163112 1.147281 1.179051
+[1] ""
+[1] "Last 10 Rt estimates:"
+          date   Rt_mean  Rt_lower  Rt_upper
+196 2021-03-22 0.9792441 0.9686420 0.9899031
+197 2021-03-23 0.9701572 0.9595940 0.9807774
+198 2021-03-24 0.9832913 0.9726302 0.9940097
+199 2021-03-25 0.9859346 0.9752424 0.9966843
+200 2021-03-26 0.9717621 0.9611367 0.9824450
+201 2021-03-27 0.9649293 0.9543159 0.9756005
+202 2021-03-28 0.9654528 0.9547997 0.9761643
+203 2021-03-29 0.9108843 0.9005016 0.9213257
+204 2021-03-30 0.8812894 0.8709910 0.8916475
+205 2021-03-31 0.8396976 0.8295192 0.8499372
+[1] ""
+[1] "Overall Rt statistics:"
+    Rt_mean          Rt_lower         Rt_upper     
+ Min.   :0.7251   Min.   :0.7179   Min.   :0.7323  
+ 1st Qu.:0.8430   1st Qu.:0.8393   1st Qu.:0.8499  
+ Median :1.0108   Median :1.0042   Median :1.0169  
+ Mean   :1.0318   Mean   :1.0244   Mean   :1.0391  
+ 3rd Qu.:1.1764   3rd Qu.:1.1700   3rd Qu.:1.1830  
+ Max.   :1.9875   Max.   :1.9593   Max.   :2.0159  
+[1] "=== Epidemic Analysis ==="
+[1] "Days with Rt significantly > 1 (lower CI > 1): 103"
+[1] "Days with Rt significantly < 1 (upper CI < 1): 102"
+[1] "Maximum Rt: 1.99 on 2020-09-08"
+[1] "Minimum Rt: 0.73 on 2021-03-03"
+[1] "=== Example: Get Rt for specific date ==="
+[1] "Rt estimate for 2020-09-17 :"
+         date  Rt_mean Rt_lower Rt_upper
+10 2020-09-17 1.163112 1.147281 1.179051
+[1] "=== Analysis Complete ==="
+[1] "Results saved to 'rt_estimates.csv'"
+[1] "Rt estimates with 95% credible intervals are available in rt_summary dataframe"

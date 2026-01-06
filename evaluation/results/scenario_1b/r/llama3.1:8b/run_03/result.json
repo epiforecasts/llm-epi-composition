@@ -1,0 +1,15 @@
+{
+  "scenario": "1b",
+  "condition": "r",
+  "llm": "llama3.1:8b",
+  "run_id": 3,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.1059,
+  "tier1_stdout": "",
+  "tier1_stderr": "\nAttaching package: ‘dplyr’\n\nThe following objects are masked from ‘package:stats’:\n\n    filter, lag\n\nThe following objects are masked from ‘package:base’:\n\n    intersect, setdiff, setequal, union\n\nRows: 212 Columns: 2\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl  (1): cases\ndate (1): date\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.\nError in `filter()`:\nℹ In argument: `date > min(data$date, na.rm = TRUE) + weeks(1)`.\nCaused by error in `weeks()`:\n! could not find function \"weeks\"\nBacktrace:\n     ▆\n  1. ├─... %>% pull(cases)\n  2. ├─dplyr::pull(., cases)\n  3. ├─dplyr::filter(., date > min(data$date, na.rm = TRUE) + weeks(1))\n  4. ├─dplyr:::filter.data.frame(., date > min(data$date, na.rm = TRUE) + weeks(1))\n  5. │ └─dplyr:::filter_rows(.data, dots, by)\n  6. │   └─dplyr:::filter_eval(...)\n  7. │     ├─base::withCallingHandlers(...)\n  8. │     └─mask$eval_all_filter(dots, env_filter)\n  9. │       └─dplyr (local) eval()\n 10. └─base::.handleSimpleError(...)\n 11.   └─dplyr (local) h(simpleError(msg, call))\n 12.     └─rlang::abort(message, class = error_class, parent = parent, call = error_call)\nExecution halted",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

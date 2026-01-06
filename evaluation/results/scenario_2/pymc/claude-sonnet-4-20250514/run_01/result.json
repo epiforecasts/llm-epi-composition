@@ -1,0 +1,15 @@
+{
+  "scenario": "2",
+  "condition": "pymc",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.309,
+  "tier1_stdout": "COVID-19 Rt Estimation with Complex Observation Processes\n============================================================\n\n1. Loading data...\n   Loaded 212 days of case data\n   Date range: 2020-09-01 00:00:00 to 2021-03-31 00:00:00\n   Total cases: 3,587,760\n\n2. Setting up epidemiological parameters...\n   Generation interval mean: 5.1 days\n   Reporting delay mean: 6.9 days\n\n3. Building PyMC model...",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pandas/core/indexes/base.py\", line 3812, in get_loc\n    return self._engine.get_loc(casted_key)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"pandas/_libs/index.pyx\", line 167, in pandas._libs.index.IndexEngine.get_loc\n  File \"pandas/_libs/index.pyx\", line 196, in pandas._libs.index.IndexEngine.get_loc\n  File \"pandas/_libs/hashtable_class_helper.pxi\", line 7088, in pandas._libs.hashtable.PyObjectHashTable.get_item\n  File \"pandas/_libs/hashtable_class_helper.pxi\", line 7096, in pandas._libs.hashtable.PyObjectHashTable.get_item\nKeyError: 'day_of_week'\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_2/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 446, in <module>\n    results = main()\n              ^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_2/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 384, in main\n    model = create_rt_model(data, gen_int, reporting_delay)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_2/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 147, in create_rt_model\n    day_of_week = cases_data['day_of_week'].values - 1  # Convert to 0-6\n                  ~~~~~~~~~~^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pandas/core/frame.py\", line 4113, in __getitem__\n    indexer = self.columns.get_loc(key)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pandas/core/indexes/base.py\", line 3819, in get_loc\n    raise KeyError(key) from err\nKeyError: 'day_of_week'",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

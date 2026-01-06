@@ -1,0 +1,38 @@
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Rows: 212 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (1): cases
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Error in `filter()`:
+ℹ In argument: `date > min(data$date, na.rm = TRUE) + weeks(1)`.
+Caused by error in `weeks()`:
+! could not find function "weeks"
+Backtrace:
+     ▆
+  1. ├─... %>% pull(cases)
+  2. ├─dplyr::pull(., cases)
+  3. ├─dplyr::filter(., date > min(data$date, na.rm = TRUE) + weeks(1))
+  4. ├─dplyr:::filter.data.frame(., date > min(data$date, na.rm = TRUE) + weeks(1))
+  5. │ └─dplyr:::filter_rows(.data, dots, by)
+  6. │   └─dplyr:::filter_eval(...)
+  7. │     ├─base::withCallingHandlers(...)
+  8. │     └─mask$eval_all_filter(dots, env_filter)
+  9. │       └─dplyr (local) eval()
+ 10. └─base::.handleSimpleError(...)
+ 11.   └─dplyr (local) h(simpleError(msg, call))
+ 12.     └─rlang::abort(message, class = error_class, parent = parent, call = error_call)
+Execution halted

@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/llama3.1:8b/run_02/script.py", line 18, in <module>
+    time_diff = (df['date'].diff().fillna(pd.DateOffset(days=1)).dt.days)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pandas/core/generic.py", line 6321, in __getattr__
+    return object.__getattribute__(self, name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pandas/core/accessor.py", line 224, in __get__
+    accessor_obj = self._accessor(obj)
+                   ^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pandas/core/indexes/accessors.py", line 643, in __new__
+    raise AttributeError("Can only use .dt accessor with datetimelike values")
+AttributeError: Can only use .dt accessor with datetimelike values. Did you mean: 'at'?

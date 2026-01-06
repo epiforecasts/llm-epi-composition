@@ -1,0 +1,198 @@
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/data.table_1.17.8.tar.gz'
+Content type 'application/x-gzip' length 5808720 bytes (5.5 MB)
+==================================================
+downloaded 5.5 MB
+
+* installing *source* package ‘data.table’ ...
+** this is package ‘data.table’ version ‘1.17.8’
+** package ‘data.table’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C compiler: ‘gcc (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-data.table/00new/data.table/libs
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (data.table)
+
+The downloaded source packages are in
+	‘/tmp/Rtmp2hEngu/downloaded_packages’
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/dplyr_1.1.4.tar.gz'
+Content type 'application/x-gzip' length 1207521 bytes (1.2 MB)
+==================================================
+downloaded 1.2 MB
+
+* installing *source* package ‘dplyr’ ...
+** this is package ‘dplyr’ version ‘1.1.4’
+** package ‘dplyr’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C++ compiler: ‘g++ (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-dplyr/00new/dplyr/libs
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (dplyr)
+
+The downloaded source packages are in
+	‘/tmp/Rtmp2hEngu/downloaded_packages’
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/ggplot2_4.0.1.tar.gz'
+Content type 'application/x-gzip' length 6343443 bytes (6.0 MB)
+==================================================
+downloaded 6.0 MB
+
+* installing *source* package ‘ggplot2’ ...
+** this is package ‘ggplot2’ version ‘4.0.1’
+** package ‘ggplot2’ successfully unpacked and MD5 sums checked
+** using staged installation
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (ggplot2)
+
+The downloaded source packages are in
+	‘/tmp/Rtmp2hEngu/downloaded_packages’
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/bsts_0.9.11.tar.gz'
+Content type 'application/x-gzip' length 304875 bytes (297 KB)
+==================================================
+downloaded 297 KB
+
+* installing *source* package ‘bsts’ ...
+** this is package ‘bsts’ version ‘0.9.11’
+** package ‘bsts’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C++ compiler: ‘g++ (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-bsts/00new/bsts/libs
+** R
+** data
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (bsts)
+
+The downloaded source packages are in
+	‘/tmp/Rtmp2hEngu/downloaded_packages’
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:data.table’:
+
+    between, first, last
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: BoomSpikeSlab
+Loading required package: Boom
+
+Attaching package: ‘Boom’
+
+The following object is masked from ‘package:stats’:
+
+    rWishart
+
+
+Attaching package: ‘BoomSpikeSlab’
+
+The following object is masked from ‘package:stats’:
+
+    knots
+
+Loading required package: zoo
+
+Attaching package: ‘zoo’
+
+The following objects are masked from ‘package:data.table’:
+
+    yearmon, yearqtr
+
+The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+Loading required package: xts
+
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+
+Attaching package: ‘xts’
+
+The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+The following objects are masked from ‘package:data.table’:
+
+    first, last
+
+
+Attaching package: ‘bsts’
+
+The following object is masked from ‘package:BoomSpikeSlab’:
+
+    SuggestBurn
+
+Error in bsts(y = cases$cases, ar_dens = list(), state_model = list(),  : 
+  argument "formula" is missing, with no default
+Execution halted

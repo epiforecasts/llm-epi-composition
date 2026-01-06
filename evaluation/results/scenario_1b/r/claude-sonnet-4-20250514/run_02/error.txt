@@ -1,0 +1,41 @@
+Loading required package: StanHeaders
+
+rstan version 2.32.7 (Stan version 2.32.2)
+
+For execution on a local, multicore CPU with excess RAM we recommend calling
+options(mc.cores = parallel::detectCores()).
+To avoid recompilation of unchanged Stan programs, we recommend calling
+rstan_options(auto_write = TRUE)
+For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
+change `threads_per_chain` option:
+rstan_options(threads_per_chain = 1)
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘lubridate’
+
+The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+Rows: 212 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+dbl  (1): cases
+date (1): date
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Warning in validityMethod(object) :
+  The following variables have undefined values:  cases_pred[1],The following variables have undefined values:  cases_pred[2],The following variables have undefined values:  cases_pred[3],The following variables have undefined values:  cases_pred[4],The following variables have undefined values:  cases_pred[5],The following variables have undefined values:  cases_pred[6],The following variables have undefined values:  cases_pred[7],The following variables have undefined values:  cases_pred[8],The following variables have undefined values:  cases_pred[9],The following variables have undefined values:  cases_pred[10],The following variables have undefined values:  cases_pred[11],The following variables have undefined values:  cases_pred[12],The following variables have undefined values:  cases_pred[13],The following variables have undefined values:  cases_pred[14],The following variables have undefined values:  cases_pred[15],The following variables have undefined values:  cases_pred[16],T [... truncated]
+error occurred during calling the sampler; sampling not done

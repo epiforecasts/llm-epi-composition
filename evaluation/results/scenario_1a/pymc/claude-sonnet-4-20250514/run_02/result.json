@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "pymc",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.4073,
+  "tier1_stdout": "Data loaded: 212 days from 2020-09-01 00:00:00 to 2021-03-31 00:00:00\nTotal cases: 3587760\n\nGeneration interval mean: 5.2 days\n\nCreating PyMC model...",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/claude-sonnet-4-20250514/run_02/script.py\", line 319, in <module>\n    summary_df, trace = main()\n                        ^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/claude-sonnet-4-20250514/run_02/script.py\", line 250, in main\n    model = create_rt_model(df['cases'].values, generation_pmf)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/claude-sonnet-4-20250514/run_02/script.py\", line 89, in create_rt_model\n    expected_cases = pt.set_subtensor(expected_cases[t], \n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/subtensor.py\", line 1461, in set_subtensor\n    return inc_subtensor(\n           ^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/subtensor.py\", line 1530, in inc_subtensor\n    raise TypeError(\nTypeError: Trying to increment a 0-dimensional subtensor with a 1-dimensional value.",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

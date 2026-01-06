@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/llama3.1:8b/run_01/script.py", line 38, in <module>
+    logp_Rt = logp_Rt(data['cases'].values, data['cases'].values, R)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_1a/pymc/llama3.1:8b/run_01/script.py", line 30, in logp_Rt
+    return pm.Deterministic('logp_Rt', np.sum(np.log(R**N - 1) * cases))
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/numpy/_core/fromnumeric.py", line 2466, in sum
+    return _wrapreduction(
+           ^^^^^^^^^^^^^^^
+  File "/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/numpy/_core/fromnumeric.py", line 84, in _wrapreduction
+    return reduction(axis=axis, out=out, **passkwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: _tensor_py_operators.sum() got an unexpected keyword argument 'out'

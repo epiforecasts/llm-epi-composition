@@ -1,0 +1,27 @@
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+Warning: package ‘cmdstanr’ is not available for this version of R
+
+A version of this package for your version of R might be available elsewhere,
+see the ideas at
+https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages
+This is cmdstanr version 0.8.0
+- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1
+- CmdStan version: 2.34.1
+
+A newer version of CmdStan is available. See ?install_cmdstan() to install it.
+To disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Error in read_csv("cases.csv") : could not find function "read_csv"
+Execution halted

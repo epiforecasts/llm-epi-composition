@@ -1,0 +1,15 @@
+{
+  "scenario": "3",
+  "condition": "pymc",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.81,
+  "tier1_stdout": "Loading data...\nLoaded 212 days of data\n\nData summary:\n                      date         cases  ...       deaths  day_of_week\ncount                  212    212.000000  ...   212.000000   212.000000\nmean   2020-12-15 12:00:00  16923.396226  ...   384.811321     3.985849\nmin    2020-09-01 00:00:00   1722.000000  ...     6.000000     1.000000\n25%    2020-10-23 18:00:00   5789.500000  ...    92.750000     2.000000\n50%    2020-12-15 12:00:00  13687.000000  ...   337.500000     4.000000\n75%    2021-02-06 06:00:00  21823.750000  ...   519.250000     6.000000\nmax    2021-03-31 00:00:00  74058.000000  ...  1328.000000     7.000000\nstd                    NaN  13933.761367  ...   342.137901     2.001134\n\n[8 rows x 5 columns]\n\nCreating model components...\nBuilding PyMC model...",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 367, in <module>\n    results, trace, model = main()\n                            ^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 332, in main\n    model = build_model(data, generation_pmf, delay_pmfs)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 206, in build_model\n    expected_cases = convolve_delays(infections, delay_pmfs['cases'], asc_cases)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_01/script.py\", line 197, in convolve_delays\n    for t in range(n_days_local):\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/miniforge3/envs/pymc/lib/python3.11/site-packages/pytensor/tensor/variable.py\", line 37, in __index__\n    raise TypeError(\nTypeError: TensorVariable cannot be converted to Python integer. Call `.astype(int)` for the symbolic equivalent.",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

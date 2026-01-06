@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "r",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": true,
+  "tier1_exit_code": 0,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.6075,
+  "tier1_stdout": "Loading case data...\nLoaded 212 days of case data from 2020-09-01 to 2021-03-31\nEstimating Rt...\n\n=== Rt Estimation Summary ===\nNumber of Rt estimates: 193\nMean Rt: 1.01\nMedian Rt: 0.99\nRange: 0.76 - 1.39\nDays with Rt > 1: 95 (49.2%)\nDays with Rt < 1: 98 (50.8%)\n\nResults saved to 'rt_estimates.csv'\n\n=== Transmission Phase Summary ===\n                      rt_trend  n percentage\n1   Declining (0.8 < Rt ≤ 1.0) 88  45.595855\n2     Growing (1.0 < Rt ≤ 1.2) 57  29.533679\n3 High transmission (Rt > 1.2) 38  19.689119\n4  Low transmission (Rt ≤ 0.8) 10   5.181347",
+  "tier1_stderr": "── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.1.4     ✔ readr     2.1.6\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.1     ✔ tibble    3.3.0\n✔ lubridate 1.9.4     ✔ tidyr     1.3.1\n✔ purrr     1.2.0     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors\nWarning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.\nℹ Please use `linewidth` instead.",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json", "Rplots.pdf", "rt_estimates.csv"]
+}

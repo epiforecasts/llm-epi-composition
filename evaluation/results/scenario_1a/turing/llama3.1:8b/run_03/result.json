@@ -1,0 +1,15 @@
+{
+  "scenario": "1a",
+  "condition": "turing",
+  "llm": "llama3.1:8b",
+  "run_id": 3,
+  "code_extracted": true,
+  "language": "julia",
+  "tier1_success": false,
+  "tier1_exit_code": 139,
+  "tier1_timed_out": false,
+  "tier1_duration": 4.9051,
+  "tier1_stdout": "",
+  "tier1_stderr": "Segmentation fault (core dumped)",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

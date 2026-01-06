@@ -1,0 +1,15 @@
+{
+  "scenario": "2",
+  "condition": "r",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 1,
+  "code_extracted": true,
+  "language": "r",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 3.5103,
+  "tier1_stdout": "Loading and preparing data...",
+  "tier1_stderr": "Loading required package: StanHeaders\n\nrstan version 2.32.7 (Stan version 2.32.2)\n\nFor execution on a local, multicore CPU with excess RAM we recommend calling\noptions(mc.cores = parallel::detectCores()).\nTo avoid recompilation of unchanged Stan programs, we recommend calling\nrstan_options(auto_write = TRUE)\nFor within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,\nchange `threads_per_chain` option:\nrstan_options(threads_per_chain = 1)\n\n\nAttaching package: ‘dplyr’\n\nThe following objects are masked from ‘package:stats’:\n\n    filter, lag\n\nThe following objects are masked from ‘package:base’:\n\n    intersect, setdiff, setequal, union\n\n\nAttaching package: ‘tidyr’\n\nThe following object is masked from ‘package:rstan’:\n\n    extract\n\nRows: 212 Columns: 2\n── Column specification ────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl  (1): cases\ndate (1): date\n\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.\nError in `mutate()`:\nℹ In argument: `day_of_week = ifelse(is.na(day_of_week),\n  as.numeric(format(date, \"%u\")), day_of_week)`.\nCaused by error:\n! object 'day_of_week' not found\nBacktrace:\n     ▆\n  1. ├─global run_rt_analysis(\"cases.csv\")\n  2. │ └─global load_and_prepare_data(file_path)\n  3. │   └─... %>% ...\n  4. ├─dplyr::mutate(...)\n  5. ├─dplyr:::mutate.data.frame(...)\n  6. │ └─dplyr:::mutate_cols(.data, dplyr_quosures(...), by)\n  7. │   ├─base::withCallingHandlers(...)\n  8. │   └─dplyr:::mutate_col(dots[[i]], data, mask, new_columns)\n  9. │     └─mask$eval_all_mutate(quo)\n 10. │       └─dplyr (local) eval()\n 11. ├─base::ifelse(...)\n 12. └─base::.handleSimpleError(...)\n 13.   └─dplyr (local) h(simpleError(msg, call))\n 14.     └─rlang::abort(message, class = error_class, parent = parent, call = error_call)\nExecution halted",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

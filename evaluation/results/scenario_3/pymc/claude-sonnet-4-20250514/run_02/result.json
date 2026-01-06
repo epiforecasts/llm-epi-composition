@@ -1,0 +1,15 @@
+{
+  "scenario": "3",
+  "condition": "pymc",
+  "llm": "claude-sonnet-4-20250514",
+  "run_id": 2,
+  "code_extracted": true,
+  "language": "python",
+  "tier1_success": false,
+  "tier1_exit_code": 1,
+  "tier1_timed_out": false,
+  "tier1_duration": 1.3055,
+  "tier1_stdout": "Multi-Stream Rt Estimation\n========================================\nLoaded 212 days of data from 2020-09-01 00:00:00 to 2021-03-31 00:00:00\nCases: 3587760, Hospitalizations: 279966, Deaths: 81580",
+  "tier1_stderr": "Traceback (most recent call last):\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_02/script.py\", line 471, in <module>\n    model, results, data = main()\n                           ^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_02/script.py\", line 439, in main\n    delay_distributions = create_delay_distributions()\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/eidesfun/code/llm-epi-composition/evaluation/results/scenario_3/pymc/claude-sonnet-4-20250514/run_02/script.py\", line 117, in create_delay_distributions\n    'dist': stats.gamma(a=2, scale=1.5).pmf(np.arange(15)),\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'rv_continuous_frozen' object has no attribute 'pmf'. Did you mean: 'pdf'?",
+  "output_files": ["cases_dow.csv", "cases.csv", "observations.csv", "result.json"]
+}

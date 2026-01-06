@@ -1,0 +1,11 @@
+Generating sample data...
+Sample data saved to 'cases.csv'
+
+Loaded data: 150 days of case counts
+Date range: 2023-01-01 00:00:00 to 2023-05-30 00:00:00
+Total cases: 3,746,312
+
+Generation interval: mean = 5.0 days
+Reporting delay: mean = 6.0 days
+
+Building PyMC model...

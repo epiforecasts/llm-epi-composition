@@ -95,40 +95,38 @@ execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
   script_file <- file.path(work_dir, paste0("script.", ext))
   writeLines(code, script_file)
 
-  # Build command
+  # Build command - combine stdout and stderr to capture all output in order
+  # This ensures we get the actual error message before any crash
+  output_file <- file.path(work_dir, "output.txt")
+
   cmd <- switch(language,
-    "r" = sprintf("cd '%s' && Rscript script.R", work_dir),
-    "python" = sprintf("cd '%s' && python script.py", work_dir),
-    "julia" = sprintf("cd '%s' && julia --project=@. script.jl", work_dir),
-    sprintf("cd '%s' && Rscript script.R", work_dir)
+    "r" = sprintf("Rscript '%s/script.R'", work_dir),
+    "python" = sprintf("python '%s/script.py'", work_dir),
+    "julia" = sprintf("julia --project=@. '%s/script.jl'", work_dir),
+    sprintf("Rscript '%s/script.R'", work_dir)
   )
 
-  # Capture output to files
-  stdout_file <- file.path(work_dir, "stdout.txt")
-  stderr_file <- file.path(work_dir, "stderr.txt")
-
-  # Execute with timeout
+  # Execute with timeout, combining stdout and stderr
   start_time <- Sys.time()
 
-  full_cmd <- sprintf("timeout %d bash -c %s > %s 2> %s",
-                      timeout, shQuote(cmd), shQuote(stdout_file), shQuote(stderr_file))
+  # Use 2>&1 to combine stderr into stdout, capturing everything in order
+  full_cmd <- sprintf("cd '%s' && timeout %d %s > '%s' 2>&1",
+                      work_dir, timeout, cmd, output_file)
 
-  exit_code <- system(full_cmd)
+  exit_code <- system(full_cmd, ignore.stdout = TRUE, ignore.stderr = TRUE)
 
   duration <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
-  # Read outputs
-  stdout_content <- if (file.exists(stdout_file)) paste(readLines(stdout_file, warn = FALSE), collapse = "\n") else ""
-  stderr_content <- if (file.exists(stderr_file)) paste(readLines(stderr_file, warn = FALSE), collapse = "\n") else ""
-
-  combined_output <- paste(stdout_content, stderr_content, sep = "\n")
+  # Read combined output
+  output_content <- ""
+  if (file.exists(output_file)) {
+    output_content <- paste(readLines(output_file, warn = FALSE), collapse = "\n")
+  }
 
   list(
     success = exit_code == 0,
     exit_code = exit_code,
-    output = combined_output,
-    stdout = stdout_content,
-    stderr = stderr_content,
+    output = output_content,
     timed_out = exit_code == 124,
     duration = duration
   )

@@ -1,0 +1,14 @@
+=== Joint Rt Estimation from Multiple Data Streams ===
+
+1. Loading data...
+Data loaded: 212 days
+Date range: 2020-09-01 00:00:00 to 2021-03-31 00:00:00
+Total cases: 3587760
+Total hospitalisations: 279966
+Total deaths: 81580
+
+2. Setting up delay distributions...
+Maximum delay considered: 30 days
+Generation interval length: 15 days
+
+3. Building Bayesian model...

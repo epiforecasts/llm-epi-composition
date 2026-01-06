@@ -1,0 +1,61 @@
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+Warning: package ‘cmdstanr’ is not available for this version of R
+
+A version of this package for your version of R might be available elsewhere,
+see the ideas at
+https://cran.r-project.org/doc/manuals/r-patched/R-admin.html#Installing-packages
+Installing package into ‘/home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5’
+(as ‘lib’ is unspecified)
+trying URL 'https://cran.ma.imperial.ac.uk/src/contrib/dplyr_1.1.4.tar.gz'
+Content type 'application/x-gzip' length 1207521 bytes (1.2 MB)
+==================================================
+downloaded 1.2 MB
+
+* installing *source* package ‘dplyr’ ...
+** this is package ‘dplyr’ version ‘1.1.4’
+** package ‘dplyr’ successfully unpacked and MD5 sums checked
+** using staged installation
+** libs
+using C++ compiler: ‘g++ (Ubuntu 15.2.0-4ubuntu4) 15.2.0’
+installing to /home/eidesfun/R/x86_64-pc-linux-gnu-library/4.5/00LOCK-dplyr/00new/dplyr/libs
+** R
+** data
+*** moving datasets to lazyload DB
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+*** copying figures
+** building package indices
+** installing vignettes
+** testing if installed package can be loaded from temporary location
+** checking absolute paths in shared objects and dynamic libraries
+** testing if installed package can be loaded from final location
+** testing if installed package keeps a record of temporary installation path
+* DONE (dplyr)
+
+The downloaded source packages are in
+	‘/tmp/RtmpKBwppx/downloaded_packages’
+This is cmdstanr version 0.8.0
+- CmdStanR documentation and vignettes: mc-stan.org/cmdstanr
+- CmdStan path: /home/eidesfun/.cmdstan/cmdstan-2.34.1
+- CmdStan version: 2.34.1
+
+A newer version of CmdStan is available. See ?install_cmdstan() to install it.
+To disable this check set option or environment variable cmdstanr_no_ver_check=TRUE.
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Error in `$<-.data.frame`(`*tmp*`, day_of_week, value = integer(0)) : 
+  replacement has 0 rows, data has 212
+Calls: $<- -> $<-.data.frame
+Execution halted

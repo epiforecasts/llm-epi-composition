@@ -1,0 +1,13 @@
+=== COVID-19 Rt Estimation using Renewal Equation ===
+
+Data loaded: 212 days from 2020-09-01 00:00:00 to 2021-03-31 00:00:00
+Total cases: 3,587,760
+Max daily cases: 74,058
+
+==================================================
+Setting up epidemiological parameters...
+Generation interval: mean=5.20, std=1.71
+Reporting delay: mean=5.10, std=3.14
+
+==================================================
+Creating PyMC model...

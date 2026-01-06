@@ -1,0 +1,150 @@
+Rt estimation code loaded successfully!
+To run the analysis, use: results <- estimate_rt('cases.csv')
+Loading and preparing data...
+Fitting Rt model...
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
+Chain 1: 
+Chain 1: Gradient evaluation took 0.000596 seconds
+Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 5.96 seconds.
+Chain 1: Adjust your expectations accordingly!
+Chain 1: 
+Chain 1: 
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
+Chain 2: 
+Chain 2: Gradient evaluation took 0.00064 seconds
+Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 6.4 seconds.
+Chain 2: Adjust your expectations accordingly!
+Chain 2: 
+Chain 2: 
+Chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)
+
+SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
+Chain 3: 
+Chain 3: Gradient evaluation took 0.000608 seconds
+Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 6.08 seconds.
+Chain 3: Adjust your expectations accordingly!
+Chain 3: 
+Chain 3: 
+Chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.22698e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 4.25412e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.19539e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.09153e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 2.48253e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.30956e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.11774e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.82954e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 4.25813e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.96777e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 3: Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain 4: 
+Chain 4: Gradient evaluation took 0.000624 seconds
+Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 6.24 seconds.
+Chain 4: Adjust your expectations accordingly!
+Chain 4: 
+Chain 4: 
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.64595e+10, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.21759e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 3.1792e+10, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 4.3358e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 1: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 6.1028e+10, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 4: Iteration:    1 / 2000 [  0%]  (Warmup)
+Chain 4: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 2.47828e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 4: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 1.17375e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 4: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 2.28606e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 4: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 6.19291e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 3.98129e+10, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 4: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 3: Iteration:  200 / 2000 [ 10%]  (Warmup)
+Chain 3: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 4: Iteration:  400 / 2000 [ 20%]  (Warmup)
+Chain 2: Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 6.04561e+66, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)
+Chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 3: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 4: Iteration:  600 / 2000 [ 30%]  (Warmup)
+Chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 3: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 4: Iteration:  800 / 2000 [ 40%]  (Warmup)
+Chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 3: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 3: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 3: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 4: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+Chain 4: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+Chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain 1: 
+Chain 1:  Elapsed Time: 203.332 seconds (Warm-up)
+Chain 1:                79.366 seconds (Sampling)
+Chain 1:                282.698 seconds (Total)
+Chain 1: 
+Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain 3: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 4: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain 2: 
+Chain 2:  Elapsed Time: 187.65 seconds (Warm-up)
+Chain 2:                126.86 seconds (Sampling)
+Chain 2:                314.51 seconds (Total)
+Chain 2: 
+ [1] "Chain 2: Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:"                                                                        
+ [2] "Chain 2: Exception: neg_binomial_2_lpmf: Precision parameter is 0, but must be positive finite! (in 'anon_model', line 71, column 6 to column 56)"                                              
+ [3] "Chain 2: If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,"                                                
+ [4] "Chain 2: but if this warning occurs often then your model may be either severely ill-conditioned or misspecified."                                                                              
+ [5] "Chain 2: "                                                                                                                                                                                      
+ [6] "Chain 2: Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:"                                                                        
+ [7] "Chain 2: Exception: neg_binomial_2_lpmf: Precision parameter is 0, but must be positive finite! (in 'anon_model', line 71, column 6 to column 56)"                                              
+ [8] "Chain 2: If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,"                                                
+ [9] "Chain 2: but if this warning occurs often then your model may be either severely ill-conditioned or misspecified."                                                                              
+[10] "Chain 2: "                                                                                                                                                                                      
+[11] "Chain 2: Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:"                                                                        
+[12] "Chain 2: Exception: neg_binomial_2_lpmf: Precision parameter is 0, but must be positive finite! (in 'anon_model', line 71, column 6 to column 56)"                                              
+[13] "Chain 2: If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,"                                                
+[14] "Chain 2: but if this warning occurs often then your model may be either severely ill-conditioned or misspecified."                                                                              
+[15] "Chain 2: "                                                                                                                                                                                      
+[16] "Chain 2: Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:"                                                                        
+[17] "Chain 2: Exception: neg_binomial_2_lpmf: Precision parameter is 0, but must be positive finite! (in 'anon_model', line 71, column 6 to column 56)"                                              
+[18] "Chain 2: If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,"                                                
+[19] "Chain 2: but if this warning occurs often then your model may be either severely ill-conditioned or misspecified."                                                                              
+[20] "Chain 2: "                                                                                                                                                                                      
+[21] "Chain 2: Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:"                                                                        
+[22] "Chain 2: Exception: normal_lpdf: Scale parameter is 0, but must be positive! (in 'anon_model', line 65, column 4 to column 51)"                                                                 
+[23] "Chain 2: If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,"                                                
+[24] "Chain 2: but if this warning occurs often then your model may be either severely ill-conditioned or misspecified."                                                                              
+[25] "Chain 2: "                                                                                                                                                                                      
+[26] "Chain 2: Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:"                                                                        
+[27] "Chain 2: Exception: neg_binomial_2_lpmf: Precision parameter is 0, but must be positive finite! (in 'anon_model', line 71, column 6 to column 56)"                                              
+[28] "Chain 2: If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,"                                                
+[29] "Chain 2: but if this warning occurs often then your model may be either severely ill-conditioned or misspecified."                                                                              
+[30] "Chain 2: "                                                                                                                                                                                      
+[31] "Error : Exception: neg_binomial_2_rng: Random number that came from gamma distribution is 2.6193e+09, but must be less than 1073741824.000000 (in 'anon_model', line 83, column 6 to column 65)"
+Chain 3: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+Chain 4: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
+Chain 3: 
+Chain 3:  Elapsed Time: 210.712 seconds (Warm-up)
+Chain 3:                175.025 seconds (Sampling)
+Chain 3:                385.737 seconds (Total)
+Chain 3: 
+Chain 4: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
