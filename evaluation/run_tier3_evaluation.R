@@ -104,39 +104,74 @@ execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
   cmd <- switch(language,
     "r" = sprintf("Rscript '%s'", script_path),
     "python" = sprintf("python '%s'", script_path),
-    "julia" = sprintf("julia --startup-file=no '%s'", script_path),
+    "julia" = sprintf("julia --project=@. --startup-file=no '%s'", script_path),
     sprintf("Rscript '%s'", script_path)
   )
 
   # Execute with timeout, combining stdout and stderr
   start_time <- Sys.time()
 
-  # Use 2>&1 to combine stderr into stdout, capturing everything in order
-  # cd to work_dir so relative file paths in the script work (e.g., "cases.csv")
-  full_cmd <- sprintf("cd '%s' && timeout %d %s > '%s' 2>&1",
-                      work_dir, timeout, cmd, output_file)
+  # Build the command based on language
+  # Use system2() for more reliable process handling
+  output_file <- file.path(work_dir, "output.txt")
 
-  # Debug: log the command being run
-  message(sprintf("    CMD: %s", full_cmd))
+  message(sprintf("    Running: %s in %s", language, work_dir))
 
-  exit_code <- system(full_cmd, ignore.stdout = TRUE, ignore.stderr = TRUE)
+  # Change to work directory, run command, capture all output
+  old_wd <- getwd()
+  setwd(work_dir)
 
-  # Debug: if segfault, try to get more info
-  if (exit_code == 139) {
-    message(sprintf("    SEGFAULT detected. Trying bash -l to get proper environment..."))
-    # Try with login shell to get full environment
-    full_cmd_bash <- sprintf("bash -l -c \"cd '%s' && timeout %d %s\" > '%s' 2>&1",
-                             work_dir, timeout, cmd, output_file)
-    exit_code <- system(full_cmd_bash, ignore.stdout = TRUE, ignore.stderr = TRUE)
-  }
+  result <- tryCatch({
+    if (language == "julia") {
+      # For Julia, use system2 with timeout wrapper
+      out <- system2(
+        "timeout",
+        args = c(as.character(timeout), "julia", "--project=@.", script_path),
+        stdout = TRUE,
+        stderr = TRUE,
+        timeout = timeout + 30
+      )
+      exit_code <- attr(out, "status")
+      if (is.null(exit_code)) exit_code <- 0
+      list(output = paste(out, collapse = "\n"), exit_code = exit_code)
+    } else if (language == "python") {
+      out <- system2(
+        "timeout",
+        args = c(as.character(timeout), "python", script_path),
+        stdout = TRUE,
+        stderr = TRUE,
+        timeout = timeout + 30
+      )
+      exit_code <- attr(out, "status")
+      if (is.null(exit_code)) exit_code <- 0
+      list(output = paste(out, collapse = "\n"), exit_code = exit_code)
+    } else {
+      out <- system2(
+        "timeout",
+        args = c(as.character(timeout), "Rscript", script_path),
+        stdout = TRUE,
+        stderr = TRUE,
+        timeout = timeout + 30
+      )
+      exit_code <- attr(out, "status")
+      if (is.null(exit_code)) exit_code <- 0
+      list(output = paste(out, collapse = "\n"), exit_code = exit_code)
+    }
+  }, error = function(e) {
+    list(output = e$message, exit_code = -1)
+  })
+
+  setwd(old_wd)
 
   duration <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
-  # Read combined output
-  output_content <- ""
-  if (file.exists(output_file)) {
-    output_content <- paste(readLines(output_file, warn = FALSE), collapse = "\n")
-  }
+  # Save output to file for reference
+  writeLines(result$output, output_file)
+
+  exit_code <- result$exit_code
+  output_content <- result$output
+
+  message(sprintf("    Exit code: %d, Output length: %d chars", exit_code, nchar(output_content)))
 
   list(
     success = exit_code == 0,
