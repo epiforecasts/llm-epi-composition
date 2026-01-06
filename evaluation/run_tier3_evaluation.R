@@ -104,7 +104,7 @@ execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
   cmd <- switch(language,
     "r" = sprintf("Rscript '%s'", script_path),
     "python" = sprintf("python '%s'", script_path),
-    "julia" = sprintf("julia '%s'", script_path),
+    "julia" = sprintf("julia --startup-file=no '%s'", script_path),
     sprintf("Rscript '%s'", script_path)
   )
 
@@ -116,7 +116,19 @@ execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
   full_cmd <- sprintf("cd '%s' && timeout %d %s > '%s' 2>&1",
                       work_dir, timeout, cmd, output_file)
 
+  # Debug: log the command being run
+  message(sprintf("    CMD: %s", full_cmd))
+
   exit_code <- system(full_cmd, ignore.stdout = TRUE, ignore.stderr = TRUE)
+
+  # Debug: if segfault, try to get more info
+  if (exit_code == 139) {
+    message(sprintf("    SEGFAULT detected. Trying bash -l to get proper environment..."))
+    # Try with login shell to get full environment
+    full_cmd_bash <- sprintf("bash -l -c \"cd '%s' && timeout %d %s\" > '%s' 2>&1",
+                             work_dir, timeout, cmd, output_file)
+    exit_code <- system(full_cmd_bash, ignore.stdout = TRUE, ignore.stderr = TRUE)
+  }
 
   duration <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
 
