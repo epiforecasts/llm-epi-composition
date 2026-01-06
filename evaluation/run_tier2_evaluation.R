@@ -137,9 +137,14 @@ run_tier2_experiment <- function(experiment_file, tier1_result_dir, tier2_result
         tier2_work_dir, timeout, python_path
       )
     } else if (language == "julia") {
+      # Use env -i to clear R's environment which can conflict with Julia's libraries
       cmd <- sprintf(
-        "cd '%s' && timeout %d julia script.jl > output.txt 2> error.txt",
-        tier2_work_dir, timeout
+        "cd '%s' && env -i PATH='%s' HOME='%s' JULIA_DEPOT_PATH='%s' timeout %d julia script.jl > output.txt 2> error.txt",
+        tier2_work_dir,
+        Sys.getenv("PATH"),
+        Sys.getenv("HOME"),
+        Sys.getenv("JULIA_DEPOT_PATH", unset = "~/.julia"),
+        timeout
       )
     }
 

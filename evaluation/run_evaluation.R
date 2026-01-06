@@ -213,9 +213,15 @@ cd("%s")
 
   writeLines(paste0(setup_code, "\n", code), code_file)
 
+  # Use env -i to clear R's environment which can conflict with Julia's libraries
+  # Only pass essential vars: PATH, HOME, JULIA_DEPOT_PATH
   cmd <- sprintf(
-    "cd '%s' && timeout %d julia script.jl > output.txt 2> error.txt",
-    work_dir, timeout
+    "cd '%s' && env -i PATH='%s' HOME='%s' JULIA_DEPOT_PATH='%s' timeout %d julia script.jl > output.txt 2> error.txt",
+    work_dir,
+    Sys.getenv("PATH"),
+    Sys.getenv("HOME"),
+    Sys.getenv("JULIA_DEPOT_PATH", unset = "~/.julia"),
+    timeout
   )
 
   start_time <- Sys.time()
