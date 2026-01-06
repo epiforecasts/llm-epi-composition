@@ -9,7 +9,7 @@ library(httr2)
 library(readr)
 
 # Configuration
-MAX_FIX_ATTEMPTS <- 2  # Number of fix attempts (so 3 total: original + 2 fixes)
+MAX_FIX_ATTEMPTS <- 4  # Number of fix attempts (so 5 total: original + 4 fixes)
 TIMEOUT_SECONDS <- 600  # 10 minutes per execution
 PROJECT_DIR <- getwd()
 DATA_DIR <- file.path(PROJECT_DIR, "data")
