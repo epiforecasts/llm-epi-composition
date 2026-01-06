@@ -98,18 +98,21 @@ execute_code <- function(code, language, work_dir, timeout = TIMEOUT_SECONDS) {
   # Build command - combine stdout and stderr to capture all output in order
   # This ensures we get the actual error message before any crash
   output_file <- file.path(work_dir, "output.txt")
+  script_path <- file.path(work_dir, paste0("script.", ext))
 
+  # Use absolute paths everywhere to avoid working directory issues
   cmd <- switch(language,
-    "r" = sprintf("Rscript '%s/script.R'", work_dir),
-    "python" = sprintf("python '%s/script.py'", work_dir),
-    "julia" = sprintf("julia --project=@. '%s/script.jl'", work_dir),
-    sprintf("Rscript '%s/script.R'", work_dir)
+    "r" = sprintf("Rscript '%s'", script_path),
+    "python" = sprintf("python '%s'", script_path),
+    "julia" = sprintf("julia '%s'", script_path),
+    sprintf("Rscript '%s'", script_path)
   )
 
   # Execute with timeout, combining stdout and stderr
   start_time <- Sys.time()
 
   # Use 2>&1 to combine stderr into stdout, capturing everything in order
+  # cd to work_dir so relative file paths in the script work (e.g., "cases.csv")
   full_cmd <- sprintf("cd '%s' && timeout %d %s > '%s' 2>&1",
                       work_dir, timeout, cmd, output_file)
 
