@@ -198,8 +198,22 @@ check_output_produced <- function(work_dir) {
 }
 
 # Run Tier 3 for a single experiment
-run_tier3_single <- function(scenario, condition, llm, run_id) {
+run_tier3_single <- function(scenario, condition, llm, run_id, skip_completed = TRUE) {
   message(sprintf("\n=== Tier 3: %s/%s/%s/run_%02d ===", scenario, condition, llm, run_id))
+
+  # Setup work directory path
+  work_dir <- file.path(TIER3_DIR, paste0("scenario_", scenario), condition, llm,
+                        sprintf("run_%02d", run_id))
+
+  # Check if already completed successfully
+  result_file <- file.path(work_dir, "tier3_result.json")
+  if (skip_completed && file.exists(result_file)) {
+    existing_result <- tryCatch(fromJSON(result_file), error = function(e) NULL)
+    if (!is.null(existing_result) && isTRUE(existing_result$tier3_success)) {
+      message("  Already completed successfully, skipping")
+      return(existing_result)
+    }
+  }
 
   # Load original experiment
   exp_file <- file.path(EXPERIMENTS_DIR, paste0("scenario_", scenario), condition, llm,
@@ -242,9 +256,7 @@ run_tier3_single <- function(scenario, condition, llm, run_id) {
     return(NULL)
   }
 
-  # Setup work directory
-  work_dir <- file.path(TIER3_DIR, paste0("scenario_", scenario), condition, llm,
-                        sprintf("run_%02d", run_id))
+  # Create work directory if needed
   dir.create(work_dir, recursive = TRUE, showWarnings = FALSE)
 
   # Copy data files from Tier 1 directory
