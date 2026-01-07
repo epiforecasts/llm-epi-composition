@@ -206,13 +206,18 @@ run_tier3_single <- function(scenario, condition, llm, run_id, skip_completed = 
                         sprintf("run_%02d", run_id))
 
   # Check if already completed (success or failure - to avoid bias from re-running failures)
+  # Only skip if the result file exists AND the experiment actually finished
+  # (either succeeded, or used all attempts, or has tier3_success field set)
   result_file <- file.path(work_dir, "tier3_result.json")
   if (skip_completed && file.exists(result_file)) {
     existing_result <- tryCatch(fromJSON(result_file), error = function(e) NULL)
-    if (!is.null(existing_result)) {
+    if (!is.null(existing_result) && !is.null(existing_result$tier3_success)) {
+      # tier3_success is only set at the end, so if it exists the run completed
       status <- if (isTRUE(existing_result$tier3_success)) "successfully" else "with failure"
       message(sprintf("  Already completed %s, skipping", status))
       return(existing_result)
+    } else {
+      message("  Found incomplete result, re-running")
     }
   }
 
