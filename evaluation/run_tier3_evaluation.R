@@ -205,12 +205,13 @@ run_tier3_single <- function(scenario, condition, llm, run_id, skip_completed = 
   work_dir <- file.path(TIER3_DIR, paste0("scenario_", scenario), condition, llm,
                         sprintf("run_%02d", run_id))
 
-  # Check if already completed successfully
+  # Check if already completed (success or failure - to avoid bias from re-running failures)
   result_file <- file.path(work_dir, "tier3_result.json")
   if (skip_completed && file.exists(result_file)) {
     existing_result <- tryCatch(fromJSON(result_file), error = function(e) NULL)
-    if (!is.null(existing_result) && isTRUE(existing_result$tier3_success)) {
-      message("  Already completed successfully, skipping")
+    if (!is.null(existing_result)) {
+      status <- if (isTRUE(existing_result$tier3_success)) "successfully" else "with failure"
+      message(sprintf("  Already completed %s, skipping", status))
       return(existing_result)
     }
   }
