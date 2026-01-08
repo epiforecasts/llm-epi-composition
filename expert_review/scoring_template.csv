@@ -1,0 +1,2 @@
+submission_id,scenario,reviewer,method_used,departure_1_desc,departure_1_cat,departure_2_desc,departure_2_cat,departure_3_desc,departure_3_cat,departure_4_desc,departure_4_cat,departure_5_desc,departure_5_cat,count_A,count_B,count_C,count_D,overall_assessment,uncertainty_quantification,appropriate_parameters,proper_discretization,notes
+SUB_001,,,,,,,,,,,,,,,,,,,,,
