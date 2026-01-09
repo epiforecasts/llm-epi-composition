@@ -30,3 +30,7 @@ venv/
 *.jl.cov
 *.jl.mem
 Manifest.toml
+
+# Expert review - confidential (breaks blinding)
+expert_review/CONFIDENTIAL_mapping.csv
+expert_review/submissions/
