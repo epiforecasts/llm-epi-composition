@@ -302,12 +302,131 @@ Date: _________________
 
   write_csv(summary_by_scenario, file.path(PROJECT_DIR, "expert_review", "submissions_by_scenario.csv"))
 
+  # Generate two files: code and scoresheet (for side-by-side review)
+  message("\nGenerating consolidated review files...")
+
+  # File 1: All code submissions
+  code_content <- c(
+    "# Expert Review: Code Submissions",
+    "",
+    "Use alongside scoresheet.md for side-by-side review.",
+    "See instructions.md for review guidelines.",
+    "",
+    "---",
+    ""
+  )
+
+  # File 2: Scoresheet only
+  score_content <- c(
+    "# Expert Review: Scoresheet",
+    "",
+    "Fill in scores while viewing code in all_code.md (same order).",
+    "See instructions.md for review guidelines.",
+    "",
+    "---",
+    ""
+  )
+
+  for (scenario_num in c("1a", "1b", "2", "3")) {
+    scenario_subs <- mapping %>% filter(scenario == scenario_num)
+    if (nrow(scenario_subs) == 0) next
+
+    code_content <- c(code_content,
+      sprintf("# Scenario %s", scenario_num),
+      "",
+      sprintf("Total submissions: %d", nrow(scenario_subs)),
+      "",
+      "---",
+      ""
+    )
+
+    score_content <- c(score_content,
+      sprintf("# Scenario %s", scenario_num),
+      "",
+      "---",
+      ""
+    )
+
+    for (i in seq_len(nrow(scenario_subs))) {
+      sub_id <- scenario_subs$submission_id[i]
+      sub_dir <- file.path(OUTPUT_DIR, sub_id)
+
+      # Get execution status
+      result <- load_results(scenario_subs$scenario[i], scenario_subs$condition[i],
+                            scenario_subs$llm[i], scenario_subs$run_id[i])
+      exec_status <- if (isTRUE(result$success)) "SUCCESS" else if (isTRUE(result$timed_out)) "TIMEOUT" else "FAILED"
+
+      # Code file entry
+      code_content <- c(code_content,
+        sprintf("## %s", sub_id),
+        "",
+        sprintf("**Scenario**: %s | **Execution**: %s", scenario_num, exec_status),
+        ""
+      )
+
+      # Add code files
+      code_files <- list.files(sub_dir, pattern = "\\.(R|py|jl|stan)$", full.names = TRUE)
+      for (code_file in code_files) {
+        ext <- tools::file_ext(code_file)
+        lang <- switch(ext,
+          "R" = "r",
+          "py" = "python",
+          "jl" = "julia",
+          "stan" = "stan",
+          ""
+        )
+        file_content <- readLines(code_file, warn = FALSE)
+
+        code_content <- c(code_content,
+          sprintf("### %s", basename(code_file)),
+          "",
+          sprintf("```%s", lang),
+          file_content,
+          "```",
+          ""
+        )
+      }
+
+      code_content <- c(code_content, "---", "")
+
+      # Scoresheet entry
+      score_content <- c(score_content,
+        sprintf("## %s", sub_id),
+        "",
+        sprintf("**Scenario**: %s | **Execution**: %s", scenario_num, exec_status),
+        "",
+        "| Field | Value |",
+        "|-------|-------|",
+        "| Method (1a only) | |",
+        "| Departures | |",
+        "| Count A (Equivalent) | |",
+        "| Count B (Minor) | |",
+        "| Count C (Major) | |",
+        "| Count D (Fundamental) | |",
+        "| Overall | Acceptable / Minor / Major / Incorrect |",
+        "| Uncertainty quantified | Yes / No |",
+        "| Appropriate parameters | Yes / No / N/A |",
+        "| Proper discretization | Yes / No / N/A |",
+        "| Notes | |",
+        "",
+        "---",
+        ""
+      )
+    }
+  }
+
+  writeLines(code_content, file.path(PROJECT_DIR, "expert_review", "all_code.md"))
+  writeLines(score_content, file.path(PROJECT_DIR, "expert_review", "scoresheet.md"))
+  message("Generated: expert_review/all_code.md and expert_review/scoresheet.md")
+
   message("\nSummary by scenario:")
   print(summary_by_scenario)
 
   message("\nDone! Materials ready for expert review.")
   message("  - Instructions: expert_review/instructions.md")
-  message("  - Submissions: expert_review/submissions/SUB_XXX/")
+  message("  - Code: expert_review/all_code.md")
+  message("  - Scoresheet: expert_review/scoresheet.md")
+  message("  - Individual submissions: expert_review/submissions/SUB_XXX/")
   message("  - Mapping (confidential): expert_review/CONFIDENTIAL_mapping.csv")
 }
 
