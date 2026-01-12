@@ -1,4 +1,4 @@
-# LLM Epidemiological Code Composition Study
+# LLM Epidemiological Code Composition
 
 Can large language models write epidemiologically correct code for estimating the time-varying reproduction number (Rt)?
 
