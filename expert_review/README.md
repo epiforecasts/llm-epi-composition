@@ -108,8 +108,8 @@ Provide an overall assessment:
 
 Valid values:
 - `renewal` - Renewal equation / Cori method / EpiEstim-style (recommended)
-- `wallinga-teunis` - Case reproduction number using symptom onset (acceptable)
-- `bettencourt-ribeiro` - SIR-based method (not recommended)
+- `wallinga` - Wallinga-Teunis case reproduction number (acceptable)
+- `bettencourt` - Bettencourt-Ribeiro SIR-based method (not recommended)
 - `naive` - Simple ratio like Ct/Ct-1 (not acceptable)
 - `other` - Describe in notes column
 
