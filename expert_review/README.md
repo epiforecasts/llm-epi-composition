@@ -119,20 +119,40 @@ Valid values:
 |--------|-------------|
 | `departures` | List of departures, separated by semicolons. Use codes below where applicable, or free text for others. |
 
-Common departure codes:
-- `no_delay` - No delay distribution between infection and reporting
-- `no_gi` - No generation interval / serial interval
-- `fixed_gi` - Generation interval hardcoded without uncertainty
-- `wrong_gi` - Generation interval value implausible for COVID-19
-- `poisson` - Poisson instead of Negative Binomial observation model
-- `no_convolution` - Missing convolution in renewal equation
-- `no_smoothing` - No Rt smoothing/regularisation (random walk, GP, etc.)
-- `negative_rt` - Prior or model allows negative Rt values
-- `no_uncertainty` - Point estimates only, no credible/confidence intervals
-- `wrong_likelihood` - Incorrect likelihood specification
-- `confused_rt_r` - Confuses Rt with growth rate r
+Use codes below where applicable, or free text for others. Example: `no_delay; poisson; custom: missing day-of-week adjustment`
 
-Free text is also fine, e.g., `no_delay; poisson; custom: missing day-of-week adjustment`
+##### `no_delay`
+No delay distribution between infection and reporting. Cases are treated as if observed immediately upon infection.
+
+##### `no_gi`
+No generation interval or serial interval specified. The model doesn't account for the time between successive infections.
+
+##### `fixed_gi`
+Generation interval is hardcoded as a fixed value without uncertainty. Should be a distribution to propagate uncertainty.
+
+##### `wrong_gi`
+Generation interval value is implausible for COVID-19 (should be ~3-7 days mean).
+
+##### `poisson`
+Uses Poisson instead of Negative Binomial observation model. Poisson assumes mean equals variance, which underestimates uncertainty for overdispersed case data.
+
+##### `no_convolution`
+Missing convolution in renewal equation. Infections should be convolved with the generation interval to get expected new infections.
+
+##### `no_smoothing`
+No Rt smoothing or regularisation. Rt should have temporal structure (random walk, AR(1), GP, splines) rather than being independent at each time point.
+
+##### `negative_rt`
+Prior or model structure allows negative Rt values, which are epidemiologically impossible.
+
+##### `no_uncertainty`
+Point estimates only, no credible or confidence intervals provided for Rt.
+
+##### `wrong_likelihood`
+Incorrect likelihood specification (e.g., Gaussian for count data, wrong link function).
+
+##### `confused_rt_r`
+Confuses instantaneous reproduction number Rt with exponential growth rate r. These are related but distinct quantities.
 | `count_A_equivalent` | Count of category A departures (different but equally valid approaches) |
 | `count_B_minor` | Count of category B departures (small mistakes, unlikely to substantially affect results) |
 | `count_C_major` | Count of category C departures (significant mistakes that would bias results) |
