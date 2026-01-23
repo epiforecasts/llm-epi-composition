@@ -115,11 +115,7 @@ Valid values:
 
 #### Departures from reference
 
-| Column | Description |
-|--------|-------------|
-| `departures` | List of departures, separated by semicolons. Use codes below where applicable, or free text for others. |
-
-Use codes below where applicable, or free text for others. Example: `no_delay; poisson; custom: missing day-of-week adjustment`
+Each common departure has its own column. Mark with the category (A/B/C/D) if present, leave blank if not applicable.
 
 ##### `no_delay`
 No delay distribution between infection and reporting. Cases are treated as if observed immediately upon infection.
@@ -153,6 +149,9 @@ Incorrect likelihood specification (e.g., Gaussian for count data, wrong link fu
 
 ##### `confused_rt_r`
 Confuses instantaneous reproduction number Rt with exponential growth rate r. These are related but distinct quantities.
+
+##### `other_departures`
+Free text for any departures not covered above.
 | `count_A_equivalent` | Count of category A departures (different but equally valid approaches) |
 | `count_B_minor` | Count of category B departures (small mistakes, unlikely to substantially affect results) |
 | `count_C_major` | Count of category C departures (significant mistakes that would bias results) |
