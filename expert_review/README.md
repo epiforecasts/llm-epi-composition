@@ -117,7 +117,22 @@ Valid values:
 
 | Column | Description |
 |--------|-------------|
-| `departures` | Brief description of each departure, separated by semicolons. E.g., "no delay distribution; Poisson not NegBin; fixed generation interval" |
+| `departures` | List of departures, separated by semicolons. Use codes below where applicable, or free text for others. |
+
+Common departure codes:
+- `no_delay` - No delay distribution between infection and reporting
+- `no_gi` - No generation interval / serial interval
+- `fixed_gi` - Generation interval hardcoded without uncertainty
+- `wrong_gi` - Generation interval value implausible for COVID-19
+- `poisson` - Poisson instead of Negative Binomial observation model
+- `no_convolution` - Missing convolution in renewal equation
+- `no_smoothing` - No Rt smoothing/regularisation (random walk, GP, etc.)
+- `negative_rt` - Prior or model allows negative Rt values
+- `no_uncertainty` - Point estimates only, no credible/confidence intervals
+- `wrong_likelihood` - Incorrect likelihood specification
+- `confused_rt_r` - Confuses Rt with growth rate r
+
+Free text is also fine, e.g., `no_delay; poisson; custom: missing day-of-week adjustment`
 | `count_A_equivalent` | Count of category A departures (different but equally valid approaches) |
 | `count_B_minor` | Count of category B departures (small mistakes, unlikely to substantially affect results) |
 | `count_C_major` | Count of category C departures (significant mistakes that would bias results) |
