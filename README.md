@@ -38,7 +38,7 @@ See [Issue #1](https://github.com/epiforecasts/llm-epi-composition/issues/1) and
 ├── expert_review/           # Expert assessment materials
 │   ├── README.md            # Reviewer instructions
 │   ├── all_code.md          # All submissions (blinded)
-│   └── scoresheet.md        # Scoring forms
+│   └── scoresheet.csv       # Scoring spreadsheet
 ├── reference_solutions/     # Ground truth implementations
 ├── data/                    # Synthetic COVID-19 case data
 └── analysis_plan.md         # Pre-registered analysis plan

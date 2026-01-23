@@ -83,42 +83,31 @@ Provide an overall assessment:
 | **Major issues** | One or more C departures; results would be biased |
 | **Incorrect** | One or more D departures; fundamental misunderstanding |
 
-## Scoring Form
+## How to Review
 
-For each submission, record:
+1. **Open the spreadsheet**: Download `scoresheet.csv` and open in Excel or Google Sheets
+2. **Open the code**: View `all_code.md` alongside (GitHub renders it, or open locally)
+3. **For each row**: Find the matching submission ID in all_code.md, review the code, fill in the columns
+4. **Return the completed spreadsheet** when done
 
-```
-Submission ID: ___________
-Scenario: ___________
+### Spreadsheet Columns
 
-1. METHOD (Scenario 1a only):
-   [ ] Renewal equation / Cori / EpiEstim
-   [ ] Wallinga-Teunis
-   [ ] Bettencourt-Ribeiro / SIR-based
-   [ ] Naive ratio
-   [ ] Other: _________________
-
-2. DEPARTURES:
-   #1: _________________________________ Category: [ A / B / C / D ]
-   #2: _________________________________ Category: [ A / B / C / D ]
-   #3: _________________________________ Category: [ A / B / C / D ]
-   (add more as needed)
-
-3. DEPARTURE COUNTS:
-   A (Equivalent): ___
-   B (Minor): ___
-   C (Major): ___
-   D (Fundamental): ___
-
-4. OVERALL ASSESSMENT:
-   [ ] Acceptable
-   [ ] Minor issues
-   [ ] Major issues
-   [ ] Incorrect
-
-5. NOTES:
-   _________________________________________
-```
+| Column | Description |
+|--------|-------------|
+| `submission_id` | Pre-filled - match to code in all_code.md |
+| `scenario` | Pre-filled (1a, 1b, 2, or 3) |
+| `execution` | Pre-filled (SUCCESS/FAILED/TIMEOUT) |
+| `method_1a_only` | For 1a only: renewal/wallinga-teunis/bettencourt-ribeiro/naive/other |
+| `departures` | Brief description of departures from reference |
+| `count_A_equivalent` | Number of A-category departures |
+| `count_B_minor` | Number of B-category departures |
+| `count_C_major` | Number of C-category departures |
+| `count_D_fundamental` | Number of D-category departures |
+| `overall` | acceptable / minor / major / incorrect |
+| `uncertainty_quantified` | yes / no |
+| `appropriate_parameters` | yes / no / na |
+| `proper_discretisation` | yes / no / na |
+| `notes` | Any additional comments |
 
 ## Additional Criteria to Note
 
