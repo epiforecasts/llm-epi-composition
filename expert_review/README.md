@@ -90,32 +90,59 @@ Provide an overall assessment:
 3. **For each row**: Find the matching submission ID in all_code.md, review the code, fill in the columns
 4. **Return the completed spreadsheet** when done
 
-### Spreadsheet Columns
+### Column Dictionary
+
+#### Pre-filled columns (do not edit)
 
 | Column | Description |
 |--------|-------------|
-| `submission_id` | Pre-filled - match to code in all_code.md |
-| `scenario` | Pre-filled (1a, 1b, 2, or 3) |
-| `execution` | Pre-filled (SUCCESS/FAILED/TIMEOUT) |
-| `method_1a_only` | For 1a only: renewal/wallinga-teunis/bettencourt-ribeiro/naive/other |
-| `departures` | Brief description of departures from reference |
-| `count_A_equivalent` | Number of A-category departures |
-| `count_B_minor` | Number of B-category departures |
-| `count_C_major` | Number of C-category departures |
-| `count_D_fundamental` | Number of D-category departures |
-| `overall` | acceptable / minor / major / incorrect |
-| `uncertainty_quantified` | yes / no |
-| `appropriate_parameters` | yes / no / na |
-| `proper_discretisation` | yes / no / na |
-| `notes` | Any additional comments |
+| `submission_id` | Unique identifier (e.g., SUB_042). Match to heading in all_code.md. |
+| `scenario` | Which scenario: 1a, 1b, 2, or 3. See Scenario Descriptions below. |
+| `execution` | Whether the code ran: SUCCESS (produced output), FAILED (error), or TIMEOUT (exceeded 10 min). |
 
-## Additional Criteria to Note
+#### Method identification (Scenario 1a only)
 
-Please also note (yes/no) for each submission:
+| Column | Description |
+|--------|-------------|
+| `method_1a_only` | Which Rt estimation method was used? Leave blank for scenarios 1b/2/3. |
 
-- **Uncertainty quantification**: Does the model provide credible/confidence intervals?
-- **Appropriate parameters**: Are generation interval (~3-7 days) and delay (~2-7 days) reasonable for COVID-19?
-- **Discretization handling**: Is continuous-to-discrete conversion handled appropriately?
+Valid values:
+- `renewal` - Renewal equation / Cori method / EpiEstim-style (recommended)
+- `wallinga-teunis` - Case reproduction number using symptom onset (acceptable)
+- `bettencourt-ribeiro` - SIR-based method (not recommended)
+- `naive` - Simple ratio like Ct/Ct-1 (not acceptable)
+- `other` - Describe in notes column
+
+#### Departures from reference
+
+| Column | Description |
+|--------|-------------|
+| `departures` | Brief description of each departure, separated by semicolons. E.g., "no delay distribution; Poisson not NegBin; fixed generation interval" |
+| `count_A_equivalent` | Count of category A departures (different but equally valid approaches) |
+| `count_B_minor` | Count of category B departures (small mistakes, unlikely to substantially affect results) |
+| `count_C_major` | Count of category C departures (significant mistakes that would bias results) |
+| `count_D_fundamental` | Count of category D departures (fundamental misunderstanding of the method) |
+
+#### Overall assessment
+
+| Column | Description |
+|--------|-------------|
+| `overall` | Summary judgement based on departure counts. |
+
+Valid values:
+- `acceptable` - No C or D departures; would produce reasonable Rt estimates
+- `minor` - Only A and B departures; results would be slightly suboptimal
+- `major` - One or more C departures; results would be biased
+- `incorrect` - One or more D departures; fundamental misunderstanding
+
+#### Additional criteria
+
+| Column | Description |
+|--------|-------------|
+| `uncertainty_quantified` | Does the model provide credible/confidence intervals for Rt? (`yes` / `no`) |
+| `appropriate_parameters` | Are generation interval (~3-7 days) and delay (~2-7 days) reasonable for COVID-19? (`yes` / `no` / `na` if not applicable) |
+| `proper_discretisation` | Is continuous-to-discrete time conversion handled appropriately? (`yes` / `no` / `na` if not applicable) |
+| `notes` | Any additional comments, clarifications, or uncertainties about your assessment. |
 
 ## Scenario Descriptions
 
