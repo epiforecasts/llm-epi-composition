@@ -36,52 +36,27 @@ Acceptable approaches include:
 - Gaussian process
 - Splines
 
-## Assessment Process
+## Departure Categories
 
-For each submission, complete the following:
-
-### 1. Method Identification (Scenario 1a only)
-
-For Scenario 1a (open method), identify which approach was used:
-
-| Method | Rating | Notes |
-|--------|--------|-------|
-| Renewal equation / Cori / EpiEstim | **Recommended** | Accurate, uses only past data |
-| Wallinga-Teunis | **Acceptable** | Uses future data, underestimates at end |
-| Bettencourt-Ribeiro / SIR-based | **Not recommended** | Assumes exponential generation interval |
-| Naive ratio ($R_t = C_t / C_{t-1}$) | **Not acceptable** | Ignores generation interval |
-| Other | Describe and assess | |
-
-### 2. List Departures from Reference
-
-Document each departure from the reference solution. A "departure" is any difference in approach, not necessarily an error.
-
-Example departures:
-- "Uses Poisson instead of Negative Binomial observation model"
-- "No delay distribution between infection and reporting"
-- "Generation interval hardcoded as 5 days without uncertainty"
-- "Missing convolution in renewal equation"
-- "Prior on Rt allows negative values"
-
-### 3. Classify Each Departure
+When counting departures, classify each into one of these categories:
 
 | Category | Definition | Examples |
 |----------|------------|----------|
-| **(A) Equivalent alternative** | Different but equally valid | GP instead of AR(1) for Rt smoothness; different parameterization of same distribution |
+| **(A) Equivalent alternative** | Different but equally valid | GP instead of AR(1) for Rt smoothness; different parameterisation of same distribution |
 | **(B) Minor error** | Small mistake, unlikely to substantially affect results | Slightly off generation interval mean (e.g., 4 vs 5 days); missing day-of-week adjustment |
 | **(C) Major error** | Significant mistake that would bias results | No delay convolution; Poisson instead of NegBin with overdispersed data; overly tight priors |
 | **(D) Fundamental misunderstanding** | Indicates lack of understanding | Naive ratio method; negative Rt values possible; confusing Rt with growth rate |
 
-### 4. Summary Assessment
+## Overall Assessment
 
-Provide an overall assessment:
+Based on your departure counts:
 
 | Rating | Criteria |
 |--------|----------|
-| **Acceptable** | No C or D departures; would produce reasonable Rt estimates |
-| **Minor issues** | Only A and B departures; results would be slightly suboptimal |
-| **Major issues** | One or more C departures; results would be biased |
-| **Incorrect** | One or more D departures; fundamental misunderstanding |
+| **acceptable** | No C or D departures; would produce reasonable Rt estimates |
+| **minor** | Only A and B departures; results would be slightly suboptimal |
+| **major** | One or more C departures; results would be biased |
+| **incorrect** | One or more D departures; fundamental misunderstanding |
 
 ## How to Review
 
