@@ -95,9 +95,6 @@ Each common departure has its own column. Mark `x` if present, leave blank if no
 ##### `no_delay`
 No delay distribution between infection and reporting. Cases are treated as if observed immediately upon infection.
 
-##### `no_gi`
-No generation interval or serial interval specified. The model doesn't account for the time between successive infections.
-
 ##### `fixed_gi`
 Generation interval is hardcoded as a fixed value without uncertainty. Should be a distribution to propagate uncertainty.
 
@@ -109,9 +106,6 @@ Uses serial interval instead of generation interval without accounting for the d
 
 ##### `poisson`
 Uses Poisson instead of Negative Binomial observation model. Poisson assumes mean equals variance, which underestimates uncertainty for overdispersed case data.
-
-##### `no_convolution`
-Missing convolution in renewal equation. Infections should be convolved with the generation interval to get expected new infections.
 
 ##### `no_smoothing`
 No Rt smoothing or regularisation. Rt should have temporal structure (random walk, AR(1), GP, splines) rather than being independent at each time point.
