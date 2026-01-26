@@ -104,6 +104,9 @@ Generation interval is hardcoded as a fixed value without uncertainty. Should be
 ##### `wrong_gi`
 Generation interval value is implausible for COVID-19 (should be ~3-7 days mean).
 
+##### `si_not_gi`
+Uses serial interval instead of generation interval without accounting for the difference. SI includes incubation periods and can bias Rt estimates.
+
 ##### `poisson`
 Uses Poisson instead of Negative Binomial observation model. Poisson assumes mean equals variance, which underestimates uncertainty for overdispersed case data.
 
