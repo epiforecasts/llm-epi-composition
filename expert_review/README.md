@@ -90,7 +90,7 @@ Valid values:
 
 #### Departures from reference
 
-Each common departure has its own column. Mark `x` if present, leave blank if not. Use `other_departures` for anything not covered below.
+Each common departure has its own column. Mark `1` if present, leave blank if not. Use `other_departures` for anything not covered below.
 
 ##### `no_delay`
 No delay distribution between infection and reporting. Cases are treated as if observed immediately upon infection.
