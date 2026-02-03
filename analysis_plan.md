@@ -17,21 +17,18 @@ Can large language models correctly compose epidemic models from first principle
 
 | Condition | Language | Framework | Description |
 |-----------|----------|-----------|-------------|
-| **A: Stan** | Stan + R | From scratch | Generate Stan code with R interface |
-| **B: PyMC** | Python | From scratch | Generate PyMC model code |
-| **C: Turing.jl** | Julia | From scratch | Generate Turing.jl code |
-| **D: EpiAware** | Julia | Validated components | Generate model using EpiAware, documentation provided |
-| **E: R** | R | Open choice | Generate R code (LLM chooses approach: packages, custom code, or combination) |
+| **R** | R | Open choice | Generate R code (LLM chooses approach: packages, custom code, or combination) |
+| **Python** | Python | Open choice | Generate Python code (LLM chooses libraries: PyMC, NumPyro, JAX, etc.) |
+| **EpiAware** | Julia | Validated components | Generate model using EpiAware, documentation provided |
 
 **Primary comparison:**
-- A/B/C vs D: Effect of validated components on model correctness
+- R/Python vs EpiAware: Effect of validated components on model correctness
 
 **Secondary comparisons:**
-- A vs B vs C: Consistency of performance across probabilistic programming languages
-- E vs A: Effect of open-choice R vs constrained Stan+R (tests whether R's ecosystem helps LLMs)
-- E vs D: Open-choice R vs composable DSL (tests whether LLMs naturally find good approaches)
+- R vs Python: Consistency of performance across general-purpose languages
+- EpiAware: Whether domain-specific tooling with documentation improves correctness
 
-Note: The primary comparison is partially confounded by language (D uses Julia), but C vs D provides a language-controlled comparison. Condition E provides an interesting test of what LLMs naturally do with R's rich ecosystem when given freedom to choose their approach.
+Note: R and Python conditions are "open choice" - the LLM decides which packages or methods to use. This tests what approaches LLMs naturally choose when given freedom. The EpiAware condition provides documentation for a specific domain tool, testing whether guided tooling improves results.
 
 ### Models Under Evaluation
 
@@ -73,12 +70,12 @@ The comparison of 1a vs 1b tests whether specifying the method improves correctn
 
 ### Data
 
-UK COVID-19 data from the UKHSA dashboard:
-- Daily case counts
+UK COVID-19 data from the UKHSA dashboard (England):
+- Daily case counts (by specimen date)
 - Hospital admissions
 - Deaths
 
-Real data is used to test whether generated models can handle actual epidemic dynamics.
+Real data is used to test whether generated models can handle actual epidemic dynamics. Note that cases are indexed by specimen date, meaning there is a delay between infection and the recorded date.
 
 ### Reference Solutions
 
@@ -221,14 +218,14 @@ For each submission, the reviewer:
 Standardised prompts will be constructed for each scenario containing:
 - Clear problem statement (epidemiological question or method specification)
 - Data description and format
-- Language/framework constraint (e.g., "use Stan", "use PyMC", "use EpiAware components")
+- Language/framework constraint (e.g., "use R", "use Python", "use EpiAware components")
 
 **Prompts do not provide epidemiological parameters** (generation interval, delay distributions). This tests whether LLMs:
 - Recognise these parameters are needed
 - Ask appropriate clarifying questions
 - Make reasonable assumptions if not asking
 
-For Condition D (with EpiAware), the prompt will additionally include:
+For the EpiAware condition, the prompt will additionally include:
 - Package overview and component descriptions
 - Type hierarchy and interfaces
 - 2-3 worked examples from documentation
@@ -318,18 +315,18 @@ We use a **two-tier evaluation** to separate these concerns:
 ### Tables
 
 **Table 1: Automated evaluation results by condition and LLM**
-- Rows: LLM × Condition (12 rows)
+- Rows: LLM × Condition (6 rows: 2 LLMs × 3 conditions)
 - Columns: Syntactic validity, Execution, Plausibility, Uncertainty quantification, Asked clarifying questions, Appropriate parameters
 - Cells: Pass rate (n/3 runs)
-- Aggregated rows for "From scratch" (A+B+C) vs "EpiAware" (D)
+- Aggregated rows for "Open choice" (R + Python) vs "EpiAware"
 
 **Table 2: Expert review summary by condition and LLM**
-- Rows: LLM × Condition (12 rows)
+- Rows: LLM × Condition (6 rows)
 - Columns: Departures by category (A/B/C/D counts), Overall assessment distribution
-- Aggregated rows for "From scratch" vs "EpiAware"
+- Aggregated rows for "Open choice" vs "EpiAware"
 
 **Table 3: Method selection in Scenario 1a**
-- Rows: LLM × Condition (12 rows)
+- Rows: LLM × Condition (6 rows)
 - Columns: Renewal/Cori, Wallinga-Teunis, Bettencourt-Ribeiro, Naive ratio, Other
 - Cells: Count of runs using each method
 
@@ -340,7 +337,7 @@ We use a **two-tier evaluation** to separate these concerns:
 ### Figures
 
 **Figure 1: Primary comparison - automated pass rates**
-- Bar chart comparing "From scratch" (A+B+C pooled) vs "EpiAware" (D)
+- Bar chart comparing "Open choice" (R + Python) vs "EpiAware"
 - Grouped by automated criterion
 - Error bars showing 95% CI (Wilson score interval)
 
@@ -352,7 +349,7 @@ We use a **two-tier evaluation** to separate these concerns:
 
 **Figure 3: Departure category distribution**
 - Stacked bar chart
-- X-axis: Condition (A, B, C, D)
+- X-axis: Condition (R, Python, EpiAware)
 - Y-axis: Proportion of departures
 - Colours: Category A (green), B (yellow), C (orange), D (red)
 - Faceted by scenario
@@ -363,11 +360,11 @@ We use a **two-tier evaluation** to separate these concerns:
 
 ### Key Results
 
-**Primary finding (A/B/C vs D):**
-"Of [n] code samples generated without validated components (conditions A-C), [x]% passed all automated checks compared to [y]% with EpiAware components (condition D). Expert review identified a mean of [mean] category C/D departures per sample in conditions A-C versus [mean] in condition D."
+**Primary finding (R/Python vs EpiAware):**
+"Of [n] code samples generated with open choice conditions (R, Python), [x]% passed all automated checks compared to [y]% with EpiAware components. Expert review identified a mean of [mean] category C/D departures per sample in open choice conditions versus [mean] with EpiAware."
 
-**Language comparison (A vs B vs C):**
-"Performance was [similar/varied] across probabilistic programming languages: Stan [x]%, PyMC [y]%, Turing.jl [z]% passed all automated checks. The language-controlled comparison (C vs D, both Julia) showed [description]."
+**Language comparison (R vs Python):**
+"Performance was [similar/varied] across general-purpose languages: R [x]%, Python [y]% passed all automated checks."
 
 **Method selection (Scenario 1a):**
 "When not constrained to the renewal equation, LLMs selected [most common method] in [x]% of cases. [y]% chose methods rated 'not recommended' or 'not acceptable' per Gostic et al. (2020)."
@@ -376,42 +373,31 @@ We use a **two-tier evaluation** to separate these concerns:
 "Specifying the renewal equation [improved/did not improve] correctness: [x]% of 1b samples passed automated checks versus [y]% for 1a."
 
 **Uncertainty quantification:**
-"[x]% of samples provided uncertainty estimates. This was [higher/similar/lower] for EpiAware ([y]%) compared to from-scratch conditions ([z]%), suggesting validated components [do/do not] naturally encourage uncertainty quantification."
+"[x]% of samples provided uncertainty estimates. This was [higher/similar/lower] for EpiAware ([y]%) compared to open choice conditions ([z]%), suggesting validated components [do/do not] naturally encourage uncertainty quantification."
 
 **Common errors:**
-"The most frequent errors were [top 3 from taxonomy], occurring in [x]%, [y]%, [z]% of from-scratch samples respectively. These errors were [absent/rare] in EpiAware samples."
+"The most frequent errors were [top 3 from taxonomy], occurring in [x]%, [y]%, [z]% of open choice samples respectively. These errors were [absent/rare] in EpiAware samples."
 
 ## Discussion Points
 
-### Functions vs DSL
+### Open Choice vs Guided Tooling
 
-This study compares "from scratch" (no tooling) with EpiAware (validated components with a DSL). This conflates two potential benefits:
+This study compares "open choice" conditions (R, Python) where LLMs freely select their approach, with EpiAware where documentation for a domain-specific tool is provided. This tests two questions:
 
-1. **Nothing → Functions**: Having access to validated building blocks (e.g., renewal equation implementation, delay convolution)
-2. **Functions → DSL**: Having a composable domain-specific language that enforces correct composition
+1. **What do LLMs naturally choose?** - Recording which packages/methods LLMs select when unconstrained
+2. **Does guided tooling help?** - Whether providing documentation for validated components improves correctness
 
-We cannot disentangle these effects without an intermediate condition providing functions without the DSL structure. This would be difficult to construct fairly - one would need to provide equivalent functionality (e.g., standalone Julia functions for renewal equations, delays, observation models) without the compositional interface.
-
-Future work could explore this distinction using delay distribution estimation as a test case. The `primarycensoreddist` ecosystem provides validated functions across multiple languages (R, Python, Stan, Julia) without a compositional DSL, enabling a cleaner comparison: (1) from scratch, (2) with `primarycensoreddist` functions, (3) with a DSL like `epidist` if available. This would isolate the benefit of composable structure from the benefit of validated components.
-
-### R Packages vs Raw Modelling Languages
-
-The "Stan" condition (A) requires the LLM to write both raw Stan model code and R interface code (using cmdstanr or rstan). The "R" condition (E) simply instructs "Use R" - giving the LLM complete freedom to choose its approach. This tests what LLMs naturally do when given a familiar, well-documented language with a rich ecosystem of statistical and epidemiological packages.
-
-The conditions create an interesting gradient of abstraction:
-- **Stan (A)**: Must write probabilistic model in Stan syntax + R interface
-- **PyMC (B)**: Must write probabilistic model in Python/PyMC
-- **Turing.jl (C)**: Must write probabilistic model in Julia/Turing
-- **EpiAware (D)**: Guided to use specific composable components with documentation
-- **R (E)**: Open choice - LLM may use EpiEstim, EpiNow2, custom code, or any combination
-
-The comparison E vs A tests whether the R ecosystem's richer training data and package ecosystem improves LLM outputs compared to the more specialised Stan requirement. The E vs D comparison tests whether LLMs naturally gravitate toward good epidemiological approaches (e.g., using EpiNow2) or need explicit guidance toward validated components. This also reveals what approaches LLMs choose when unconstrained - recording whether they use existing packages, write custom models, or combine both.
+The R and Python conditions test what LLMs naturally do with general-purpose languages that have rich ecosystems. LLMs may choose task-specific packages (EpiEstim, EpiNow2 in R; PyMC, NumPyro in Python), write custom code, or combine approaches.
 
 ### DSL vs Task-Specific Packages
 
-Condition E (R) enables comparison between what LLMs naturally produce in R (which may include task-specific packages like EpiEstim, EpiNow2) and a composable DSL (EpiAware, condition D). Task-specific packages may be easier for LLMs to use correctly (fewer choices to make) but offer less flexibility for complex scenarios. The comparison E vs D across scenarios 1-3 tests whether the composable DSL provides advantages as scenario complexity increases, where monolithic packages may not cover all required functionality.
+The R condition enables comparison between what LLMs naturally produce (which may include task-specific packages like EpiEstim, EpiNow2) and a composable DSL (EpiAware). Task-specific packages may be easier for LLMs to use correctly (fewer choices to make) but offer less flexibility for complex scenarios.
 
-For simpler scenarios (1a, 1b), R packages like EpiEstim provide direct solutions, but for complex scenarios (2, 3) with day-of-week effects, time-varying ascertainment, or multiple data streams, LLMs using R packages may need to compose multiple packages or write custom code, reducing the abstraction benefit.
+For simpler scenarios (1a, 1b), R packages like EpiEstim provide direct solutions, but for complex scenarios (2, 3) with day-of-week effects, time-varying ascertainment, or multiple data streams, LLMs using R packages may need to compose multiple packages or write custom code, reducing the abstraction benefit. The EpiAware DSL is designed for such composition.
+
+### Functions vs DSL
+
+This study does not cleanly separate the benefit of validated functions from the benefit of a composable DSL structure. Future work could explore this distinction using delay distribution estimation as a test case. The `primarycensoreddist` ecosystem provides validated functions across multiple languages (R, Python, Stan, Julia) without a compositional DSL, enabling a cleaner comparison.
 
 ## Ethical Considerations
 

@@ -29,4 +29,4 @@ Your code should produce:
 
 ## Language
 
-{{LANGUAGE_INSTRUCTION}}
+Use Python.
