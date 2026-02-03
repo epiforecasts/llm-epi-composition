@@ -21,11 +21,13 @@ Each stream has its own delay from infection to observation, ascertainment rate,
 
 ## Data
 
-You are provided with daily observations (`observations.csv`): A CSV file with columns:
-- `date`: Date in YYYY-MM-DD format
-- `cases`: Number of reported cases on that date
-- `hospitalisations`: Number of hospital admissions on that date
-- `deaths`: Number of deaths on that date
+Daily COVID-19 observations from England (`data/observations.csv`):
+- `date`: Specimen/event date, in YYYY-MM-DD format
+- `cases`: Number of confirmed cases (by specimen date)
+- `hospitalisations`: Number of hospital admissions
+- `deaths`: Number of deaths
+
+Note: Each data stream has different delays from infection to observation. Recent data may be incomplete due to reporting delays.
 
 ## Requirements
 
@@ -45,7 +47,8 @@ You are provided with daily observations (`observations.csv`): A CSV file with c
 ## Output
 
 Your code should produce:
-- Rt estimates for each time point
+- Rt estimates for each time point (the full trajectory)
+- The current (most recent) Rt estimate with uncertainty
 - Stream-specific ascertainment rate estimates
 - A summary or plot showing results
 
