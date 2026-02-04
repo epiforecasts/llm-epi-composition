@@ -185,13 +185,11 @@ Each criterion is scored 0/1. Total plausibility score = sum of criteria met.
 
 | Criterion | Pass condition |
 |-----------|----------------|
-| **Bounded** | All Rt estimates between 0.1 and 10 |
-| **No negative values** | No Rt estimates ≤ 0 |
-| **Smooth trajectory** | No day-to-day changes > 0.5 in point estimate (allowing for genuine epidemic dynamics) |
-| **Reasonable range** | Rt values span a plausible range for the epidemic phase (not all identical, not wildly variable) |
-| **Uncertainty width** | 95% intervals neither too narrow (<0.1) nor too wide (>5) |
-| **Uncertainty increases at edges** | Wider uncertainty for recent dates (where data is incomplete) |
-| **Consistent direction** | Trajectory broadly consistent with case trend (Rt>1 when cases rising, Rt<1 when falling) |
+| **Positive** | All Rt estimates > 0 |
+| **Bounded** | No extreme values (e.g., Rt > 100) |
+| **Sensible variation** | Trajectory varies over time but not erratically (some temporal structure) |
+| **Reasonable uncertainty** | Credible/confidence intervals neither implausibly narrow nor implausibly wide |
+| **Consistent with data** | Trajectory broadly consistent with case trend (Rt>1 when cases rising, Rt<1 when falling) |
 
 ### Expert Review (Departure-Based Assessment)
 
