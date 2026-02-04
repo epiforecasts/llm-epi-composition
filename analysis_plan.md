@@ -171,12 +171,12 @@ Reference solution code is in `reference_solutions/`.
 
 | Criterion | Measurement |
 |-----------|-------------|
-| **Syntactic validity** | Does the code parse without errors? (0/1) |
-| **Execution** | Does the model run on the test data? (0/1) |
+| **Success** | Did the LLM produce working code within the iteration limit? (0/1) |
+| **Iterations** | Number of iterations required to produce working code (1-10, or NA if failed) |
 | **Plausibility** | Are Rt estimates plausible? (0/1) - bounded (e.g., 0.1-10), smooth over time (no implausible jumps), consistent with epidemic dynamics |
 | **Uncertainty quantification** | Does the model provide uncertainty estimates? (0/1) - credible/confidence intervals, posterior samples, or similar |
-| **Asked clarifying questions** | Did the LLM ask about epidemiological parameters before producing code? (0/1) |
-| **Appropriate parameters** | If not asked, did the model use reasonable epidemiological parameters? (0/1) - generation interval ~3-7 days, delay ~2-7 days for COVID-19 |
+| **Appropriate parameters** | Did the model use reasonable epidemiological parameters? (0/1) - generation interval ~3-7 days, delay ~2-7 days for COVID-19 |
+| **Error types** | Categories of errors encountered during iteration (import errors, syntax errors, runtime errors, etc.) |
 
 ### Expert Review (Departure-Based Assessment)
 
@@ -251,44 +251,29 @@ If an LLM asks clarifying questions rather than producing code:
 | Bayesian or frequentist? | "Use whatever approach you think is most appropriate" |
 | Other questions | "Make reasonable assumptions based on your knowledge of COVID-19 epidemiology" |
 
-### Execution
+### Execution: Agentic Approach
 
-1. Each LLM will be prompted 3 times per scenario per condition (to account for stochasticity)
-2. Temperature settings will be recorded and held constant where possible
-3. All prompts and responses will be logged verbatim
-4. Code outputs will be executed in isolated environments with standardised package versions
+We use an **agentic approach** where the LLM can iteratively write, execute, and refine code until it works. This reflects realistic use of coding assistants like Claude Code, Cursor, or GitHub Copilot, where users expect the tool to fix its own errors.
 
-### Handling Execution Failures
+**Protocol:**
+1. Each LLM is given the prompt and asked to write code, execute it, and fix any errors
+2. The LLM can iterate until the code runs successfully or a maximum of 10 iterations is reached
+3. Each run is repeated 3 times per scenario per condition (to account for stochasticity)
+4. All iterations, error messages, and fixes are logged
 
-Code may fail to execute for two distinct reasons:
+**Recorded metrics:**
+- Number of iterations required to produce working code
+- Types of errors encountered and how they were fixed
+- Whether the LLM succeeded within the iteration limit
+- Final code and outputs
 
-1. **Trivial implementation errors**: Missing imports, typos in function names, incorrect file paths, package installation issues
-2. **Methodological errors**: Incorrect model structure, wrong distributions, missing components
+**Tools:**
+- Claude Code (Claude models) - CLI tool with code execution capability
+- Aider with Ollama (open-source models) - provides similar agentic capability for local models
 
-We use a **two-tier evaluation** to separate these concerns:
+**Rationale**: Single-shot code generation often fails due to trivial errors (missing imports, typos) that obscure assessment of methodological correctness. The agentic approach separates "can the LLM eventually produce working code?" from "is the methodology correct?", while reflecting how these tools are actually used in practice.
 
-**Tier 1: "Runs as-is"**
-- Execute the original code without modification
-- Record success/failure and any error messages
-- This captures overall code quality and whether an end-user who cannot code could use the output directly
-
-**Tier 2: "With minimal fixes"**
-- For code that fails Tier 1, apply minimal fixes to enable execution
-- **Allowed fixes** (record each fix applied):
-  - Adding missing `library()` / `import` / `using` statements
-  - Correcting obvious typos in function or variable names
-  - Fixing file paths to match data location
-  - Adding package installation commands
-- **Not allowed** (these are methodological and should not be fixed):
-  - Changing model structure or parameters
-  - Adding missing model components (e.g., delay convolution)
-  - Correcting distribution choices
-  - Any change that affects the epidemiological approach
-- This allows evaluation of methodological correctness even when there are trivial bugs
-
-**Rationale**: A user who cannot code would be unable to fix trivial errors, so Tier 1 captures real-world usability. However, we also want to evaluate methodological understanding separately from implementation skill, which Tier 2 enables. Both metrics are informative.
-
-**Timeout**: Each execution attempt is limited to 10 minutes. Models that exceed this are recorded as "timeout".
+**Timeout**: Each execution attempt within an iteration is limited to 10 minutes. Total session timeout is 60 minutes.
 
 ### Expert Review Protocol
 
