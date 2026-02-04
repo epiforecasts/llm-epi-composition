@@ -51,6 +51,8 @@ Your code should produce:
 - Time-varying ascertainment estimates
 - A summary or plot showing results
 
+Save all results to files.
+
 ## Language
 
 Use EpiAware.jl components in Julia. The EpiAware documentation is provided below.

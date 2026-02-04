@@ -52,6 +52,8 @@ Your code should produce:
 - Stream-specific ascertainment rate estimates
 - A summary or plot showing results
 
+Save all results to files.
+
 ## Language
 
 Use R.

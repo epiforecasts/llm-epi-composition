@@ -27,6 +27,8 @@ Your code should produce:
 - The current (most recent) Rt estimate with uncertainty
 - A summary or plot of Rt over time
 
+Save all results to files.
+
 ## Language
 
 Use R.
