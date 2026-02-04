@@ -173,10 +173,25 @@ Reference solution code is in `reference_solutions/`.
 |-----------|-------------|
 | **Success** | Did the LLM produce working code within the iteration limit? (0/1) |
 | **Iterations** | Number of iterations required to produce working code (1-10, or NA if failed) |
-| **Plausibility** | Are Rt estimates plausible? (0/1) - bounded (e.g., 0.1-10), smooth over time (no implausible jumps), consistent with epidemic dynamics |
-| **Uncertainty quantification** | Does the model provide uncertainty estimates? (0/1) - credible/confidence intervals, posterior samples, or similar |
-| **Appropriate parameters** | Did the model use reasonable epidemiological parameters? (0/1) - generation interval ~3-7 days, delay ~2-7 days for COVID-19 |
+| **Produces plot** | Did the code generate a plot of Rt over time? (0/1) |
+| **Current estimate** | Did the code report a current (most recent) Rt estimate? (0/1) |
+| **Uncertainty** | Did the code provide uncertainty quantification? (0/1) |
+| **Plausibility** | Are Rt estimates plausible? (checklist below) |
 | **Error types** | Categories of errors encountered during iteration (import errors, syntax errors, runtime errors, etc.) |
+
+#### Plausibility Criteria
+
+Each criterion is scored 0/1. Total plausibility score = sum of criteria met.
+
+| Criterion | Pass condition |
+|-----------|----------------|
+| **Bounded** | All Rt estimates between 0.1 and 10 |
+| **No negative values** | No Rt estimates ≤ 0 |
+| **Smooth trajectory** | No day-to-day changes > 0.5 in point estimate (allowing for genuine epidemic dynamics) |
+| **Reasonable range** | Rt values span a plausible range for the epidemic phase (not all identical, not wildly variable) |
+| **Uncertainty width** | 95% intervals neither too narrow (<0.1) nor too wide (>5) |
+| **Uncertainty increases at edges** | Wider uncertainty for recent dates (where data is incomplete) |
+| **Consistent direction** | Trajectory broadly consistent with case trend (Rt>1 when cases rising, Rt<1 when falling) |
 
 ### Expert Review (Departure-Based Assessment)
 
