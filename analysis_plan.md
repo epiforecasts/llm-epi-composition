@@ -185,11 +185,10 @@ Each criterion is scored 0/1. Total plausibility score = sum of criteria met.
 
 | Criterion | Pass condition |
 |-----------|----------------|
-| **Positive** | All Rt estimates > 0 |
-| **Bounded** | No extreme values (e.g., Rt > 100) |
-| **Sensible variation** | Trajectory varies over time but not erratically (some temporal structure) |
-| **Reasonable uncertainty** | Credible/confidence intervals neither implausibly narrow nor implausibly wide |
-| **Consistent with data** | Trajectory broadly consistent with case trend (Rt>1 when cases rising, Rt<1 when falling) |
+| **Positive and bounded** | Rt values are positive and within a plausible range |
+| **Sensible variation** | Trajectory varies over time but not erratically |
+| **Reasonable uncertainty** | Credible/confidence intervals are neither implausibly narrow nor wide |
+| **Consistent with data** | Trajectory broadly consistent with case trend |
 
 ### Expert Review (Departure-Based Assessment)
 
