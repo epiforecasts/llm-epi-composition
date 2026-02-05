@@ -178,6 +178,7 @@ Reference solution code is in `reference_solutions/`.
 | **Current estimate** | Did the code report a current (most recent) Rt estimate? (0/1) |
 | **Uncertainty** | Did the code provide uncertainty quantification? (0/1) |
 | **Plausibility** | Are Rt estimates plausible? (checklist below) |
+| **Fit diagnostics** | For models involving fitting: did the code report any diagnostics? (0/1, descriptive) |
 | **Error types** | Categories of errors encountered during iteration (import errors, syntax errors, runtime errors, etc.) |
 
 #### Plausibility Criteria
