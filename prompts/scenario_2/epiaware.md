@@ -55,7 +55,7 @@ Save all results and any other output that may be useful to the user.
 
 ## Language
 
-Use EpiAware.jl components in Julia (requires Julia 1.10 or later). The EpiAware documentation is provided below.
+Use EpiAware.jl components in Julia (requires Julia 1.11 or later). The EpiAware documentation is provided below.
 
 ---
 
