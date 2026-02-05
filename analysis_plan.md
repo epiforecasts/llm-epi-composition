@@ -233,36 +233,12 @@ Standardised prompts will be constructed for each scenario containing:
 - Data description and format
 - Language/framework constraint (e.g., "use R", "use Python", "use EpiAware components")
 
-**Prompts do not provide epidemiological parameters** (generation interval, delay distributions). This tests whether LLMs:
-- Recognise these parameters are needed
-- Ask appropriate clarifying questions
-- Make reasonable assumptions if not asking
+**Prompts do not provide epidemiological parameters** (generation interval, delay distributions). This tests whether LLMs can make reasonable assumptions based on their knowledge of COVID-19 epidemiology.
 
 For the EpiAware condition, the prompt will additionally include:
 - Package overview and component descriptions
 - Type hierarchy and interfaces
 - 2-3 worked examples from documentation
-
-### Handling Clarifying Questions
-
-If an LLM asks clarifying questions rather than producing code:
-
-1. **Standard responses are provided** for common questions (see below)
-2. **Maximum 3 rounds** of back-and-forth before final code expected
-3. **Only final code is evaluated** - intermediate outputs are not assessed
-4. **Record whether** the LLM asked clarifying questions (evaluation criterion)
-5. **Record what** questions were asked (qualitative analysis)
-
-#### Standard Responses to Clarifying Questions
-
-| Question | Response |
-|----------|----------|
-| Generation interval? | "Use a gamma distribution with mean 5 days and SD 1.5 days, or an equivalent discrete PMF" |
-| Reporting delay? | "Use a gamma distribution with mean 4 days and SD 2 days, or an equivalent discrete PMF" |
-| What time period? | "The data covers [start date] to [end date]" |
-| What priors? | "Use your best judgement for reasonable priors" |
-| Bayesian or frequentist? | "Use whatever approach you think is most appropriate" |
-| Other questions | "Make reasonable assumptions based on your knowledge of COVID-19 epidemiology" |
 
 ### Execution: Agentic Approach
 
