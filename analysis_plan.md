@@ -19,16 +19,17 @@ Can large language models correctly compose epidemic models from first principle
 |-----------|----------|-----------|-------------|
 | **R** | R | Open choice | Generate R code (LLM chooses approach: packages, custom code, or combination) |
 | **Python** | Python | Open choice | Generate Python code (LLM chooses libraries: PyMC, NumPyro, JAX, etc.) |
+| **Julia** | Julia | Open choice | Generate Julia code (LLM chooses libraries: Turing.jl, etc.) |
 | **EpiAware** | Julia | Validated components | Generate model using EpiAware, documentation provided |
 
 **Primary comparison:**
-- R/Python vs EpiAware: Effect of validated components on model correctness
+- R/Python/Julia vs EpiAware: Effect of validated components on model correctness
 
 **Secondary comparisons:**
-- R vs Python: Consistency of performance across general-purpose languages
+- R vs Python vs Julia: Consistency of performance across general-purpose languages
 - EpiAware: Whether domain-specific tooling with documentation improves correctness
 
-Note: R and Python conditions are "open choice" - the LLM decides which packages or methods to use. This tests what approaches LLMs naturally choose when given freedom. The EpiAware condition provides documentation for a specific domain tool, testing whether guided tooling improves results.
+Note: R, Python, and Julia conditions are "open choice" - the LLM decides which packages or methods to use. This tests what approaches LLMs naturally choose when given freedom. The EpiAware condition provides documentation for a specific domain tool, testing whether guided tooling improves results.
 
 ### Models Under Evaluation
 
