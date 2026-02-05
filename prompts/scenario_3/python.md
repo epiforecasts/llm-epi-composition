@@ -52,7 +52,7 @@ Your code should produce:
 - Stream-specific ascertainment rate estimates
 - A summary or plot showing results
 
-Save all results to files.
+Save all results and any other output that may be useful to the user.
 
 ## Language
 
