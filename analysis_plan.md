@@ -17,21 +17,19 @@ Can large language models correctly compose epidemic models from first principle
 
 | Condition | Language | Framework | Description |
 |-----------|----------|-----------|-------------|
-| **A: Stan** | Stan + R | From scratch | Generate Stan code with R interface |
-| **B: PyMC** | Python | From scratch | Generate PyMC model code |
-| **C: Turing.jl** | Julia | From scratch | Generate Turing.jl code |
-| **D: EpiAware** | Julia | Validated components | Generate model using EpiAware, documentation provided |
-| **E: R** | R | Open choice | Generate R code (LLM chooses approach: packages, custom code, or combination) |
+| **R** | R | Open choice | Generate R code (LLM chooses approach: packages, custom code, or combination) |
+| **Python** | Python | Open choice | Generate Python code (LLM chooses libraries: PyMC, NumPyro, JAX, etc.) |
+| **Julia** | Julia | Open choice | Generate Julia code (LLM chooses libraries: Turing.jl, etc.) |
+| **EpiAware** | Julia | Validated components | Generate model using EpiAware, documentation provided |
 
 **Primary comparison:**
-- A/B/C vs D: Effect of validated components on model correctness
+- R/Python/Julia vs EpiAware: Effect of validated components on model correctness
 
 **Secondary comparisons:**
-- A vs B vs C: Consistency of performance across probabilistic programming languages
-- E vs A: Effect of open-choice R vs constrained Stan+R (tests whether R's ecosystem helps LLMs)
-- E vs D: Open-choice R vs composable DSL (tests whether LLMs naturally find good approaches)
+- R vs Python vs Julia: Consistency of performance across general-purpose languages
+- EpiAware: Whether domain-specific tooling with documentation improves correctness
 
-Note: The primary comparison is partially confounded by language (D uses Julia), but C vs D provides a language-controlled comparison. Condition E provides an interesting test of what LLMs naturally do with R's rich ecosystem when given freedom to choose their approach.
+Note: R, Python, and Julia conditions are "open choice" - the LLM decides which packages or methods to use. This tests what approaches LLMs naturally choose when given freedom. The EpiAware condition provides documentation for a specific domain tool, testing whether guided tooling improves results.
 
 ### Models Under Evaluation
 
@@ -73,12 +71,12 @@ The comparison of 1a vs 1b tests whether specifying the method improves correctn
 
 ### Data
 
-UK COVID-19 data from the UKHSA dashboard:
-- Daily case counts
+UK COVID-19 data from the UKHSA dashboard (England):
+- Daily case counts (by specimen date)
 - Hospital admissions
 - Deaths
 
-Real data is used to test whether generated models can handle actual epidemic dynamics.
+Real data is used to test whether generated models can handle actual epidemic dynamics. Note that cases are indexed by specimen date, meaning there is a delay between infection and the recorded date.
 
 ### Reference Solutions
 
@@ -174,12 +172,25 @@ Reference solution code is in `reference_solutions/`.
 
 | Criterion | Measurement |
 |-----------|-------------|
-| **Syntactic validity** | Does the code parse without errors? (0/1) |
-| **Execution** | Does the model run on the test data? (0/1) |
-| **Plausibility** | Are Rt estimates plausible? (0/1) - bounded (e.g., 0.1-10), smooth over time (no implausible jumps), consistent with epidemic dynamics |
-| **Uncertainty quantification** | Does the model provide uncertainty estimates? (0/1) - credible/confidence intervals, posterior samples, or similar |
-| **Asked clarifying questions** | Did the LLM ask about epidemiological parameters before producing code? (0/1) |
-| **Appropriate parameters** | If not asked, did the model use reasonable epidemiological parameters? (0/1) - generation interval ~3-7 days, delay ~2-7 days for COVID-19 |
+| **Success** | Did the LLM produce working code within the iteration limit? (0/1) |
+| **Iterations** | Number of iterations required to produce working code (1-10, or NA if failed) |
+| **Produces plot** | Did the code generate a plot of Rt over time? (0/1) |
+| **Current estimate** | Did the code report a current (most recent) Rt estimate? (0/1) |
+| **Uncertainty** | Did the code provide uncertainty quantification? (0/1) |
+| **Plausibility** | Are Rt estimates plausible? (checklist below) |
+| **Fit diagnostics** | For models involving fitting: did the code report any diagnostics? (0/1, descriptive) |
+| **Error types** | Categories of errors encountered during iteration (import errors, syntax errors, runtime errors, etc.) |
+
+#### Plausibility Criteria
+
+Each criterion is scored 0/1. Total plausibility score = sum of criteria met.
+
+| Criterion | Pass condition |
+|-----------|----------------|
+| **Positive and bounded** | Rt values are positive and within a plausible range |
+| **Sensible variation** | Trajectory varies over time but not erratically |
+| **Reasonable uncertainty** | Credible/confidence intervals are neither implausibly narrow nor wide |
+| **Consistent with data** | Trajectory broadly consistent with case trend |
 
 ### Expert Review (Departure-Based Assessment)
 
@@ -221,77 +232,35 @@ For each submission, the reviewer:
 Standardised prompts will be constructed for each scenario containing:
 - Clear problem statement (epidemiological question or method specification)
 - Data description and format
-- Language/framework constraint (e.g., "use Stan", "use PyMC", "use EpiAware components")
+- Language/framework constraint (e.g., "use R", "use Python", "use EpiAware components")
 
-**Prompts do not provide epidemiological parameters** (generation interval, delay distributions). This tests whether LLMs:
-- Recognise these parameters are needed
-- Ask appropriate clarifying questions
-- Make reasonable assumptions if not asking
+**Prompts do not provide epidemiological parameters** (generation interval, delay distributions). This tests whether LLMs can make reasonable assumptions based on their knowledge of COVID-19 epidemiology.
 
-For Condition D (with EpiAware), the prompt will additionally include:
-- Package overview and component descriptions
-- Type hierarchy and interfaces
-- 2-3 worked examples from documentation
+For the EpiAware condition, the prompt will additionally include links to the package documentation and Github repository and the version of Julia that it is compatible with.
 
-### Handling Clarifying Questions
+### Execution: Agentic Approach
 
-If an LLM asks clarifying questions rather than producing code:
+We use an **agentic approach** where the LLM can iteratively write, execute, and refine code until it works. This reflects realistic use of coding assistants like Claude Code, Cursor, or GitHub Copilot, where users expect the tool to fix its own errors.
 
-1. **Standard responses are provided** for common questions (see below)
-2. **Maximum 3 rounds** of back-and-forth before final code expected
-3. **Only final code is evaluated** - intermediate outputs are not assessed
-4. **Record whether** the LLM asked clarifying questions (evaluation criterion)
-5. **Record what** questions were asked (qualitative analysis)
+**Protocol:**
+1. Each LLM is given the prompt and asked to write code, execute it, and fix any errors
+2. The LLM can iterate until the code runs successfully or a maximum of 10 iterations is reached
+3. Each run is repeated 3 times per scenario per condition (to account for stochasticity)
+4. All iterations, error messages, and fixes are logged
 
-#### Standard Responses to Clarifying Questions
+**Recorded metrics:**
+- Number of iterations required to produce working code
+- Types of errors encountered and how they were fixed
+- Whether the LLM succeeded within the iteration limit
+- Final code and outputs
 
-| Question | Response |
-|----------|----------|
-| Generation interval? | "Use a gamma distribution with mean 5 days and SD 1.5 days, or an equivalent discrete PMF" |
-| Reporting delay? | "Use a gamma distribution with mean 4 days and SD 2 days, or an equivalent discrete PMF" |
-| What time period? | "The data covers [start date] to [end date]" |
-| What priors? | "Use your best judgement for reasonable priors" |
-| Bayesian or frequentist? | "Use whatever approach you think is most appropriate" |
-| Other questions | "Make reasonable assumptions based on your knowledge of COVID-19 epidemiology" |
+**Tools:**
+- Claude Code (Claude models) - CLI tool with code execution capability
+- Aider with Ollama (open-source models) - provides similar agentic capability for local models
 
-### Execution
+**Rationale**: Single-shot code generation often fails due to trivial errors (missing imports, typos) that obscure assessment of methodological correctness. The agentic approach separates "can the LLM eventually produce working code?" from "is the methodology correct?", while reflecting how these tools are actually used in practice.
 
-1. Each LLM will be prompted 3 times per scenario per condition (to account for stochasticity)
-2. Temperature settings will be recorded and held constant where possible
-3. All prompts and responses will be logged verbatim
-4. Code outputs will be executed in isolated environments with standardised package versions
-
-### Handling Execution Failures
-
-Code may fail to execute for two distinct reasons:
-
-1. **Trivial implementation errors**: Missing imports, typos in function names, incorrect file paths, package installation issues
-2. **Methodological errors**: Incorrect model structure, wrong distributions, missing components
-
-We use a **two-tier evaluation** to separate these concerns:
-
-**Tier 1: "Runs as-is"**
-- Execute the original code without modification
-- Record success/failure and any error messages
-- This captures overall code quality and whether an end-user who cannot code could use the output directly
-
-**Tier 2: "With minimal fixes"**
-- For code that fails Tier 1, apply minimal fixes to enable execution
-- **Allowed fixes** (record each fix applied):
-  - Adding missing `library()` / `import` / `using` statements
-  - Correcting obvious typos in function or variable names
-  - Fixing file paths to match data location
-  - Adding package installation commands
-- **Not allowed** (these are methodological and should not be fixed):
-  - Changing model structure or parameters
-  - Adding missing model components (e.g., delay convolution)
-  - Correcting distribution choices
-  - Any change that affects the epidemiological approach
-- This allows evaluation of methodological correctness even when there are trivial bugs
-
-**Rationale**: A user who cannot code would be unable to fix trivial errors, so Tier 1 captures real-world usability. However, we also want to evaluate methodological understanding separately from implementation skill, which Tier 2 enables. Both metrics are informative.
-
-**Timeout**: Each execution attempt is limited to 10 minutes. Models that exceed this are recorded as "timeout".
+**Timeout**: Each execution attempt within an iteration is limited to 10 minutes. Total session timeout is 60 minutes.
 
 ### Expert Review Protocol
 
@@ -318,18 +287,18 @@ We use a **two-tier evaluation** to separate these concerns:
 ### Tables
 
 **Table 1: Automated evaluation results by condition and LLM**
-- Rows: LLM × Condition (12 rows)
+- Rows: LLM × Condition (6 rows: 2 LLMs × 3 conditions)
 - Columns: Syntactic validity, Execution, Plausibility, Uncertainty quantification, Asked clarifying questions, Appropriate parameters
 - Cells: Pass rate (n/3 runs)
-- Aggregated rows for "From scratch" (A+B+C) vs "EpiAware" (D)
+- Aggregated rows for "Open choice" (R + Python) vs "EpiAware"
 
 **Table 2: Expert review summary by condition and LLM**
-- Rows: LLM × Condition (12 rows)
+- Rows: LLM × Condition (6 rows)
 - Columns: Departures by category (A/B/C/D counts), Overall assessment distribution
-- Aggregated rows for "From scratch" vs "EpiAware"
+- Aggregated rows for "Open choice" vs "EpiAware"
 
 **Table 3: Method selection in Scenario 1a**
-- Rows: LLM × Condition (12 rows)
+- Rows: LLM × Condition (6 rows)
 - Columns: Renewal/Cori, Wallinga-Teunis, Bettencourt-Ribeiro, Naive ratio, Other
 - Cells: Count of runs using each method
 
@@ -340,7 +309,7 @@ We use a **two-tier evaluation** to separate these concerns:
 ### Figures
 
 **Figure 1: Primary comparison - automated pass rates**
-- Bar chart comparing "From scratch" (A+B+C pooled) vs "EpiAware" (D)
+- Bar chart comparing "Open choice" (R + Python) vs "EpiAware"
 - Grouped by automated criterion
 - Error bars showing 95% CI (Wilson score interval)
 
@@ -352,7 +321,7 @@ We use a **two-tier evaluation** to separate these concerns:
 
 **Figure 3: Departure category distribution**
 - Stacked bar chart
-- X-axis: Condition (A, B, C, D)
+- X-axis: Condition (R, Python, EpiAware)
 - Y-axis: Proportion of departures
 - Colours: Category A (green), B (yellow), C (orange), D (red)
 - Faceted by scenario
@@ -363,11 +332,11 @@ We use a **two-tier evaluation** to separate these concerns:
 
 ### Key Results
 
-**Primary finding (A/B/C vs D):**
-"Of [n] code samples generated without validated components (conditions A-C), [x]% passed all automated checks compared to [y]% with EpiAware components (condition D). Expert review identified a mean of [mean] category C/D departures per sample in conditions A-C versus [mean] in condition D."
+**Primary finding (R/Python vs EpiAware):**
+"Of [n] code samples generated with open choice conditions (R, Python), [x]% passed all automated checks compared to [y]% with EpiAware components. Expert review identified a mean of [mean] category C/D departures per sample in open choice conditions versus [mean] with EpiAware."
 
-**Language comparison (A vs B vs C):**
-"Performance was [similar/varied] across probabilistic programming languages: Stan [x]%, PyMC [y]%, Turing.jl [z]% passed all automated checks. The language-controlled comparison (C vs D, both Julia) showed [description]."
+**Language comparison (R vs Python):**
+"Performance was [similar/varied] across general-purpose languages: R [x]%, Python [y]% passed all automated checks."
 
 **Method selection (Scenario 1a):**
 "When not constrained to the renewal equation, LLMs selected [most common method] in [x]% of cases. [y]% chose methods rated 'not recommended' or 'not acceptable' per Gostic et al. (2020)."
@@ -376,42 +345,31 @@ We use a **two-tier evaluation** to separate these concerns:
 "Specifying the renewal equation [improved/did not improve] correctness: [x]% of 1b samples passed automated checks versus [y]% for 1a."
 
 **Uncertainty quantification:**
-"[x]% of samples provided uncertainty estimates. This was [higher/similar/lower] for EpiAware ([y]%) compared to from-scratch conditions ([z]%), suggesting validated components [do/do not] naturally encourage uncertainty quantification."
+"[x]% of samples provided uncertainty estimates. This was [higher/similar/lower] for EpiAware ([y]%) compared to open choice conditions ([z]%), suggesting validated components [do/do not] naturally encourage uncertainty quantification."
 
 **Common errors:**
-"The most frequent errors were [top 3 from taxonomy], occurring in [x]%, [y]%, [z]% of from-scratch samples respectively. These errors were [absent/rare] in EpiAware samples."
+"The most frequent errors were [top 3 from taxonomy], occurring in [x]%, [y]%, [z]% of open choice samples respectively. These errors were [absent/rare] in EpiAware samples."
 
 ## Discussion Points
 
-### Functions vs DSL
+### Open Choice vs Guided Tooling
 
-This study compares "from scratch" (no tooling) with EpiAware (validated components with a DSL). This conflates two potential benefits:
+This study compares "open choice" conditions (R, Python) where LLMs freely select their approach, with EpiAware where documentation for a domain-specific tool is provided. This tests two questions:
 
-1. **Nothing → Functions**: Having access to validated building blocks (e.g., renewal equation implementation, delay convolution)
-2. **Functions → DSL**: Having a composable domain-specific language that enforces correct composition
+1. **What do LLMs naturally choose?** - Recording which packages/methods LLMs select when unconstrained
+2. **Does guided tooling help?** - Whether providing documentation for validated components improves correctness
 
-We cannot disentangle these effects without an intermediate condition providing functions without the DSL structure. This would be difficult to construct fairly - one would need to provide equivalent functionality (e.g., standalone Julia functions for renewal equations, delays, observation models) without the compositional interface.
-
-Future work could explore this distinction using delay distribution estimation as a test case. The `primarycensoreddist` ecosystem provides validated functions across multiple languages (R, Python, Stan, Julia) without a compositional DSL, enabling a cleaner comparison: (1) from scratch, (2) with `primarycensoreddist` functions, (3) with a DSL like `epidist` if available. This would isolate the benefit of composable structure from the benefit of validated components.
-
-### R Packages vs Raw Modelling Languages
-
-The "Stan" condition (A) requires the LLM to write both raw Stan model code and R interface code (using cmdstanr or rstan). The "R" condition (E) simply instructs "Use R" - giving the LLM complete freedom to choose its approach. This tests what LLMs naturally do when given a familiar, well-documented language with a rich ecosystem of statistical and epidemiological packages.
-
-The conditions create an interesting gradient of abstraction:
-- **Stan (A)**: Must write probabilistic model in Stan syntax + R interface
-- **PyMC (B)**: Must write probabilistic model in Python/PyMC
-- **Turing.jl (C)**: Must write probabilistic model in Julia/Turing
-- **EpiAware (D)**: Guided to use specific composable components with documentation
-- **R (E)**: Open choice - LLM may use EpiEstim, EpiNow2, custom code, or any combination
-
-The comparison E vs A tests whether the R ecosystem's richer training data and package ecosystem improves LLM outputs compared to the more specialised Stan requirement. The E vs D comparison tests whether LLMs naturally gravitate toward good epidemiological approaches (e.g., using EpiNow2) or need explicit guidance toward validated components. This also reveals what approaches LLMs choose when unconstrained - recording whether they use existing packages, write custom models, or combine both.
+The R and Python conditions test what LLMs naturally do with general-purpose languages that have rich ecosystems. LLMs may choose task-specific packages (EpiEstim, EpiNow2 in R; PyMC, NumPyro in Python), write custom code, or combine approaches.
 
 ### DSL vs Task-Specific Packages
 
-Condition E (R) enables comparison between what LLMs naturally produce in R (which may include task-specific packages like EpiEstim, EpiNow2) and a composable DSL (EpiAware, condition D). Task-specific packages may be easier for LLMs to use correctly (fewer choices to make) but offer less flexibility for complex scenarios. The comparison E vs D across scenarios 1-3 tests whether the composable DSL provides advantages as scenario complexity increases, where monolithic packages may not cover all required functionality.
+The R condition enables comparison between what LLMs naturally produce (which may include task-specific packages like EpiEstim, EpiNow2) and a composable DSL (EpiAware). Task-specific packages may be easier for LLMs to use correctly (fewer choices to make) but offer less flexibility for complex scenarios.
 
-For simpler scenarios (1a, 1b), R packages like EpiEstim provide direct solutions, but for complex scenarios (2, 3) with day-of-week effects, time-varying ascertainment, or multiple data streams, LLMs using R packages may need to compose multiple packages or write custom code, reducing the abstraction benefit.
+For simpler scenarios (1a, 1b), R packages like EpiEstim provide direct solutions, but for complex scenarios (2, 3) with day-of-week effects, time-varying ascertainment, or multiple data streams, LLMs using R packages may need to compose multiple packages or write custom code, reducing the abstraction benefit. The EpiAware DSL is designed for such composition.
+
+### Functions vs DSL
+
+This study does not cleanly separate the benefit of validated functions from the benefit of a composable DSL structure. Future work could explore this distinction using delay distribution estimation as a test case. The `primarycensoreddist` ecosystem provides validated functions across multiple languages (R, Python, Stan, Julia) without a compositional DSL, enabling a cleaner comparison.
 
 ## Ethical Considerations
 

@@ -31,4 +31,4 @@ Save all results and any other output that may be useful to the user.
 
 ## Language
 
-{{LANGUAGE_INSTRUCTION}}
+Use Python.
