@@ -239,7 +239,6 @@ Standardised prompts will be constructed for each scenario containing:
 For the EpiAware condition, the prompt will additionally include links to the package documentation and Github repository and the version of Julia that it is compatible with.
 - Package overview and component descriptions
 - Type hierarchy and interfaces
-- 2-3 worked examples from documentation
 
 ### Execution: Agentic Approach
 
