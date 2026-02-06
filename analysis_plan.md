@@ -236,7 +236,7 @@ Standardised prompts will be constructed for each scenario containing:
 
 **Prompts do not provide epidemiological parameters** (generation interval, delay distributions). This tests whether LLMs can make reasonable assumptions based on their knowledge of COVID-19 epidemiology.
 
-For the EpiAware condition, the prompt will additionally include:
+For the EpiAware condition, the prompt will additionally include links to the package documentation and Github repository and the version of Julia that it is compatible with.
 - Package overview and component descriptions
 - Type hierarchy and interfaces
 - 2-3 worked examples from documentation
