@@ -2,13 +2,15 @@
 
 ## Task
 
-Estimate the time-varying reproduction number (Rt) from daily reported COVID-19 case counts.
+Estimate the time-varying reproduction number (Rt) from daily COVID-19 case counts.
 
 ## Data
 
-You are provided with daily case counts (`cases.csv`): A CSV file with columns:
-- `date`: Date in YYYY-MM-DD format
-- `cases`: Number of reported cases on that date
+Daily COVID-19 case counts from England (`data/cases.csv`):
+- `date`: Specimen date (date the test was taken), in YYYY-MM-DD format
+- `cases`: Number of confirmed cases
+
+Note: There is a delay between infection and specimen date. Recent data may be incomplete due to reporting delays.
 
 ## Requirements
 
@@ -21,8 +23,11 @@ You are provided with daily case counts (`cases.csv`): A CSV file with columns:
 ## Output
 
 Your code should produce:
-- Rt estimates for each time point
+- Rt estimates for each time point (the full trajectory)
+- The current (most recent) Rt estimate with uncertainty
 - A summary or plot of Rt over time
+
+Save all results and any other output that may be useful to the user.
 
 ## Language
 

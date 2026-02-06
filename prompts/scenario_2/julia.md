@@ -2,7 +2,7 @@
 
 ## Task
 
-Estimate the time-varying reproduction number (Rt) from daily reported COVID-19 case counts, accounting for complex observation processes.
+Estimate the time-varying reproduction number (Rt) from daily COVID-19 case counts, accounting for complex observation processes.
 
 ## Background
 
@@ -20,10 +20,12 @@ Reported cases are not a direct observation of infections. The observation proce
 
 ## Data
 
-You are provided with daily case counts (`cases.csv`): A CSV file with columns:
-- `date`: Date in YYYY-MM-DD format
-- `cases`: Number of reported cases on that date
+Daily COVID-19 case counts from England (`data/cases_dow.csv`):
+- `date`: Specimen date (date the test was taken), in YYYY-MM-DD format
+- `cases`: Number of confirmed cases
 - `day_of_week`: Integer 1-7 (Monday=1, Sunday=7)
+
+Note: There is a delay between infection and specimen date. Recent data may be incomplete due to reporting delays.
 
 ## Requirements
 
@@ -43,11 +45,14 @@ You are provided with daily case counts (`cases.csv`): A CSV file with columns:
 ## Output
 
 Your code should produce:
-- Rt estimates for each time point
+- Rt estimates for each time point (the full trajectory)
+- The current (most recent) Rt estimate with uncertainty
 - Day-of-week effect estimates
 - Time-varying ascertainment estimates
 - A summary or plot showing results
 
+Save all results and any other output that may be useful to the user.
+
 ## Language
 
-Use Turing.jl for the model in Julia.
+Use Julia.
