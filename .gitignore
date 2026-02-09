@@ -8,6 +8,9 @@ outputs/**/*.json
 outputs/**/*.csv
 outputs/**/*.rds
 
+# Agentic run outputs
+runs/
+
 # Environment
 .env
 *.log
