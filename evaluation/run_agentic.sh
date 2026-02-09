@@ -2,6 +2,10 @@
 # Run agentic evaluation using Claude Code
 # Usage: ./run_agentic.sh <scenario> <condition> <model> <run_number>
 # Example: ./run_agentic.sh scenario_1a r claude-sonnet-4-20250514 1
+#
+# Runs Claude in an isolated temp directory containing only the prompt and
+# data files, preventing access to reference solutions, other runs, or the
+# study design.
 
 set -e
 
@@ -38,19 +42,25 @@ if [ ! -f "$PROMPT_FILE" ]; then
     exit 1
 fi
 
-# Create run directory
+# Create final output directory
 mkdir -p "$RUN_DIR"
 
-# Copy data files
-cp "$PROJECT_DIR/data/cases.csv" "$RUN_DIR/"
-cp "$PROJECT_DIR/data/cases_dow.csv" "$RUN_DIR/"
-cp "$PROJECT_DIR/data/observations.csv" "$RUN_DIR/"
+# Create isolated temp directory for the run
+# This prevents Claude from exploring the repo, reference solutions, or other runs
+WORK_DIR=$(mktemp -d)
+trap "rm -rf $WORK_DIR" EXIT
 
-# Copy prompt
-cp "$PROMPT_FILE" "$RUN_DIR/prompt.md"
+echo "Isolated working directory: $WORK_DIR"
 
-# Record metadata
-cat > "$RUN_DIR/metadata.json" << EOF
+# Copy only the data and prompt into the isolated directory
+mkdir -p "$WORK_DIR/data"
+cp "$PROJECT_DIR/data/cases.csv" "$WORK_DIR/data/"
+cp "$PROJECT_DIR/data/cases_dow.csv" "$WORK_DIR/data/"
+cp "$PROJECT_DIR/data/observations.csv" "$WORK_DIR/data/"
+cp "$PROMPT_FILE" "$WORK_DIR/prompt.md"
+
+# Record metadata in both locations
+cat > "$WORK_DIR/metadata.json" << EOF
 {
     "scenario": "$SCENARIO",
     "condition": "$CONDITION",
@@ -64,14 +74,13 @@ EOF
 echo "Starting Claude Code..."
 echo ""
 
-cd "$RUN_DIR"
+cd "$WORK_DIR"
 
-# Run Claude Code with the prompt
+# Run Claude Code in the isolated directory
 # --print: non-interactive mode
 # --dangerously-skip-permissions: allow code execution
 # --model: specify the model
 # --verbose: required for stream-json output
-# Capture both stdout and the conversation
 claude --print \
     --dangerously-skip-permissions \
     --model "$MODEL" \
@@ -93,6 +102,9 @@ meta['end_time'] = '$END_TIME'
 with open('metadata.json', 'w') as f:
     json.dump(meta, f, indent=2)
 "
+
+# Copy all results back to the run directory
+cp -r "$WORK_DIR"/* "$RUN_DIR/"
 
 echo ""
 echo "Run complete. Output saved to: $RUN_DIR"
