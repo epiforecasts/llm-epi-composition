@@ -31,8 +31,8 @@ Save all results and any other output that may be useful to the user.
 
 ## Language
 
-Use EpiAware.jl components in Julia (requires Julia 1.11 which can be accessed using juliaup).
+Use EpiAware.jl components in Julia (requires Julia 1.11 using juliaup).
 
-Documentation: https://epiaware.org/ComposableProbabilisticIDModels/epiaware/ and https://github.com/seabbs/Rt-without-renewal
+API documentation for EpiAware.jl is provided in `epiaware_docs.md` in the working directory. Read this file to understand the available types and functions.
 
 A Julia project environment with EpiAware and dependencies is provided (activate with `--project=.`).
