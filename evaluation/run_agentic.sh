@@ -70,10 +70,12 @@ cd "$RUN_DIR"
 # --print: non-interactive mode
 # --dangerously-skip-permissions: allow code execution
 # --model: specify the model
+# --verbose: required for stream-json output
 # Capture both stdout and the conversation
 claude --print \
     --dangerously-skip-permissions \
     --model "$MODEL" \
+    --verbose \
     --output-format stream-json \
     "$(cat prompt.md)" \
     > conversation.jsonl 2> error.log
