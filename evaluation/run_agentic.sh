@@ -59,6 +59,15 @@ cp "$PROJECT_DIR/data/cases_dow.csv" "$WORK_DIR/data/"
 cp "$PROJECT_DIR/data/observations.csv" "$WORK_DIR/data/"
 cp "$PROMPT_FILE" "$WORK_DIR/prompt.md"
 
+# For Julia/EpiAware conditions: provide a pre-configured Julia environment
+# so package installation doesn't break or stall the run
+JULIA_ENV="$PROJECT_DIR/evaluation/julia_env"
+if [ -f "$JULIA_ENV/Project.toml" ] && [[ "$CONDITION" == "julia" || "$CONDITION" == "epiaware" ]]; then
+    cp "$JULIA_ENV/Project.toml" "$WORK_DIR/"
+    cp "$JULIA_ENV/Manifest.toml" "$WORK_DIR/"
+    echo "Julia environment provided in working directory"
+fi
+
 # Record metadata in both locations
 cat > "$WORK_DIR/metadata.json" << EOF
 {

@@ -55,4 +55,4 @@ Save all results and any other output that may be useful to the user.
 
 ## Language
 
-Use Julia.
+Use Julia. A Julia project environment with common packages is provided (activate with `--project=.`).

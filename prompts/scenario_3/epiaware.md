@@ -59,3 +59,5 @@ Save all results and any other output that may be useful to the user.
 Use EpiAware.jl components in Julia (requires Julia 1.11 use juliaup).
 
 Documentation: https://epiaware.org/ComposableProbabilisticIDModels/epiaware/ and https://github.com/seabbs/Rt-without-renewal
+
+A Julia project environment with EpiAware and dependencies is provided (activate with `--project=.`).
