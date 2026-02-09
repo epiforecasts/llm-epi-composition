@@ -1,3 +1,0 @@
-Initializing NUTS using jitter+adapt_diag...
-Multiprocess sampling (2 chains in 2 jobs)
-NUTS: [I_seed, rt_init, rt_noise, alpha]

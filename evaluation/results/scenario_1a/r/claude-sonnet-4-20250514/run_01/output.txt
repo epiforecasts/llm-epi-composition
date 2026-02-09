@@ -1,3 +1,0 @@
-=== COVID-19 Rt ESTIMATION ===
-
-Loading data...
