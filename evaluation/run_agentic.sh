@@ -68,6 +68,13 @@ if [ -f "$JULIA_ENV/Project.toml" ] && [[ "$CONDITION" == "julia" || "$CONDITION
     echo "Julia environment provided in working directory"
 fi
 
+# For EpiAware condition: provide API documentation
+EPIAWARE_DOCS="$PROJECT_DIR/prompts/epiaware_api_docs.md"
+if [ -f "$EPIAWARE_DOCS" ] && [[ "$CONDITION" == "epiaware" ]]; then
+    cp "$EPIAWARE_DOCS" "$WORK_DIR/epiaware_docs.md"
+    echo "EpiAware API documentation provided in working directory"
+fi
+
 # Record metadata in both locations
 cat > "$WORK_DIR/metadata.json" << EOF
 {
