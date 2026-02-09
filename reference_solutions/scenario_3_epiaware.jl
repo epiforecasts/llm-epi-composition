@@ -35,7 +35,7 @@ delay_deaths = [0.0, 0.0, 0.01, 0.02, 0.04, 0.07, 0.10, 0.12, 0.14, 0.13, 0.11, 
 # ---- Build Model Components ----
 
 # 1. Infection model: Renewal equation (shared across all streams)
-model_data = EpiData(gen_int = gen_int_pmf)
+model_data = EpiData(gen_int_pmf, exp)
 epi_model = Renewal(model_data; initialisation_prior = Normal(log(100.0), 2.0))
 
 # 2. Latent model for log(Rt): AR(1) process

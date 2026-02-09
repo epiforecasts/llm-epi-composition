@@ -29,7 +29,7 @@ delay_pmf = [0.0, 0.05, 0.15, 0.25, 0.25, 0.15, 0.1, 0.05]
 
 # 1. Infection model: Renewal equation
 #    Uses the generation interval to model how infections propagate
-model_data = EpiData(gen_int = gen_int_pmf)
+model_data = EpiData(gen_int_pmf, exp)
 epi_model = Renewal(model_data; initialisation_prior = Normal(log(100.0), 2.0))
 
 # 2. Latent model: AR(1) process for log(Rt)

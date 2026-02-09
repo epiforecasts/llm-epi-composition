@@ -31,7 +31,7 @@ delay_pmf = [0.0, 0.05, 0.15, 0.25, 0.25, 0.15, 0.1, 0.05]
 # ---- Build Model Components ----
 
 # 1. Infection model: Renewal equation
-model_data = EpiData(gen_int = gen_int_pmf)
+model_data = EpiData(gen_int_pmf, exp)
 epi_model = Renewal(model_data; initialisation_prior = Normal(log(100.0), 2.0))
 
 # 2. Latent model for log(Rt): AR(1) process
