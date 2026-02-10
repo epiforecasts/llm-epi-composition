@@ -42,6 +42,12 @@ if [ ! -f "$PROMPT_FILE" ]; then
     exit 1
 fi
 
+# Skip if run already has results
+if [ -f "$RUN_DIR/conversation.jsonl" ]; then
+    echo "SKIP: Run already complete at $RUN_DIR"
+    exit 0
+fi
+
 # Create final output directory
 mkdir -p "$RUN_DIR"
 
