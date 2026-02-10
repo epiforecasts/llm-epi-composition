@@ -87,7 +87,32 @@ apply_method(epiproblem::EpiProblem, method::AbstractEpiMethod, data;
 - `model`: The Turing model.
 - `data`: The input data.
 - `samples`: The inference result (e.g. `MCMCChains.Chains`).
-- `generated`: Generated quantities from the model (if applicable).
+- `generated`: Generated quantities — an iterable of `NamedTuple`s (indexed `[iteration, chain]` when from MCMC). Each element has fields `generated_y_t`, `I_t`, and `Z_t`.
+
+**Extracting results from `generated`:**
+
+```julia
+result = apply_method(problem, method, (y_t = data,))
+
+# Extract infection trajectories (Matrix: time_steps × n_samples)
+I_t_samples = mapreduce(hcat, result.generated) do gen
+    gen.I_t
+end
+
+# Extract latent process Z_t (Matrix: time_steps × n_samples)
+Z_t_samples = mapreduce(hcat, result.generated) do gen
+    gen.Z_t
+end
+
+# For Renewal models: Rt = transformation(Z_t), e.g. Rt = exp.(Z_t)
+Rt_samples = exp.(Z_t_samples)   # if transformation = exp
+
+# Compute posterior median and credible intervals
+using Statistics
+Rt_median = mapslices(median, Rt_samples, dims=2)
+Rt_lower = mapslices(x -> quantile(x, 0.025), Rt_samples, dims=2)
+Rt_upper = mapslices(x -> quantile(x, 0.975), Rt_samples, dims=2)
+```
 
 ### `generate_epiaware`
 
