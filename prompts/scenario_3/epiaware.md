@@ -61,3 +61,7 @@ Use EpiAware.jl components in Julia (requires Julia 1.11 using juliaup).
 API documentation for EpiAware.jl is provided in `epiaware_docs.md` in the working directory. Read this file to understand the available types and functions.
 
 A Julia project environment with EpiAware and dependencies is provided (activate with `--project=.`).
+
+## Execution
+
+Model fitting and inference can take a long time. Run long-running scripts in the background and poll for completion rather than waiting for them to finish.

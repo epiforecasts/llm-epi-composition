@@ -45,3 +45,7 @@ Save all results and any other output that may be useful to the user.
 ## Language
 
 Use Julia. A Julia project environment with common packages is provided (activate with `--project=.`).
+
+## Execution
+
+Model fitting and inference can take a long time. Run long-running scripts in the background and poll for completion rather than waiting for them to finish.
