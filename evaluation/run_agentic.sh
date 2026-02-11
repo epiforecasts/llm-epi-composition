@@ -109,7 +109,7 @@ claude --print \
     --verbose \
     --output-format stream-json \
     "$(cat prompt.md)" \
-    > conversation.jsonl 2> error.log
+    > conversation.jsonl 2> error.log || true
 
 # Record end time
 END_TIME=$(date -Iseconds)
