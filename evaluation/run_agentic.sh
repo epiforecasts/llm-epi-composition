@@ -106,6 +106,7 @@ cd "$WORK_DIR"
 claude --print \
     --dangerously-skip-permissions \
     --model "$MODEL" \
+    --max-turns 200 \
     --verbose \
     --output-format stream-json \
     "$(cat prompt.md)" \
