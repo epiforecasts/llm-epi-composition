@@ -48,8 +48,10 @@ get_code_files <- function(run_dir) {
 
 # Determine execution status: SUCCESS if any CSV with "rt" in name exists
 get_execution_status <- function(run_dir) {
-  csvs <- list.files(run_dir, pattern = "\\.csv$", full.names = FALSE)
-  has_rt_csv <- any(grepl("rt", csvs, ignore.case = TRUE))
+  csvs <- list.files(run_dir, pattern = "\\.csv$",
+                     full.names = TRUE, recursive = TRUE)
+  csvs <- csvs[!grepl("/(rt_env|data)/", csvs)]
+  has_rt_csv <- any(grepl("rt", basename(csvs), ignore.case = TRUE))
   if (has_rt_csv) "SUCCESS" else "FAILED"
 }
 

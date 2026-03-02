@@ -11758,7 +11758,7 @@ cat("\nVisualisation completed successfully!\n")
 
 ## SUB_012
 
-**Scenario**: 2 | **Execution**: FAILED
+**Scenario**: 2 | **Execution**: SUCCESS
 
 ### rt_comprehensive_final.jl
 
@@ -20413,7 +20413,7 @@ if __name__ == "__main__":
 
 ## SUB_019
 
-**Scenario**: 2 | **Execution**: FAILED
+**Scenario**: 2 | **Execution**: SUCCESS
 
 ### final_rt_analysis.jl
 
