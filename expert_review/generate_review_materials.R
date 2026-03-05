@@ -163,15 +163,13 @@ generate_review_materials <- function() {
     no_uncertainty = character(n),
     wrong_likelihood = character(n),
     confused_rt_r = character(n),
+    no_discretisation = character(n),
     other_departures = character(n),
     count_A_equivalent = character(n),
     count_B_minor = character(n),
     count_C_major = character(n),
     count_D_fundamental = character(n),
     overall = character(n),
-    uncertainty_quantified = character(n),
-    appropriate_parameters = character(n),
-    proper_discretisation = character(n),
     notes = character(n),
     stringsAsFactors = FALSE
   )

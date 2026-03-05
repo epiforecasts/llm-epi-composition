@@ -122,6 +122,9 @@ Incorrect likelihood specification (e.g., Gaussian for count data, wrong link fu
 ##### `confused_rt_r`
 Confuses instantaneous reproduction number Rt with exponential growth rate r. These are related but distinct quantities.
 
+##### `no_discretisation`
+Continuous-to-discrete time conversion not handled appropriately. Generation interval and delay distributions should be discretised to daily time steps rather than used as continuous densities.
+
 ##### `other_departures`
 Free text for any departures not covered above.
 | `count_A_equivalent` | Count of category A departures (different but equally valid approaches) |
@@ -141,13 +144,10 @@ Valid values:
 - `major` - One or more C departures; results would be biased
 - `incorrect` - One or more D departures; fundamental misunderstanding
 
-#### Additional criteria
+#### Notes
 
 | Column | Description |
 |--------|-------------|
-| `uncertainty_quantified` | Does the model provide credible/confidence intervals for Rt? (`yes` / `no`) |
-| `appropriate_parameters` | Are generation interval (~3-7 days) and delay (~2-7 days) reasonable for COVID-19? (`yes` / `no` / `na` if not applicable) |
-| `proper_discretisation` | Is continuous-to-discrete time conversion handled appropriately? (`yes` / `no` / `na` if not applicable) |
 | `notes` | Any additional comments, clarifications, or uncertainties about your assessment. |
 
 ## Scenario Descriptions
