@@ -38,12 +38,61 @@ get_all_runs <- function() {
   runs
 }
 
-# Collect code files from a run directory (top-level only, exclude data/ etc.)
-get_code_files <- function(run_dir) {
-  pattern <- paste0("\\.(", paste(CODE_EXTENSIONS, collapse = "|"), ")$")
-  files <- list.files(run_dir, pattern = pattern, full.names = TRUE)
-  # Sort for deterministic ordering
-  sort(files)
+# Find the last code file written and executed by the LLM from conversation.jsonl
+get_final_code_file <- function(run_dir) {
+  conv_file <- file.path(run_dir, "conversation.jsonl")
+  if (!file.exists(conv_file)) return(NULL)
+
+  raw <- readLines(conv_file, warn = FALSE)
+  raw <- paste(raw, collapse = "\n")
+
+  exts <- paste(tolower(CODE_EXTENSIONS), collapse = "|")
+
+  # Find all files that were written (Write tool calls)
+  write_pattern <- paste0('"file_path":"[^"]*?/([^/"]+[.](?:', exts, '))","content"')
+  write_matches <- gregexpr(write_pattern, raw, ignore.case = TRUE, perl = TRUE)
+  written_files <- character(0)
+  if (write_matches[[1]][1] != -1) {
+    for (pos in write_matches[[1]]) {
+      chunk <- substr(raw, pos, pos + 300)
+      m <- regmatches(chunk, regexec(write_pattern, chunk,
+                                     ignore.case = TRUE, perl = TRUE))[[1]]
+      if (length(m) >= 2) written_files <- c(written_files, m[2])
+    }
+  }
+
+  # Find all files that were executed (Bash command calls)
+  exec_pattern <- paste0('"command":"[^"]*?([\\w_-]+[.](?:', exts, '))')
+  exec_matches <- gregexpr(exec_pattern, raw, ignore.case = TRUE, perl = TRUE)
+  executed_files <- character(0)
+  if (exec_matches[[1]][1] != -1) {
+    for (pos in exec_matches[[1]]) {
+      chunk <- substr(raw, pos, pos + 500)
+      m <- regmatches(chunk, regexec(exec_pattern, chunk,
+                                     ignore.case = TRUE, perl = TRUE))[[1]]
+      if (length(m) >= 2) executed_files <- c(executed_files, m[2])
+    }
+  }
+
+  # Last file that was both written and executed, excluding auxiliary scripts
+  aux_pattern <- "^(plot|create_plot|simple_plot|summary|final_summary|show_result|monitor|inspect|extract|fix_plot|test|explore|debug|install)"
+  both <- intersect(written_files, executed_files)
+  if (length(both) > 1) {
+    non_aux <- both[!grepl(aux_pattern, both, ignore.case = TRUE)]
+    if (length(non_aux) > 0) both <- non_aux
+  }
+  if (length(both) == 0) {
+    if (length(written_files) == 0) return(NULL)
+    both <- written_files
+    non_aux <- both[!grepl(aux_pattern, both, ignore.case = TRUE)]
+    if (length(non_aux) > 0) both <- non_aux
+  }
+
+  # Pick the last one (most recent in conversation order)
+  final <- both[length(both)]
+
+  filepath <- file.path(run_dir, final)
+  if (file.exists(filepath)) filepath else NULL
 }
 
 # Determine execution status: SUCCESS if any CSV with "rt" in name exists
@@ -113,7 +162,7 @@ generate_review_materials <- function() {
     execution <- mapping$execution[i]
     run <- runs[[i]]
 
-    code_files <- get_code_files(run$run_dir)
+    final_file <- get_final_code_file(run$run_dir)
 
     code_lines <- c(code_lines,
       sprintf("## %s", sub_id),
@@ -122,23 +171,19 @@ generate_review_materials <- function() {
       ""
     )
 
-    if (length(code_files) == 0) {
+    if (is.null(final_file)) {
       code_lines <- c(code_lines, "*No code files found.*", "")
     } else {
-      for (cf in code_files) {
-        ext <- tools::file_ext(cf)
-        lang <- ext_to_lang(ext)
-        file_content <- readLines(cf, warn = FALSE)
+      ext <- tools::file_ext(final_file)
+      lang <- ext_to_lang(ext)
+      file_content <- readLines(final_file, warn = FALSE)
 
-        code_lines <- c(code_lines,
-          sprintf("### %s", basename(cf)),
-          "",
-          sprintf("```%s", lang),
-          file_content,
-          "```",
-          ""
-        )
-      }
+      code_lines <- c(code_lines,
+        sprintf("```%s", lang),
+        file_content,
+        "```",
+        ""
+      )
     }
 
     code_lines <- c(code_lines, "---", "")
