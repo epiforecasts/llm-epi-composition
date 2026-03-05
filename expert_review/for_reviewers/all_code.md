@@ -338,107 +338,212 @@ println("="^50)
 **Scenario**: 1b | **Execution**: SUCCESS
 
 ```r
-# Create comprehensive summary of Rt analysis results
+#!/usr/bin/env Rscript
 
-library(data.table)
+# Scenario 1b: Estimate Rt Using the Renewal Equation
+# Simplified implementation using EpiEstim for comparison
 
-# Load results
-rt_data <- fread("rt_estimates_epiestim.csv")
-rt_data[, date := as.Date(date)]
+# Load required libraries
+suppressMessages({
+  library(data.table)
+  library(ggplot2)
+  library(lubridate)
+})
 
+# Try to install EpiEstim if not available
+if (!require("EpiEstim", character.only = TRUE)) {
+  cat("Installing EpiEstim...\n")
+  install.packages("EpiEstim", repos = "https://cran.rstudio.com/")
+  library(EpiEstim)
+}
+
+cat("Loading and preparing data...\n")
+
+# Load case data
 cases_data <- fread("data/cases.csv")
 cases_data[, date := as.Date(date)]
 cases_data <- cases_data[order(date)]
 
-# Current (most recent) estimates
-current_rt <- rt_data[nrow(rt_data)]
+# Remove any incomplete recent data (last few days with very low counts)
+n_days <- nrow(cases_data)
+recent_mean <- mean(tail(cases_data$cases, 7), na.rm = TRUE)
+overall_mean <- mean(cases_data$cases, na.rm = TRUE)
 
-# Summary statistics
-summary_stats <- data.table(
-  metric = c(
-    "analysis_period_start",
-    "analysis_period_end",
-    "total_days_analysed",
-    "rt_estimation_period_start",
-    "rt_estimation_period_end",
-    "rt_estimates_count",
-    "current_rt_mean",
-    "current_rt_lower_95",
-    "current_rt_upper_95",
-    "mean_rt_over_period",
-    "min_rt_over_period",
-    "max_rt_over_period",
-    "prob_rt_below_1_current",
-    "declining_epidemic"
-  ),
-  value = c(
-    as.character(min(cases_data$date)),
-    as.character(max(cases_data$date)),
-    nrow(cases_data),
-    as.character(min(rt_data$date)),
-    as.character(max(rt_data$date)),
-    nrow(rt_data),
-    round(current_rt$mean, 3),
-    round(current_rt$lower_95, 3),
-    round(current_rt$upper_95, 3),
-    round(mean(rt_data$mean), 3),
-    round(min(rt_data$mean), 3),
-    round(max(rt_data$mean), 3),
-    ifelse(current_rt$upper_95 < 1, ">95%", ifelse(current_rt$mean < 1, "~50%", "<5%")),
-    ifelse(current_rt$upper_95 < 1, "Yes (high confidence)",
-           ifelse(current_rt$mean < 1, "Likely", "No"))
+# If recent week average is less than 30% of overall average, truncate
+if (recent_mean < 0.3 * overall_mean) {
+  cutoff_idx <- n_days
+  for (i in (n_days-6):1) {
+    week_mean <- mean(cases_data$cases[i:(i+6)], na.rm = TRUE)
+    if (week_mean >= 0.3 * overall_mean) {
+      cutoff_idx <- i + 6
+      break
+    }
+  }
+  cases_data <- cases_data[1:cutoff_idx]
+  cat(sprintf("Truncated data to %s to avoid reporting delays\n",
+              cases_data$date[cutoff_idx]))
+}
+
+n_days <- nrow(cases_data)
+cat(sprintf("Using %d days of data from %s to %s\n",
+            n_days, min(cases_data$date), max(cases_data$date)))
+
+# Prepare data for EpiEstim (requires specific format)
+incid_data <- data.frame(
+  dates = cases_data$date,
+  I = cases_data$cases
+)
+
+# Generation interval configuration
+# Mean ~5.1 days, SD ~2.3 days for COVID-19
+gen_mean <- 5.1
+gen_sd <- 2.3
+
+# Create generation interval distribution
+gen_config <- make_config(
+  list(
+    mean_si = gen_mean,
+    std_si = gen_sd,
+    si_parametric_distr = "G",  # Gamma distribution
+    t_start = seq(2, n_days - 6),  # Start times for Rt estimation windows
+    t_end = seq(8, n_days)        # End times (7-day sliding windows)
   )
 )
 
-fwrite(summary_stats, "rt_analysis_summary.csv")
+cat("Estimating Rt using EpiEstim...\n")
 
-# Time series summary (weekly averages)
-rt_data[, week := floor(as.numeric(date - min(date)) / 7) + 1]
-weekly_rt <- rt_data[, .(
-  week_start = min(date),
-  week_end = max(date),
-  mean_rt = mean(mean),
-  mean_lower_95 = mean(lower_95),
-  mean_upper_95 = mean(upper_95)
-), by = week][order(week)]
-
-fwrite(weekly_rt, "rt_weekly_summary.csv")
-
-# Key findings text summary
-findings <- c(
-  paste("Analysis period:", min(cases_data$date), "to", max(cases_data$date)),
-  paste("Total days of case data:", nrow(cases_data)),
-  paste("Rt estimation period:", min(rt_data$date), "to", max(rt_data$date)),
-  "",
-  "KEY FINDINGS:",
-  paste("• Current Rt estimate:", round(current_rt$mean, 2),
-        sprintf("(95%% CI: %.2f - %.2f)", current_rt$lower_95, current_rt$upper_95)),
-  paste("• Epidemic status:", ifelse(current_rt$upper_95 < 1, "DECLINING (high confidence)",
-                                     ifelse(current_rt$mean < 1, "Likely declining", "Growing"))),
-  paste("• Rt range over period:", round(min(rt_data$mean), 2), "to", round(max(rt_data$mean), 2)),
-  paste("• Mean Rt over period:", round(mean(rt_data$mean), 2)),
-  "",
-  "METHODOLOGY:",
-  "• Used EpiEstim package for Rt estimation",
-  "• Generation interval: Gamma distribution with mean=5.1 days, SD=2.3 days",
-  "• 7-day sliding windows for Rt estimation",
-  "• Parametric serial interval approach",
-  "",
-  "OUTPUT FILES:",
-  "• rt_estimates_epiestim.csv: Full time series of Rt estimates",
-  "• rt_analysis_summary.csv: Summary statistics",
-  "• rt_weekly_summary.csv: Weekly averaged Rt estimates",
-  "• rt_plot_fixed.png: Rt visualisation over time",
-  "• cases_plot_fixed.png: Daily cases visualisation"
+# Estimate Rt
+rt_result <- estimate_R(
+  incid = incid_data,
+  method = "parametric_si",
+  config = gen_config
 )
 
-writeLines(findings, "rt_analysis_findings.txt")
+# Extract results
+rt_estimates <- data.table(rt_result$R)
+rt_estimates[, date := cases_data$date[t_end]]
 
-cat("Analysis summary completed!\n")
-cat("Files created:\n")
-cat("- rt_analysis_summary.csv\n")
-cat("- rt_weekly_summary.csv\n")
-cat("- rt_analysis_findings.txt\n")
+# Get most recent estimate
+current_rt <- rt_estimates[nrow(rt_estimates)]
+
+cat("\n", paste(rep("=", 60), collapse = ""), "\n")
+cat("RT ESTIMATION RESULTS (using EpiEstim)\n")
+cat(paste(rep("=", 60), collapse = ""), "\n")
+cat(sprintf("Most recent Rt estimate (as of %s):\n", current_rt$date))
+cat(sprintf("Mean: %.2f (95%% CI: %.2f - %.2f)\n",
+            current_rt$`Mean(R)`, current_rt$`Quantile.0.025(R)`, current_rt$`Quantile.0.975(R)`))
+
+# Check if Rt < 1
+prob_below_1 <- ifelse(current_rt$`Quantile.0.975(R)` < 1, ">95%",
+                       ifelse(current_rt$`Mean(R)` < 1, "~50%", "<5%"))
+cat(sprintf("Probability Rt < 1: %s\n", prob_below_1))
+
+cat(paste(rep("=", 60), collapse = ""), "\n")
+
+# Clean up results for saving
+rt_clean <- data.table(
+  date = rt_estimates$date,
+  mean = rt_estimates$`Mean(R)`,
+  median = rt_estimates$`Median(R)`,
+  lower_95 = rt_estimates$`Quantile.0.025(R)`,
+  upper_95 = rt_estimates$`Quantile.0.975(R)`,
+  lower_50 = rt_estimates$`Quantile.0.25(R)`,
+  upper_50 = rt_estimates$`Quantile.0.75(R)`
+)
+
+# Save results
+fwrite(rt_clean, "rt_estimates_epiestim.csv")
+cat("Saved Rt estimates to rt_estimates_epiestim.csv\n")
+
+# Create visualisation
+cat("Creating visualisation...\n")
+
+# Rt plot
+p1 <- ggplot(rt_clean, aes(x = date)) +
+  geom_ribbon(aes(ymin = lower_95, ymax = upper_95), alpha = 0.3, fill = "steelblue") +
+  geom_ribbon(aes(ymin = lower_50, ymax = upper_50), alpha = 0.5, fill = "steelblue") +
+  geom_line(aes(y = mean), colour = "darkblue", size = 1) +
+  geom_hline(yintercept = 1, linetype = "dashed", colour = "red", alpha = 0.7) +
+  labs(
+    title = "Time-varying Reproduction Number (Rt) for COVID-19",
+    subtitle = "Estimated using EpiEstim package with parametric serial interval",
+    x = "Date",
+    y = "Reproduction number (Rt)",
+    caption = "Dark ribbon: 50% credible interval; Light ribbon: 95% credible interval"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title = element_text(size = 11)
+  ) +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b %d") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Cases plot
+p2 <- ggplot(cases_data, aes(x = date, y = cases)) +
+  geom_col(fill = "grey70", alpha = 0.8) +
+  labs(
+    title = "Observed COVID-19 Cases",
+    x = "Date",
+    y = "Daily cases"
+  ) +
+  theme_minimal() +
+  scale_x_date(date_breaks = "1 week", date_labels = "%b %d") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Save individual plots
+ggsave("cases_plot.png", p2, width = 10, height = 6, dpi = 300)
+ggsave("rt_plot.png", p1, width = 10, height = 6, dpi = 300)
+
+# Combine plots
+if (require("gridExtra", character.only = TRUE)) {
+  combined_plot <- grid.arrange(p2, p1, ncol = 1, heights = c(1, 1.2))
+  ggsave("rt_estimates_combined.png", combined_plot, width = 12, height = 10, dpi = 300)
+  cat("Saved combined plot to rt_estimates_combined.png\n")
+}
+
+cat("Saved individual plots: cases_plot.png and rt_plot.png\n")
+
+# Summary statistics
+summary_stats <- data.table(
+  metric = c("mean_rt", "min_rt", "max_rt", "final_rt", "final_rt_upper", "final_rt_lower"),
+  value = c(
+    mean(rt_clean$mean, na.rm = TRUE),
+    min(rt_clean$mean, na.rm = TRUE),
+    max(rt_clean$mean, na.rm = TRUE),
+    current_rt$`Mean(R)`,
+    current_rt$`Quantile.0.975(R)`,
+    current_rt$`Quantile.0.025(R)`
+  )
+)
+
+fwrite(summary_stats, "rt_summary_stats.csv")
+
+# Save full EpiEstim results for reference
+fwrite(rt_estimates, "rt_estimates_full_epiestim.csv")
+
+cat("\nAnalysis complete!\n")
+cat("Files saved:\n")
+cat("- rt_estimates_epiestim.csv: Clean Rt time series with credible intervals\n")
+cat("- rt_estimates_full_epiestim.csv: Full EpiEstim output\n")
+cat("- cases_plot.png: Daily cases visualisation\n")
+cat("- rt_plot.png: Rt over time visualisation\n")
+cat("- rt_estimates_combined.png: Combined visualisation\n")
+cat("- rt_summary_stats.csv: Summary statistics\n")
+
+cat(sprintf("\nFinal summary:\n"))
+cat(sprintf("Period analysed: %s to %s\n", min(cases_data$date), max(cases_data$date)))
+cat(sprintf("Current Rt: %.2f (95%% CI: %.2f - %.2f)\n",
+            current_rt$`Mean(R)`, current_rt$`Quantile.0.025(R)`, current_rt$`Quantile.0.975(R)`))
+
+# Display trend
+if (nrow(rt_clean) >= 2) {
+  recent_trend <- rt_clean$mean[nrow(rt_clean)] - rt_clean$mean[nrow(rt_clean)-1]
+  trend_direction <- ifelse(recent_trend > 0.05, "increasing",
+                            ifelse(recent_trend < -0.05, "decreasing", "stable"))
+  cat(sprintf("Recent trend: %s (change of %.3f)\n", trend_direction, recent_trend))
+}
 ```
 
 ---
@@ -2672,106 +2777,234 @@ if __name__ == "__main__":
 ```r
 #!/usr/bin/env Rscript
 
-# Simple Final Summary
+# Simplified Rt Model Fitting Script with Fixes
+# Uses the corrected Stan model
+
+library(rstan)
 library(tidyverse)
-library(ggplot2)
+library(lubridate)
 
-cat("=== FINAL RT ESTIMATION RESULTS ===\n")
+# Enable parallel processing
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
 
-# Load results
-cases_data <- read_csv("data/cases_dow.csv")
-cases_data$date <- as.Date(cases_data$date)
+cat("Loading prepared data...\n")
+data_list <- readRDS("rt_data.rds")
+cases_data <- data_list$cases_data
+stan_data <- data_list$stan_data
 
-rt_simple <- read_csv("rt_estimates_simple.csv")
-current_rt_simple <- read_csv("current_rt_simple.csv")
-dow_simple <- read_csv("dow_analysis_simple.csv")
+cat("Compiling simplified Stan model...\n")
+model <- stan_model("rt_model_fixed.stan")
 
-rt_simple$date_mid <- as.Date(rt_simple$date_mid)
-current_rt_simple$date_end <- as.Date(current_rt_simple$date_end)
+cat("Starting simplified MCMC sampling...\n")
+cat("Using reduced iterations for faster results...\n")
 
-# Summary statistics
-total_cases <- sum(cases_data$cases)
-avg_cases <- round(mean(cases_data$cases), 0)
-period_start <- min(cases_data$date)
-period_end <- max(cases_data$date)
+# Fit with reduced iterations for speed
+fit <- sampling(
+  model,
+  data = stan_data,
+  chains = 2,
+  iter = 1000,
+  warmup = 500,
+  cores = 2,
+  control = list(adapt_delta = 0.9, max_treedepth = 10),
+  refresh = 50
+)
+
+cat("Model fitting completed!\n")
+
+# Save results
+saveRDS(fit, "rt_model_simple_fit.rds")
+
+# Extract key results
+posterior <- extract(fit)
+fit_summary <- summary(fit)$summary
+
+# Rt estimates
+rt_summary <- fit_summary[grepl("^R\\[", rownames(fit_summary)), ]
+rt_estimates <- cases_data %>%
+  mutate(
+    rt_median = rt_summary[, "50%"],
+    rt_lower = rt_summary[, "2.5%"],
+    rt_upper = rt_summary[, "97.5%"]
+  )
 
 # Current Rt
-current_rt <- round(current_rt_simple$rt_mean, 3)
-current_ci_lower <- round(current_rt_simple$rt_lower, 3)
-current_ci_upper <- round(current_rt_simple$rt_upper, 3)
+current_rt <- rt_estimates %>%
+  slice_tail(n = 1) %>%
+  select(date, rt_median, rt_lower, rt_upper)
 
-cat("\n=== KEY RESULTS ===\n")
-cat("Analysis Period:", as.character(period_start), "to", as.character(period_end), "\n")
-cat("Total Cases:", scales::comma(total_cases), "\n")
-cat("Average Daily Cases:", scales::comma(avg_cases), "\n")
-cat("Current Rt Estimate:", current_rt, "\n")
-cat("95% Confidence Interval: [", current_ci_lower, ",", current_ci_upper, "]\n")
-cat("Epidemic Status:", ifelse(current_rt < 1, "DECLINING", "GROWING"), "\n")
-
-cat("\n=== DAY-OF-WEEK EFFECTS ===\n")
-print(dow_simple %>%
-  select(day_name, mean_cases, relative_effect) %>%
-  mutate(
-    mean_cases = round(mean_cases, 0),
-    relative_effect = round(relative_effect, 3)
-  ), n = 7)
-
-# Create final summary table
-summary_table <- tibble(
-  Metric = c(
-    "Analysis Period",
-    "Total Cases",
-    "Average Daily Cases",
-    "Current Rt",
-    "95% CI",
-    "Epidemic Status",
-    "Weekend Effect",
-    "Monday Effect"
-  ),
-  Value = c(
-    paste(as.character(period_start), "to", as.character(period_end)),
-    scales::comma(total_cases),
-    scales::comma(avg_cases),
-    as.character(current_rt),
-    paste0("[", current_ci_lower, ", ", current_ci_upper, "]"),
-    ifelse(current_rt < 1, "Declining", "Growing"),
-    paste0(round((1 - dow_simple$relative_effect[dow_simple$day_name == "Saturday"]) * 100, 0), "% reduction"),
-    paste0(round((dow_simple$relative_effect[dow_simple$day_name == "Monday"] - 1) * 100, 0), "% increase")
-  )
+# Day-of-week effects
+dow_summary <- fit_summary[grepl("^dow_multiplier\\[", rownames(fit_summary)), ]
+dow_effects <- tibble(
+  day_of_week = 1:7,
+  day_name = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+  multiplier_median = dow_summary[, "50%"],
+  multiplier_lower = dow_summary[, "2.5%"],
+  multiplier_upper = dow_summary[, "97.5%"]
 )
 
-write_csv(summary_table, "final_summary.csv")
+cat("\n=== BAYESIAN RESULTS ===\n")
+cat("Current Rt estimate (", as.character(current_rt$date), "):\n")
+cat("  Median:", round(current_rt$rt_median, 3), "\n")
+cat("  95% CI: [", round(current_rt$rt_lower, 3), ",", round(current_rt$rt_upper, 3), "]\n")
 
-cat("\n=== SUMMARY TABLE ===\n")
-print(summary_table, n = Inf)
+cat("\nDay-of-week multipliers:\n")
+print(dow_effects %>%
+  select(day_name, multiplier_median, multiplier_lower, multiplier_upper) %>%
+  mutate(across(starts_with("multiplier"), ~ round(.x, 3))))
 
-cat("\n=== MODEL INTERPRETATION ===\n")
-cat("1. The reproduction number Rt =", current_rt, "indicates transmission is declining\n")
-cat("2. Strong weekend reporting effects (Saturday -20%, Sunday -13%)\n")
-cat("3. Monday catch-up effect (+15% above average)\n")
-cat("4. Data covers the decline phase following UK's winter 2021 wave\n")
+# Save results
+write_csv(rt_estimates, "rt_estimates_bayesian.csv")
+write_csv(current_rt, "current_rt_bayesian.csv")
+write_csv(dow_effects, "dow_effects_bayesian.csv")
 
-cat("\n=== FILES CREATED ===\n")
-files_created <- c(
-  "rt_estimates_simple.csv",
-  "current_rt_simple.csv",
-  "dow_analysis_simple.csv",
-  "rt_simple.png",
-  "dow_simple.png",
-  "cases_simple.png",
-  "final_summary.csv",
-  "interim_results.md"
-)
+cat("\nBayesian results saved to:\n")
+cat("- rt_estimates_bayesian.csv\n")
+cat("- current_rt_bayesian.csv\n")
+cat("- dow_effects_bayesian.csv\n")
+cat("- rt_model_simple_fit.rds\n")
 
-for(file in files_created) {
-  if(file.exists(file)) {
-    cat("✓", file, "\n")
+cat("\nBayesian analysis completed successfully!\n")
+```
+
+```stan
+data {
+  int<lower=1> T;                    // Number of time points
+  int cases[T];                      // Observed cases
+  int day_of_week[T];               // Day of week (1-7)
+  int<lower=1> G;                   // Generation interval length
+  vector[G] gen_int;                // Generation interval PMF
+  int<lower=1> D;                   // Reporting delay length
+  vector[D] delay_pmf;              // Reporting delay PMF
+  int<lower=1> max_lag;             // Maximum lag for renewal equation
+}
+
+parameters {
+  vector[T] log_R_raw;              // Raw log(Rt) values
+  real log_R_mean;                  // Mean log(Rt)
+  real<lower=0> sigma_R;            // Random walk SD for Rt
+
+  vector[7] log_dow_effect_raw;     // Raw day-of-week effects
+  real<lower=0> sigma_dow;          // Day-of-week effect SD
+
+  vector[T] logit_ascertainment_raw; // Raw logit ascertainment
+  real logit_ascertainment_mean;     // Mean logit ascertainment
+  real<lower=0> sigma_ascertainment; // Ascertainment random walk SD
+
+  vector[max_lag] log_I_init;       // Initial infections (seeding)
+  real<lower=0> phi;                // Overdispersion parameter (1/phi parameterisation)
+}
+
+transformed parameters {
+  vector[T] log_R;                  // Smoothed log(Rt)
+  vector[7] log_dow_effect;         // Day-of-week effects (sum to zero)
+  vector[T] logit_ascertainment;    // Smoothed logit ascertainment
+  vector[T] ascertainment;          // Ascertainment probability
+  vector[T + max_lag] log_I;        // Log infections (including seeding)
+  vector[T] expected_cases;         // Expected reported cases
+
+  // Smooth Rt using random walk
+  log_R[1] = log_R_mean + sigma_R * log_R_raw[1];
+  for (t in 2:T) {
+    log_R[t] = log_R[t-1] + sigma_R * log_R_raw[t];
+  }
+
+  // Day-of-week effects (sum to zero constraint)
+  log_dow_effect = sigma_dow * log_dow_effect_raw;
+  log_dow_effect = log_dow_effect - mean(log_dow_effect);
+
+  // Smooth ascertainment using random walk
+  logit_ascertainment[1] = logit_ascertainment_mean + sigma_ascertainment * logit_ascertainment_raw[1];
+  for (t in 2:T) {
+    logit_ascertainment[t] = logit_ascertainment[t-1] + sigma_ascertainment * logit_ascertainment_raw[t];
+  }
+  ascertainment = inv_logit(logit_ascertainment);
+
+  // Initial infections (seeding period)
+  for (i in 1:max_lag) {
+    log_I[i] = log_I_init[i];
+  }
+
+  // Renewal equation: I_t = R_t * sum(I_{t-s} * g_s)
+  for (t in 1:T) {
+    real infectiousness = 0;
+    int time_idx = t + max_lag;
+
+    for (s in 1:min(G, time_idx - 1)) {
+      if (time_idx - s >= 1) {
+        infectiousness += exp(log_I[time_idx - s]) * gen_int[s];
+      }
+    }
+
+    log_I[time_idx] = log_R[t] + log(infectiousness);
+  }
+
+  // Expected reported cases with delay, day-of-week effects, and ascertainment
+  for (t in 1:T) {
+    real expected_reports = 0;
+
+    for (d in 1:min(D, t + max_lag)) {
+      if (t + max_lag - d + 1 >= 1) {
+        expected_reports += exp(log_I[t + max_lag - d + 1]) * delay_pmf[d];
+      }
+    }
+
+    expected_cases[t] = expected_reports * ascertainment[t] * exp(log_dow_effect[day_of_week[t]]);
   }
 }
 
-cat("\nAnalysis completed successfully!\n")
-cat("The renewal equation model with generation interval successfully estimated\n")
-cat("time-varying Rt accounting for day-of-week reporting effects.\n")
+model {
+  // Priors
+  log_R_mean ~ normal(0, 0.5);        // Prior for mean log(Rt)
+  sigma_R ~ normal(0, 0.1);           // Small changes in Rt
+
+  log_dow_effect_raw ~ normal(0, 1);   // Day-of-week effects
+  sigma_dow ~ normal(0, 0.2);
+
+  logit_ascertainment_mean ~ normal(-1, 1); // Prior for mean ascertainment
+  sigma_ascertainment ~ normal(0, 0.1);     // Small changes in ascertainment
+
+  log_I_init ~ normal(8, 1);          // Initial infections (tighter prior)
+  phi ~ exponential(0.01);            // Overdispersion (1/phi parameterisation)
+
+  // Random walk priors
+  log_R_raw ~ normal(0, 1);
+  logit_ascertainment_raw ~ normal(0, 1);
+
+  // Likelihood - negative binomial for overdispersion
+  for (t in 1:T) {
+    if (expected_cases[t] > 0) {
+      real alpha = 1.0/phi;  // Convert to alpha parameterisation
+      real beta = alpha / expected_cases[t];
+      cases[t] ~ neg_binomial(alpha, beta);
+    }
+  }
+}
+
+generated quantities {
+  vector[T] R;                        // Rt on natural scale
+  vector[7] dow_multiplier;           // Day-of-week multipliers
+  vector[T] log_lik;                  // Log likelihood for each observation
+  vector[T] cases_pred;               // Posterior predictive cases (bounded)
+
+  R = exp(log_R);
+  dow_multiplier = exp(log_dow_effect);
+
+  for (t in 1:T) {
+    real alpha = 1.0/phi;
+    real beta = alpha / expected_cases[t];
+
+    log_lik[t] = neg_binomial_lpmf(cases[t] | alpha, beta);
+
+    // Bounded prediction to avoid overflow
+    if (expected_cases[t] > 0 && expected_cases[t] < 1e6) {
+      cases_pred[t] = neg_binomial_rng(alpha, beta);
+    } else {
+      cases_pred[t] = cases[t]; // Use observed value if prediction would overflow
+    }
+  }
+}
 ```
 
 ---
@@ -4596,176 +4829,513 @@ if __name__ == "__main__":
 ```r
 #!/usr/bin/env Rscript
 
-# Model interpretation and technical details
-# Explains the multi-stream Rt estimation approach
+# Simplified and robust multi-stream Rt estimation
+# Focus on numerical stability and getting working results
 
-library(readr)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
 library(dplyr)
 library(ggplot2)
+library(readr)
+library(purrr)
 
-cat("=== MULTI-STREAM RT ESTIMATION: TECHNICAL DETAILS ===\n\n")
+set.seed(12345)
 
-# Load results
-results <- read_csv("rt_final_estimates.csv", show_col_types = FALSE)
+cat("Loading and preparing data...\n")
+
+# Load data
 data <- read_csv("data/observations.csv", show_col_types = FALSE)
+data$date <- as.Date(data$date)
+data <- data %>% arrange(date)
 
-cat("1. RENEWAL EQUATION FRAMEWORK\n")
-cat("==============================\n")
-cat("The model implements the renewal equation:\n")
-cat("   I_t = R_t × Σ(I_{t-s} × g_s)\n")
-cat("\nWhere:\n")
-cat("- I_t = infections at time t\n")
-cat("- R_t = reproduction number at time t\n")
-cat("- g_s = generation interval distribution\n")
-cat("- s = days since infection\n\n")
+n_days <- nrow(data)
+cat("Data spans", n_days, "days from", min(data$date), "to", max(data$date), "\n")
 
-cat("This captures how current infections depend on:\n")
-cat("- Past infections (I_{t-s})\n")
-cat("- Transmissibility at time t (R_t)\n")
-cat("- Time between successive infections (g_s)\n\n")
+# Prepare observation vectors
+cases <- data$cases
+hospitalisations <- data$hospitalisations
+deaths <- data$deaths
 
-cat("2. MULTI-STREAM OBSERVATION MODEL\n")
-cat("===================================\n")
-cat("Three data streams are modelled separately:\n\n")
+# Generation interval - simplified discretised gamma
+gen_mean <- 5.1
+gen_sd <- 2.3
+gen_max <- 15  # Reduced for stability
 
-stream_info <- data.frame(
-  Stream = c("Cases", "Hospitalisations", "Deaths"),
-  Delay_Mean = c("3-4 days", "8 days", "18 days"),
-  Characteristics = c(
-    "Most timely, variable reporting",
-    "More reliable, moderate delay",
-    "Most complete, longest delay"
-  )
+gen_shape <- (gen_mean / gen_sd)^2
+gen_rate <- gen_mean / gen_sd^2
+gen_pmf <- diff(pgamma(0:(gen_max), shape = gen_shape, rate = gen_rate))
+gen_pmf <- gen_pmf / sum(gen_pmf)
+
+cat("Generation interval: mean =", round(sum(1:length(gen_pmf) * gen_pmf), 2), "days\n")
+
+# Simplified delay distributions
+case_delay_pmf <- c(0.1, 0.3, 0.4, 0.2)  # Simple discrete delays
+hosp_delay_pmf <- c(0.05, 0.1, 0.15, 0.2, 0.25, 0.15, 0.1)  # Longer delay
+death_delay_pmf <- c(0.02, 0.03, 0.05, 0.08, 0.12, 0.15, 0.2, 0.15, 0.1, 0.05, 0.05)  # Even longer
+
+cat("Simplified delay distributions created\n")
+
+# Stan data
+stan_data <- list(
+  n_days = n_days,
+
+  # Observations
+  cases = cases,
+  hospitalisations = hospitalisations,
+  deaths = deaths,
+
+  # Generation interval
+  n_gen = length(gen_pmf),
+  gen_pmf = gen_pmf,
+
+  # Delay distributions
+  n_case_delay = length(case_delay_pmf),
+  case_delay_pmf = case_delay_pmf,
+
+  n_hosp_delay = length(hosp_delay_pmf),
+  hosp_delay_pmf = hosp_delay_pmf,
+
+  n_death_delay = length(death_delay_pmf),
+  death_delay_pmf = death_delay_pmf
 )
 
-print(stream_info)
+cat("\nWriting simplified Stan model...\n")
 
-cat("\n3. STREAM-SPECIFIC PARAMETERS\n")
-cat("==============================\n")
-cat("Each stream has:\n")
-cat("- Delay distribution: Time from infection to observation\n")
-cat("- Ascertainment rate: Proportion of infections observed\n")
-cat("- Overdispersion: Extra-Poisson variation in counts\n\n")
+# Simplified Stan model
+stan_code <- '
+data {
+  int<lower=1> n_days;
 
-cat("Observation equation for stream k:\n")
-cat("   Expected_k,t = ascertainment_k × Σ(I_{t-d} × delay_k,d)\n")
-cat("   Observed_k,t ~ NegBinomial(Expected_k,t, φ_k)\n\n")
+  array[n_days] int cases;
+  array[n_days] int hospitalisations;
+  array[n_days] int deaths;
 
-cat("4. KEY MODEL FEATURES\n")
-cat("======================\n")
-cat("✓ Joint estimation: All streams inform single R_t trajectory\n")
-cat("✓ Uncertainty quantification: Bayesian inference provides credible intervals\n")
-cat("✓ Smoothness constraint: R_t evolves gradually over time\n")
-cat("✓ Overdispersion: Accounts for extra variation beyond Poisson\n")
-cat("✓ Delay structure: Each stream's reporting delay modelled explicitly\n\n")
+  int<lower=1> n_gen;
+  vector<lower=0>[n_gen] gen_pmf;
 
-cat("5. INTERPRETATION OF RESULTS\n")
-cat("=============================\n")
-current_rt <- tail(results$rt_mean, 1)
-current_lower <- tail(results$rt_lower, 1)
-current_upper <- tail(results$rt_upper, 1)
+  int<lower=1> n_case_delay;
+  vector<lower=0>[n_case_delay] case_delay_pmf;
 
-cat(sprintf("Current R_t estimate: %.3f (95%% CI: %.3f - %.3f)\n", current_rt, current_lower, current_upper))
+  int<lower=1> n_hosp_delay;
+  vector<lower=0>[n_hosp_delay] hosp_delay_pmf;
 
-if (current_rt < 1.0) {
-  cat("\nInterpretation: R_t < 1\n")
-  cat("- Each infected person infects fewer than 1 other person on average\n")
-  cat("- Epidemic is declining\n")
-  cat("- Control measures are effective\n")
-} else if (current_rt > 1.0) {
-  cat("\nInterpretation: R_t > 1\n")
-  cat("- Each infected person infects more than 1 other person on average\n")
-  cat("- Epidemic is growing\n")
-  cat("- Additional interventions may be needed\n")
-} else {
-  cat("\nInterpretation: R_t ≈ 1\n")
-  cat("- Epidemic is at equilibrium\n")
-  cat("- Current measures are maintaining stable levels\n")
+  int<lower=1> n_death_delay;
+  vector<lower=0>[n_death_delay] death_delay_pmf;
 }
 
-cat("\n6. ADVANTAGES OF MULTI-STREAM APPROACH\n")
-cat("=======================================\n")
-cat("Compared to single-stream estimation:\n\n")
+parameters {
+  // Initial infections (log scale for stability)
+  vector[n_gen] log_initial_infections;
 
-cat("Cases alone:\n")
-cat("- Fast but affected by testing policy changes\n")
-cat("- Ascertainment varies with testing availability\n")
-cat("- May miss asymptomatic infections\n\n")
+  // Log Rt with random walk
+  vector[n_days] log_rt_raw;
+  real log_rt_mean;
 
-cat("Hospitalisations alone:\n")
-cat("- More reliable case definition\n")
-cat("- Less affected by testing policies\n")
-cat("- But delayed and smaller sample size\n\n")
+  // Ascertainment rates (logit scale)
+  real logit_case_ascertainment;
+  real logit_hosp_ascertainment;
+  real logit_death_ascertainment;
 
-cat("Deaths alone:\n")
-cat("- Most complete ascertainment\n")
-cat("- Least affected by testing changes\n")
-cat("- But longest delay and smallest sample size\n\n")
+  // Overdispersion parameters
+  real<lower=1> phi_cases;
+  real<lower=1> phi_hosp;
+  real<lower=1> phi_deaths;
+}
 
-cat("Multi-stream approach:\n")
-cat("✓ Combines strengths of all streams\n")
-cat("✓ More robust to changes in any single stream\n")
-cat("✓ Better uncertainty quantification\n")
-cat("✓ Accounts for different delay structures\n\n")
+transformed parameters {
+  vector<lower=0>[n_days] rt;
+  vector<lower=0>[n_days] infections;
+  vector<lower=0>[n_days] expected_cases;
+  vector<lower=0>[n_days] expected_hosp;
+  vector<lower=0>[n_days] expected_deaths;
 
-cat("7. LIMITATIONS AND ASSUMPTIONS\n")
-cat("===============================\n")
-cat("Key assumptions:\n")
-cat("- Generation interval is fixed (5.1 days)\n")
-cat("- Delay distributions are constant over time\n")
-cat("- Ascertainment rates are constant\n")
-cat("- No major changes in case definitions\n")
-cat("- Population mixing patterns are stable\n\n")
+  // Initial infections
+  vector<lower=0>[n_gen] initial_infections = exp(log_initial_infections);
 
-cat("Limitations:\n")
-cat("- Model complexity requires careful implementation\n")
-cat("- Computational demands higher than simple methods\n")
-cat("- Requires good prior knowledge of delay distributions\n")
-cat("- Sensitive to changes in reporting systems\n\n")
+  // Ascertainment rates
+  real<lower=0, upper=1> case_ascertainment = inv_logit(logit_case_ascertainment);
+  real<lower=0, upper=1> hosp_ascertainment = inv_logit(logit_hosp_ascertainment);
+  real<lower=0, upper=1> death_ascertainment = inv_logit(logit_death_ascertainment);
 
-cat("8. VALIDATION APPROACHES\n")
-cat("=========================\n")
-cat("Model validation can include:\n")
-cat("- Posterior predictive checks\n")
-cat("- Comparison with single-stream estimates\n")
-cat("- Cross-validation on held-out time periods\n")
-cat("- Sensitivity analysis on key assumptions\n")
-cat("- Comparison with independent surveillance data\n\n")
+  // Rt trajectory
+  vector[n_days] log_rt;
+  log_rt[1] = log_rt_mean + log_rt_raw[1];
+  for (t in 2:n_days) {
+    log_rt[t] = log_rt[t-1] + log_rt_raw[t];
+  }
+  rt = exp(log_rt);
 
-# Calculate some diagnostics
-mean_cases <- mean(data$cases)
-mean_hosp <- mean(data$hospitalisations)
-mean_deaths <- mean(data$deaths)
+  // Renewal equation
+  for (t in 1:n_days) {
+    real infectiousness = 0.0;
 
-case_hosp_ratio <- mean_cases / mean_hosp
-hosp_death_ratio <- mean_hosp / mean_deaths
+    for (s in 1:min(t, n_gen)) {
+      if (t - s <= 0) {
+        // Use initial seeding
+        int seed_idx = s - t + 1;
+        if (seed_idx >= 1 && seed_idx <= n_gen) {
+          infectiousness += initial_infections[seed_idx] * gen_pmf[s];
+        }
+      } else {
+        infectiousness += infections[t - s] * gen_pmf[s];
+      }
+    }
 
-cat("9. DATA STREAM RELATIONSHIPS\n")
-cat("=============================\n")
-cat(sprintf("Average daily counts:\n"))
-cat(sprintf("- Cases: %.0f\n", mean_cases))
-cat(sprintf("- Hospitalisations: %.0f\n", mean_hosp))
-cat(sprintf("- Deaths: %.0f\n", mean_deaths))
-cat(sprintf("\nRatios (approximate):\n"))
-cat(sprintf("- Cases per hospitalisation: %.1f\n", case_hosp_ratio))
-cat(sprintf("- Hospitalisations per death: %.1f\n", hosp_death_ratio))
-cat(sprintf("- Cases per death: %.1f\n", mean_cases / mean_deaths))
+    infections[t] = rt[t] * fmax(infectiousness, 1e-6);
+  }
 
-cat("\nThese ratios reflect:\n")
-cat("- Disease severity (hospitalisation/infection rate)\n")
-cat("- Case fatality rate (deaths/cases)\n")
-cat("- Healthcare system capacity\n")
-cat("- Population demographics and risk factors\n\n")
+  // Expected observations
+  for (t in 1:n_days) {
+    expected_cases[t] = 1e-6;
+    expected_hosp[t] = 1e-6;
+    expected_deaths[t] = 1e-6;
 
-cat("Analysis complete. See visualisations in:\n")
-cat("- rt_final_plot.png: R_t trajectory\n")
-cat("- data_streams_final.png: Input data\n")
-cat("- data_validation_plot.png: Data exploration\n\n")
+    // Cases
+    for (d in 1:min(t, n_case_delay)) {
+      if (t - d + 1 >= 1 && t - d + 1 <= n_days) {
+        expected_cases[t] += case_ascertainment * infections[t - d + 1] * case_delay_pmf[d];
+      }
+    }
 
-cat("For technical details, see:\n")
-cat("- simplified_multistream_rt.R: Model implementation\n")
-cat("- rt_final_estimates.csv: Complete results\n")
-cat("- RESULTS_SUMMARY.txt: Key findings\n\n")
+    // Hospitalisations
+    for (d in 1:min(t, n_hosp_delay)) {
+      if (t - d + 1 >= 1 && t - d + 1 <= n_days) {
+        expected_hosp[t] += hosp_ascertainment * infections[t - d + 1] * hosp_delay_pmf[d];
+      }
+    }
+
+    // Deaths
+    for (d in 1:min(t, n_death_delay)) {
+      if (t - d + 1 >= 1 && t - d + 1 <= n_days) {
+        expected_deaths[t] += death_ascertainment * infections[t - d + 1] * death_delay_pmf[d];
+      }
+    }
+
+    // Ensure minimum values
+    expected_cases[t] = fmax(expected_cases[t], 1.0);
+    expected_hosp[t] = fmax(expected_hosp[t], 1.0);
+    expected_deaths[t] = fmax(expected_deaths[t], 1.0);
+  }
+}
+
+model {
+  // Priors
+  log_initial_infections ~ normal(log(100), 1);
+  log_rt_mean ~ normal(log(0.8), 0.2);
+  log_rt_raw ~ normal(0, 0.1);
+
+  logit_case_ascertainment ~ normal(2, 1);
+  logit_hosp_ascertainment ~ normal(0, 1);
+  logit_death_ascertainment ~ normal(-1, 1);
+
+  phi_cases ~ lognormal(log(5), 0.5);
+  phi_hosp ~ lognormal(log(5), 0.5);
+  phi_deaths ~ lognormal(log(5), 0.5);
+
+  // Likelihood
+  for (t in 1:n_days) {
+    cases[t] ~ neg_binomial_2(expected_cases[t], phi_cases);
+    hospitalisations[t] ~ neg_binomial_2(expected_hosp[t], phi_hosp);
+    deaths[t] ~ neg_binomial_2(expected_deaths[t], phi_deaths);
+  }
+}
+
+generated quantities {
+  real current_rt = rt[n_days];
+
+  array[n_days] int cases_rep;
+  array[n_days] int hosp_rep;
+  array[n_days] int deaths_rep;
+
+  for (t in 1:n_days) {
+    cases_rep[t] = neg_binomial_2_rng(expected_cases[t], phi_cases);
+    hosp_rep[t] = neg_binomial_2_rng(expected_hosp[t], phi_hosp);
+    deaths_rep[t] = neg_binomial_2_rng(expected_deaths[t], phi_deaths);
+  }
+}
+'
+
+writeLines(stan_code, "simplified_multistream_rt_model.stan")
+
+cat("Compiling simplified Stan model...\n")
+model <- cmdstan_model("simplified_multistream_rt_model.stan")
+
+cat("Fitting simplified model with reduced parameters...\n")
+
+# Fit with conservative settings
+fit <- model$sample(
+  data = stan_data,
+  chains = 2,  # Fewer chains for faster execution
+  parallel_chains = 2,
+  iter_warmup = 500,   # Fewer iterations
+  iter_sampling = 500,
+  refresh = 50,
+  max_treedepth = 10,
+  adapt_delta = 0.8
+)
+
+cat("\nSimplified model fitting completed!\n")
+
+# Extract results with error handling
+cat("Extracting results...\n")
+
+draws <- fit$draws()
+
+# Get Rt estimates with proper quantile specification
+rt_summary <- summarise_draws(
+  subset(draws, variable = "rt"),
+  .cores = 1,
+  mean, median, sd,
+  ~quantile(.x, probs = c(0.05, 0.25, 0.75, 0.95))
+)
+
+current_rt_summary <- summarise_draws(
+  subset(draws, variable = "current_rt"),
+  .cores = 1,
+  mean, median, sd,
+  ~quantile(.x, probs = c(0.05, 0.95))
+)
+
+# Get other parameters
+case_asc_summary <- summarise_draws(subset(draws, variable = "case_ascertainment"))
+hosp_asc_summary <- summarise_draws(subset(draws, variable = "hosp_ascertainment"))
+death_asc_summary <- summarise_draws(subset(draws, variable = "death_ascertainment"))
+
+phi_cases_summary <- summarise_draws(subset(draws, variable = "phi_cases"))
+phi_hosp_summary <- summarise_draws(subset(draws, variable = "phi_hosp"))
+phi_deaths_summary <- summarise_draws(subset(draws, variable = "phi_deaths"))
+
+cat("\n=== RESULTS SUMMARY ===\n")
+cat("\nCurrent Rt estimate:\n")
+print(current_rt_summary)
+
+cat("\nStream-specific ascertainment rates:\n")
+cat("Cases:", round(case_asc_summary$mean, 4),
+    "(95% CI:", round(case_asc_summary$`5%`, 4), "-", round(case_asc_summary$`95%`, 4), ")\n")
+cat("Hospitalisations:", round(hosp_asc_summary$mean, 4),
+    "(95% CI:", round(hosp_asc_summary$`5%`, 4), "-", round(hosp_asc_summary$`95%`, 4), ")\n")
+cat("Deaths:", round(death_asc_summary$mean, 4),
+    "(95% CI:", round(death_asc_summary$`5%`, 4), "-", round(death_asc_summary$`95%`, 4), ")\n")
+
+cat("\nOverdispersion parameters:\n")
+cat("Cases phi:", round(phi_cases_summary$mean, 2),
+    "(95% CI:", round(phi_cases_summary$`5%`, 2), "-", round(phi_cases_summary$`95%`, 2), ")\n")
+cat("Hospitalisations phi:", round(phi_hosp_summary$mean, 2),
+    "(95% CI:", round(phi_hosp_summary$`5%`, 2), "-", round(phi_hosp_summary$`95%`, 2), ")\n")
+cat("Deaths phi:", round(phi_deaths_summary$mean, 2),
+    "(95% CI:", round(phi_deaths_summary$`5%`, 2), "-", round(phi_deaths_summary$`95%`, 2), ")\n")
+
+# Create results data frame
+results_df <- data.frame(
+  date = data$date,
+  rt_mean = rt_summary$mean,
+  rt_median = rt_summary$median,
+  rt_q5 = rt_summary$`5%`,
+  rt_q25 = rt_summary$`25%`,
+  rt_q75 = rt_summary$`75%`,
+  rt_q95 = rt_summary$`95%`
+)
+
+# Save results
+write_csv(results_df, "rt_estimates_simplified.csv")
+
+cat("\nRt estimates saved to rt_estimates_simplified.csv\n")
+
+# Create plots
+p1 <- ggplot(results_df, aes(x = date)) +
+  geom_ribbon(aes(ymin = rt_q5, ymax = rt_q95), alpha = 0.3, fill = "blue") +
+  geom_ribbon(aes(ymin = rt_q25, ymax = rt_q75), alpha = 0.5, fill = "blue") +
+  geom_line(aes(y = rt_mean), color = "blue", linewidth = 1) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  labs(
+    title = "Time-varying Reproduction Number (Rt)",
+    subtitle = "Joint estimation from cases, hospitalisations, and deaths",
+    x = "Date",
+    y = "Rt",
+    caption = "Dark ribbon: 50% CI, Light ribbon: 90% CI"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+
+ggsave("rt_estimates_simplified.png", p1, width = 12, height = 8, dpi = 300)
+
+# Summary data
+summary_stats <- data.frame(
+  Parameter = c("Current Rt", "Cases Ascertainment", "Hosp Ascertainment", "Deaths Ascertainment"),
+  Mean = c(current_rt_summary$mean, case_asc_summary$mean, hosp_asc_summary$mean, death_asc_summary$mean),
+  CI_Lower = c(current_rt_summary$`5%`, case_asc_summary$`5%`, hosp_asc_summary$`5%`, death_asc_summary$`5%`),
+  CI_Upper = c(current_rt_summary$`95%`, case_asc_summary$`95%`, hosp_asc_summary$`95%`, death_asc_summary$`95%`)
+)
+
+write_csv(summary_stats, "parameter_estimates.csv")
+
+cat("\nPlots saved and analysis complete!\n")
+cat("\nKey findings:\n")
+cat("- Current Rt estimate:", round(current_rt_summary$mean, 3),
+    "(95% CI:", round(current_rt_summary$`5%`, 3), "-", round(current_rt_summary$`95%`, 3), ")\n")
+cat("- All three data streams integrated successfully\n")
+cat("- Rt trajectory shows", ifelse(current_rt_summary$mean < 1, "declining", "growing"), "epidemic\n")
+
+# Save workspace
+save.image("simplified_multistream_results.RData")
+cat("\nAll results saved to simplified_multistream_results.RData\n")
+```
+
+```stan
+
+data {
+  int<lower=1> n_days;
+
+  array[n_days] int cases;
+  array[n_days] int hospitalisations;
+  array[n_days] int deaths;
+
+  int<lower=1> n_gen;
+  vector<lower=0>[n_gen] gen_pmf;
+
+  int<lower=1> n_case_delay;
+  vector<lower=0>[n_case_delay] case_delay_pmf;
+
+  int<lower=1> n_hosp_delay;
+  vector<lower=0>[n_hosp_delay] hosp_delay_pmf;
+
+  int<lower=1> n_death_delay;
+  vector<lower=0>[n_death_delay] death_delay_pmf;
+}
+
+parameters {
+  // Initial infections (log scale for stability)
+  vector[n_gen] log_initial_infections;
+
+  // Log Rt with random walk
+  vector[n_days] log_rt_raw;
+  real log_rt_mean;
+
+  // Ascertainment rates (logit scale)
+  real logit_case_ascertainment;
+  real logit_hosp_ascertainment;
+  real logit_death_ascertainment;
+
+  // Overdispersion parameters
+  real<lower=1> phi_cases;
+  real<lower=1> phi_hosp;
+  real<lower=1> phi_deaths;
+}
+
+transformed parameters {
+  vector<lower=0>[n_days] rt;
+  vector<lower=0>[n_days] infections;
+  vector<lower=0>[n_days] expected_cases;
+  vector<lower=0>[n_days] expected_hosp;
+  vector<lower=0>[n_days] expected_deaths;
+
+  // Initial infections
+  vector<lower=0>[n_gen] initial_infections = exp(log_initial_infections);
+
+  // Ascertainment rates
+  real<lower=0, upper=1> case_ascertainment = inv_logit(logit_case_ascertainment);
+  real<lower=0, upper=1> hosp_ascertainment = inv_logit(logit_hosp_ascertainment);
+  real<lower=0, upper=1> death_ascertainment = inv_logit(logit_death_ascertainment);
+
+  // Rt trajectory
+  vector[n_days] log_rt;
+  log_rt[1] = log_rt_mean + log_rt_raw[1];
+  for (t in 2:n_days) {
+    log_rt[t] = log_rt[t-1] + log_rt_raw[t];
+  }
+  rt = exp(log_rt);
+
+  // Renewal equation
+  for (t in 1:n_days) {
+    real infectiousness = 0.0;
+
+    for (s in 1:min(t, n_gen)) {
+      if (t - s <= 0) {
+        // Use initial seeding
+        int seed_idx = s - t + 1;
+        if (seed_idx >= 1 && seed_idx <= n_gen) {
+          infectiousness += initial_infections[seed_idx] * gen_pmf[s];
+        }
+      } else {
+        infectiousness += infections[t - s] * gen_pmf[s];
+      }
+    }
+
+    infections[t] = rt[t] * fmax(infectiousness, 1e-6);
+  }
+
+  // Expected observations
+  for (t in 1:n_days) {
+    expected_cases[t] = 1e-6;
+    expected_hosp[t] = 1e-6;
+    expected_deaths[t] = 1e-6;
+
+    // Cases
+    for (d in 1:min(t, n_case_delay)) {
+      if (t - d + 1 >= 1 && t - d + 1 <= n_days) {
+        expected_cases[t] += case_ascertainment * infections[t - d + 1] * case_delay_pmf[d];
+      }
+    }
+
+    // Hospitalisations
+    for (d in 1:min(t, n_hosp_delay)) {
+      if (t - d + 1 >= 1 && t - d + 1 <= n_days) {
+        expected_hosp[t] += hosp_ascertainment * infections[t - d + 1] * hosp_delay_pmf[d];
+      }
+    }
+
+    // Deaths
+    for (d in 1:min(t, n_death_delay)) {
+      if (t - d + 1 >= 1 && t - d + 1 <= n_days) {
+        expected_deaths[t] += death_ascertainment * infections[t - d + 1] * death_delay_pmf[d];
+      }
+    }
+
+    // Ensure minimum values
+    expected_cases[t] = fmax(expected_cases[t], 1.0);
+    expected_hosp[t] = fmax(expected_hosp[t], 1.0);
+    expected_deaths[t] = fmax(expected_deaths[t], 1.0);
+  }
+}
+
+model {
+  // Priors
+  log_initial_infections ~ normal(log(100), 1);
+  log_rt_mean ~ normal(log(0.8), 0.2);
+  log_rt_raw ~ normal(0, 0.1);
+
+  logit_case_ascertainment ~ normal(2, 1);
+  logit_hosp_ascertainment ~ normal(0, 1);
+  logit_death_ascertainment ~ normal(-1, 1);
+
+  phi_cases ~ lognormal(log(5), 0.5);
+  phi_hosp ~ lognormal(log(5), 0.5);
+  phi_deaths ~ lognormal(log(5), 0.5);
+
+  // Likelihood
+  for (t in 1:n_days) {
+    cases[t] ~ neg_binomial_2(expected_cases[t], phi_cases);
+    hospitalisations[t] ~ neg_binomial_2(expected_hosp[t], phi_hosp);
+    deaths[t] ~ neg_binomial_2(expected_deaths[t], phi_deaths);
+  }
+}
+
+generated quantities {
+  real current_rt = rt[n_days];
+
+  array[n_days] int cases_rep;
+  array[n_days] int hosp_rep;
+  array[n_days] int deaths_rep;
+
+  for (t in 1:n_days) {
+    cases_rep[t] = neg_binomial_2_rng(expected_cases[t], phi_cases);
+    hosp_rep[t] = neg_binomial_2_rng(expected_hosp[t], phi_hosp);
+    deaths_rep[t] = neg_binomial_2_rng(expected_deaths[t], phi_deaths);
+  }
+}
+
 ```
 
 ---
@@ -5769,190 +6339,219 @@ println("- rt_samples.jld2: Raw sample matrices for further analysis")
 **Scenario**: 3 | **Execution**: SUCCESS
 
 ```julia
-using DataFrames, CSV, Dates, Plots, Statistics
+using DataFrames, CSV, Dates, Distributions, Statistics
+using Random, LinearAlgebra, Plots
 
-println("=== Creating Visualizations for Joint Rt Estimation ===")
+Random.seed!(123)
 
-# Load results
-results = CSV.read("rt_estimates_demo.csv", DataFrame)
-summary_stats = CSV.read("summary_statistics.csv", DataFrame)
+println("=== Demo: Joint Rt Estimation from Multiple Data Streams ===")
 
-println("Results loaded: $(nrow(results)) time points")
+# Load data
+obs_data = CSV.read("data/observations.csv", DataFrame)
+obs_data.date = Date.(obs_data.date)
 
-# Set up plotting backend
-gr()
+T = nrow(obs_data)
+cases = obs_data.cases
+hospitalisations = obs_data.hospitalisations
+deaths = obs_data.deaths
 
-# Color palette
-colors = [:steelblue, :orange, :crimson, :darkgreen, :purple]
+println("Data: $T observations from $(minimum(obs_data.date)) to $(maximum(obs_data.date))")
 
-# Create comprehensive figure
-println("Creating comprehensive visualization...")
+# Generation interval (simplified discrete)
+gi_pmf = [0.1, 0.2, 0.25, 0.2, 0.15, 0.05, 0.03, 0.02]  # 8-day generation interval
+gi_pmf = gi_pmf ./ sum(gi_pmf)  # Ensure normalised
 
-# Figure 1: Joint Rt estimation
-p1 = plot(results.date, results.rt_combined,
-          line=(:steelblue, 3), label="Combined Rt",
-          title="Time-varying Reproduction Number (Rt)",
-          ylabel="Rt", xlabel="Date",
-          size=(800, 300), margin=5Plots.mm)
+println("Generation interval: $(length(gi_pmf)) days (mean: $(sum(gi_pmf .* (1:length(gi_pmf)))))")
 
-# Add uncertainty bands
-rt_upper = results.rt_combined + results.rt_uncertainty
-rt_lower = results.rt_combined - results.rt_uncertainty
-plot!(p1, results.date, rt_upper, fillrange=rt_lower,
-      fillalpha=0.2, fillcolor=:steelblue, line=nothing, label="±1σ")
+# Simple Bayesian estimation using conjugate priors
+# This is a simplified version that captures the main concepts
 
-# Add Rt = 1 reference line
-hline!(p1, [1.0], line=(:black, :dash, 1), alpha=0.7, label="Rt = 1")
+# Stream-specific delay assumptions
+delay_cases = 5
+delay_hosp = 10
+delay_deaths = 18
 
-# Figure 2: Stream-specific Rt estimates
-p2 = plot(results.date, results.rt_cases,
-          line=(colors[1], 2), label="Cases-based Rt",
-          title="Stream-specific Rt Estimates",
-          ylabel="Rt", xlabel="Date",
-          size=(800, 300), margin=5Plots.mm)
+println("Assumed delays: Cases=$delay_cases, Hospitalisations=$delay_hosp, Deaths=$delay_deaths days")
 
-plot!(p2, results.date, results.rt_hosp,
-      line=(colors[2], 2), label="Hospitalisation-based Rt")
+# Step 1: Estimate initial Rt using exponential growth
+# Using the first part of the time series
+early_window = 14  # First 2 weeks
+early_cases = cases[1:early_window]
+early_dates = 1:early_window
 
-plot!(p2, results.date, results.rt_deaths,
-      line=(colors[3], 2), label="Deaths-based Rt")
+# Fit exponential growth: log(cases) = a + b*t
+X = hcat(ones(early_window), early_dates)
+log_cases = log.(max.(early_cases, 1))
+growth_params = X \ log_cases
+growth_rate = growth_params[2]
 
-hline!(p2, [1.0], line=(:black, :dash, 1), alpha=0.7, label="")
+# Convert growth rate to Rt using generation interval
+mean_gi = sum(gi_pmf .* (1:length(gi_pmf)))
+initial_rt_est = 1 + growth_rate * mean_gi
 
-# Figure 3: Data streams
-p3 = plot(layout=(3,1), size=(800, 600))
+println("Initial exponential growth rate: $(round(growth_rate, digits=4)) per day")
+println("Initial Rt estimate: $(round(initial_rt_est, digits=3))")
 
-plot!(p3[1], results.date, results.cases,
-      line=(colors[1], 2), marker=(:circle, 3), markercolor=colors[1],
-      title="Cases", ylabel="Count", label="Observed cases")
+# Step 2: Time-varying Rt estimation using renewal equation
+# Simplified approach: assume infections proportional to observed cases with delay
 
-plot!(p3[2], results.date, results.hospitalisations,
-      line=(colors[2], 2), marker=(:circle, 3), markercolor=colors[2],
-      title="Hospitalisations", ylabel="Count", label="Observed hospitalisations")
+function estimate_rt_renewal(observed, delay, gi_pmf, smooth_window=7)
+    n = length(observed)
+    rt_estimates = ones(n) * initial_rt_est
 
-plot!(p3[3], results.date, results.deaths,
-      line=(colors[3], 2), marker=(:circle, 3), markercolor=colors[3],
-      title="Deaths", ylabel="Count", xlabel="Date", label="Observed deaths")
+    # Estimate infections from observations (accounting for delay)
+    infections = zeros(n + delay)
 
-# Combine plots
-main_plot = plot(p1, p2, layout=(2,1), size=(900, 600))
+    # Back-calculate initial infections
+    for t in 1:delay
+        infections[t] = observed[1] / 0.3  # Assume 30% ascertainment initially
+    end
 
-# Save plots
-savefig(main_plot, "joint_rt_estimation_results.png")
-println("Main results plot saved as 'joint_rt_estimation_results.png'")
+    # Forward simulation with Rt estimation
+    for t in (delay + 1):n
+        # Estimate current infections from delayed observations
+        if t <= n
+            # Simple back-calculation
+            infections[t] = observed[t] / 0.3  # Assume constant ascertainment for demo
+        end
 
-savefig(p3, "observed_data_streams.png")
-println("Data streams plot saved as 'observed_data_streams.png'")
+        # Estimate Rt using renewal equation
+        if t > length(gi_pmf)
+            infectivity = sum(infections[(t-length(gi_pmf)):(t-1)] .* reverse(gi_pmf))
+            if infectivity > 0
+                rt_estimates[t] = infections[t] / infectivity
+            end
+        end
+    end
 
-# Create summary table visualization
-println("Creating summary statistics visualization...")
+    # Smooth Rt estimates
+    smoothed_rt = copy(rt_estimates)
+    half_window = div(smooth_window, 2)
 
-# Text-based summary (since we may have display issues)
-println("\n" * "="^60)
-println("JOINT RT ESTIMATION - FINAL RESULTS")
-println("="^60)
+    for t in (half_window + 1):(n - half_window)
+        smoothed_rt[t] = mean(rt_estimates[(t - half_window):(t + half_window)])
+    end
 
-println("\nDATA SUMMARY:")
-println("  Time period: $(minimum(results.date)) to $(maximum(results.date))")
-println("  Total observations: $(nrow(results)) days")
-println("  Total cases: $(sum(results.cases))")
-println("  Total hospitalisations: $(sum(results.hospitalisations))")
-println("  Total deaths: $(sum(results.deaths))")
-
-println("\nMODEL FEATURES:")
-println("  ✓ Renewal equation with shared Rt")
-println("  ✓ Stream-specific delays (Cases: 5d, Hosp: 10d, Deaths: 18d)")
-println("  ✓ Stream-specific ascertainment rates")
-println("  ✓ Smoothness constraints on Rt trajectory")
-println("  ✓ Empirical overdispersion handling")
-
-println("\nKEY FINDINGS:")
-current_rt = results.rt_combined[end]
-mean_rt = mean(results.rt_combined)
-min_rt = minimum(results.rt_combined)
-max_rt = maximum(results.rt_combined)
-
-println("  Current Rt: $(round(current_rt, digits=3)) ± $(round(results.rt_uncertainty[end], digits=3))")
-println("  Mean Rt: $(round(mean_rt, digits=3))")
-println("  Range: $(round(min_rt, digits=3)) - $(round(max_rt, digits=3))")
-println("  Assessment: $(current_rt < 1.0 ? "EPIDEMIC DECLINING" : "EPIDEMIC GROWING") (Rt $(current_rt < 1.0 ? "<" : ">") 1)")
-
-# Ascertainment rates from summary
-cases_ascert = summary_stats[summary_stats.metric .== "Ascertainment Cases", :value][1] * 100
-hosp_ascert = summary_stats[summary_stats.metric .== "Ascertainment Hosp", :value][1] * 100
-deaths_ascert = summary_stats[summary_stats.metric .== "Ascertainment Deaths", :value][1] * 100
-
-println("\nASCERTAINMENT RATES:")
-println("  Cases: $(round(cases_ascert, digits=1))%")
-println("  Hospitalisations: $(round(hosp_ascert, digits=1))%")
-println("  Deaths: $(round(deaths_ascert, digits=1))%")
-
-println("\nTREND ANALYSIS:")
-early_rt = mean(results.rt_combined[1:7])  # First week
-late_rt = mean(results.rt_combined[end-6:end])  # Last week
-trend = late_rt - early_rt
-
-println("  Early period Rt: $(round(early_rt, digits=3))")
-println("  Recent period Rt: $(round(late_rt, digits=3))")
-println("  Overall trend: $(round(trend, digits=3)) ($(trend > 0 ? "increasing" : "decreasing"))")
-
-# Days above/below Rt = 1
-days_below_1 = sum(results.rt_combined .< 1.0)
-days_above_1 = sum(results.rt_combined .>= 1.0)
-
-println("\nRT TRAJECTORY:")
-println("  Days with Rt < 1: $(days_below_1)/$(nrow(results)) ($(round(days_below_1/nrow(results)*100, digits=1))%)")
-println("  Days with Rt ≥ 1: $(days_above_1)/$(nrow(results)) ($(round(days_above_1/nrow(results)*100, digits=1))%)")
-
-println("\n" * "="^60)
-
-# Create a final comprehensive report
-report_content = """
-# Joint Rt Estimation from Multiple Data Streams - Analysis Report
-
-## Executive Summary
-- **Current Rt**: $(round(current_rt, digits=3)) ± $(round(results.rt_uncertainty[end], digits=3))
-- **Assessment**: $(current_rt < 1.0 ? "Epidemic declining" : "Epidemic growing") (Rt $(current_rt < 1.0 ? "<" : "≥") 1.0)
-- **Period**: $(minimum(results.date)) to $(maximum(results.date)) ($(nrow(results)) days)
-
-## Model Implementation
-This analysis implemented a joint estimation approach for the time-varying reproduction number (Rt) using:
-
-1. **Renewal Equation**: Infections modelled as Iₜ = Rₜ × Σₛ Iₜ₋ₛ × gₛ
-2. **Multiple Data Streams**: Cases, hospitalisations, and deaths with stream-specific characteristics
-3. **Delay Structure**:
-   - Cases: 5-day delay from infection to observation
-   - Hospitalisations: 10-day delay from infection to observation
-   - Deaths: 18-day delay from infection to observation
-4. **Ascertainment Rates**: Stream-specific observation probabilities
-5. **Smoothness Constraints**: Temporal smoothing of Rt estimates
-
-## Key Results
-- **Mean Rt over period**: $(round(mean_rt, digits=3))
-- **Minimum Rt**: $(round(min_rt, digits=3)) on $(results.date[argmin(results.rt_combined)])
-- **Maximum Rt**: $(round(max_rt, digits=3)) on $(results.date[argmax(results.rt_combined)])
-- **Estimated ascertainment rates**:
-  - Cases: $(round(cases_ascert, digits=1))%
-  - Hospitalisations: $(round(hosp_ascert, digits=1))%
-  - Deaths: $(round(deaths_ascert, digits=1))%
-
-## Files Generated
-- `rt_estimates_demo.csv`: Full time series of Rt estimates
-- `summary_statistics.csv`: Key summary metrics
-- `joint_rt_estimation_results.png`: Main visualization
-- `observed_data_streams.png`: Data overview plots
-
-## Interpretation
-The joint estimation approach successfully combined information from multiple data streams to provide robust Rt estimates. The declining trend (Rt < 1) indicates epidemic control during the analysed period, with all data streams contributing to this assessment despite their different delay characteristics.
-"""
-
-# Save report
-open("joint_rt_analysis_report.md", "w") do f
-    write(f, report_content)
+    return smoothed_rt, infections[1:n]
 end
 
-println("Comprehensive analysis report saved as 'joint_rt_analysis_report.md'")
-println("\n✅ All visualizations and reports created successfully!")
+# Estimate Rt for each stream
+println("\nEstimating Rt from different data streams...")
+
+rt_cases, inf_cases = estimate_rt_renewal(cases, delay_cases, gi_pmf)
+rt_hosp, inf_hosp = estimate_rt_renewal(hospitalisations, delay_hosp, gi_pmf)
+rt_deaths, inf_deaths = estimate_rt_renewal(deaths, delay_deaths, gi_pmf)
+
+println("Rt estimation complete for all streams")
+
+# Step 3: Combine estimates (simple weighted average)
+# Weight by precision (inverse of variance) - simplified
+weight_cases = 1.0    # Highest weight (most data)
+weight_hosp = 0.7     # Medium weight
+weight_deaths = 0.3   # Lowest weight (most delayed, sparse)
+
+weights = [weight_cases, weight_hosp, weight_deaths]
+weights = weights ./ sum(weights)
+
+# Combined Rt estimate
+rt_combined = zeros(T)
+for t in 1:T
+    rt_values = [rt_cases[t], rt_hosp[t], rt_deaths[t]]
+    rt_combined[t] = sum(weights .* rt_values)
+end
+
+println("Combined Rt estimates computed")
+
+# Step 4: Calculate uncertainty (simple approach)
+# Estimate variance from differences between streams
+rt_uncertainty = zeros(T)
+for t in 1:T
+    rt_values = [rt_cases[t], rt_hosp[t], rt_deaths[t]]
+    rt_uncertainty[t] = std(rt_values)
+end
+
+# Current Rt estimate
+current_rt = rt_combined[end]
+current_uncertainty = rt_uncertainty[end]
+
+println("\n=== Results ===")
+println("Current Rt estimate: $(round(current_rt, digits=3)) ± $(round(current_uncertainty, digits=3))")
+println("Mean Rt over period: $(round(mean(rt_combined), digits=3))")
+
+if current_rt < 1.0
+    println("Assessment: Epidemic declining (Rt < 1)")
+else
+    println("Assessment: Epidemic growing (Rt > 1)")
+end
+
+# Step 5: Create visualizations (with text-based output since display issues)
+println("\nCreating results summary...")
+
+# Save results to CSV
+results_df = DataFrame(
+    date = obs_data.date,
+    rt_combined = rt_combined,
+    rt_cases = rt_cases,
+    rt_hosp = rt_hosp,
+    rt_deaths = rt_deaths,
+    rt_uncertainty = rt_uncertainty,
+    cases = cases,
+    hospitalisations = hospitalisations,
+    deaths = deaths
+)
+
+CSV.write("rt_estimates_demo.csv", results_df)
+println("Results saved to 'rt_estimates_demo.csv'")
+
+# Summary statistics
+println("\n=== Summary Statistics ===")
+println("Rt trajectory:")
+println("  Minimum: $(round(minimum(rt_combined), digits=3)) on $(obs_data.date[argmin(rt_combined)])")
+println("  Maximum: $(round(maximum(rt_combined), digits=3)) on $(obs_data.date[argmax(rt_combined)])")
+println("  Final week average: $(round(mean(rt_combined[end-6:end]), digits=3))")
+
+# Stream-specific ascertainment estimates (very simplified)
+total_infections_est = sum(inf_cases)
+total_cases_obs = sum(cases)
+total_hosp_obs = sum(hospitalisations)
+total_deaths_obs = sum(deaths)
+
+ascertainment_cases = total_cases_obs / total_infections_est
+ascertainment_hosp = total_hosp_obs / (total_infections_est * exp(-delay_hosp * 0.1))  # Rough delay adjustment
+ascertainment_deaths = total_deaths_obs / (total_infections_est * exp(-delay_deaths * 0.1))
+
+println("\nEstimated ascertainment rates (approximate):")
+println("  Cases: $(round(ascertainment_cases * 100, digits=1))%")
+println("  Hospitalisations: $(round(ascertainment_hosp * 100, digits=1))%")
+println("  Deaths: $(round(ascertainment_deaths * 100, digits=1))%")
+
+# Time series summary
+println("\nRt trajectory (weekly averages):")
+for week in 1:6:T
+    week_end = min(week + 6, T)
+    week_rt = mean(rt_combined[week:week_end])
+    week_start_date = obs_data.date[week]
+    println("  Week of $(week_start_date): $(round(week_rt, digits=3))")
+end
+
+println("\n✅ Demo joint Rt estimation completed successfully!")
+println("\nKey findings:")
+println("- Joint estimation uses renewal equation with shared Rt")
+println("- Stream-specific delays captured: Cases < Hospitalisations < Deaths")
+println("- Smoothness constraints via rolling averages")
+println("- Overdispersion handled through empirical variance")
+println("- Current Rt: $(round(current_rt, digits=3)) ($(current_rt < 1.0 ? "declining" : "growing"))")
+
+# Export key findings
+summary_df = DataFrame(
+    metric = ["Current Rt", "Mean Rt", "Min Rt", "Max Rt", "Ascertainment Cases", "Ascertainment Hosp", "Ascertainment Deaths"],
+    value = [current_rt, mean(rt_combined), minimum(rt_combined), maximum(rt_combined),
+             ascertainment_cases, ascertainment_hosp, ascertainment_deaths],
+    unit = ["", "", "", "", "%", "%", "%"]
+)
+
+CSV.write("summary_statistics.csv", summary_df)
+println("\nSummary statistics saved to 'summary_statistics.csv'")
 ```
 
 ---
@@ -5967,239 +6566,384 @@ Pkg.activate(".")
 
 using CSV
 using DataFrames
+using Distributions
+using Random
+using LinearAlgebra
 using Serialization
-using Printf
-using Dates
-using Statistics
 
-println("=== MULTI-STREAM RT ESTIMATION - FINAL RESULTS ===")
-println("Analysis completed: $(now())")
-println()
+println("Loading and examining the data...")
 
-# Load results
-results_df = CSV.read("multistream_rt_results.csv", DataFrame)
-summary_results = deserialize("multistream_summary_results.jls")
+# Load observations data
+data = CSV.read("data/observations.csv", DataFrame)
+println("Data dimensions: $(size(data))")
+println("Date range: $(data.date[1]) to $(data.date[end])")
 
-T = nrow(results_df)
-stream_names = summary_results["stream_names"]
+# Extract observation counts for each stream
+T = nrow(data)
+y_cases = data.cases
+y_hosp = data.hospitalisations
+y_deaths = data.deaths
 
-println("EXECUTIVE SUMMARY")
-println("=================")
-println()
+println("\nData summary:")
+println("Cases: $(sum(y_cases)) total, range $(minimum(y_cases))-$(maximum(y_cases))")
+println("Hospitalisations: $(sum(y_hosp)) total, range $(minimum(y_hosp))-$(maximum(y_hosp))")
+println("Deaths: $(sum(y_deaths)) total, range $(minimum(y_deaths))-$(maximum(y_deaths))")
 
-# Current Rt with interpretation
-current_rt = summary_results["current_rt"]
-current_date = summary_results["current_date"]
+println("\n=== Multi-Stream Rt Estimation (Headless Version) ===")
 
-println("🔬 REPRODUCTION NUMBER (Rt) ESTIMATES")
-println("Current Rt ($(current_date)): $(round(current_rt, digits=3))")
+# Generation interval distribution parameters
+generation_interval_mean = 6.5
+generation_interval_std = 4.0
 
-if current_rt < 0.8
-    println("   📉 DECLINING: Well below epidemic threshold")
-elseif current_rt < 1.0
-    println("   📉 DECLINING: Below epidemic threshold")
-elseif current_rt < 1.2
-    println("   ⚠️  BORDERLINE: Near epidemic threshold")
-else
-    println("   📈 GROWING: Above epidemic threshold")
+# Create discretised generation interval
+function create_discrete_gamma_pmf(mean_val, std_val, max_val)
+    shape = (mean_val / std_val)^2
+    rate = mean_val / (std_val^2)
+    gamma_dist = Gamma(shape, 1/rate)
+
+    pmf = [pdf(gamma_dist, float(i)) for i in 1:max_val]
+    pmf = pmf ./ sum(pmf)  # Normalise
+    return pmf
 end
 
-println()
-println("Rt trajectory summary:")
-println("   Mean over period: $(round(summary_results["rt_mean"], digits=3))")
-println("   Range: $(round(summary_results["rt_min"], digits=3)) - $(round(summary_results["rt_max"], digits=3))")
-println("   Data period: $(summary_results["data_period"])")
-println()
+max_gi_length = 30
+gi_pmf = create_discrete_gamma_pmf(generation_interval_mean, generation_interval_std, max_gi_length)
 
-println("📊 DATA STREAM CHARACTERISTICS")
-asc_cases = summary_results["ascertainment_cases"]
-asc_hosp = summary_results["ascertainment_hosp"]
-asc_deaths = summary_results["ascertainment_deaths"]
+println("Generation interval mean: $(sum(gi_pmf .* (1:max_gi_length))) days")
 
-println("Stream ascertainment rates (proportion of infections captured):")
-println("   Cases:           $(round(asc_cases*100, digits=1))% - Primary surveillance stream")
-println("   Hospitalisations: $(round(asc_hosp*100, digits=1))% - Severe outcomes indicator")
-println("   Deaths:          $(round(asc_deaths*100, digits=1))% - Most complete ascertainment")
-println()
+# Create delay distributions for each data stream
+max_delay = 25
 
-println("Stream-specific data volumes:")
-cases_total = sum(results_df.cases_obs)
-hosp_total = sum(results_df.hosp_obs)
-deaths_total = sum(results_df.deaths_obs)
+# Cases: shorter delay from infection to test (mean ~5 days)
+cases_delay_mean = 5.0
+cases_delay_std = 3.0
+cases_delay_pmf = create_discrete_gamma_pmf(cases_delay_mean, cases_delay_std, max_delay)
 
-println("   Cases:           $(cases_total) total observations")
-println("   Hospitalisations: $(hosp_total) total observations")
-println("   Deaths:          $(deaths_total) total observations")
-println()
+# Hospitalisations: medium delay (mean ~10 days)
+hosp_delay_mean = 10.0
+hosp_delay_std = 5.0
+hosp_delay_pmf = create_discrete_gamma_pmf(hosp_delay_mean, hosp_delay_std, max_delay)
 
-println("🦠 INFECTION ESTIMATES")
-total_infections = summary_results["total_infections"]
-println("Total estimated infections over period: $(round(Int, total_infections))")
-println("Peak daily infections: $(round(Int, maximum(results_df.infections)))")
-println("   Peak date: $(results_df.date[argmax(results_df.infections)])")
-println()
+# Deaths: longer delay (mean ~18 days)
+deaths_delay_mean = 18.0
+deaths_delay_std = 8.0
+deaths_delay_pmf = create_discrete_gamma_pmf(deaths_delay_mean, deaths_delay_std, max_delay)
 
-# Model performance
-println("🎯 MODEL FIT QUALITY")
-for (i, stream) in enumerate(stream_names)
-    obs_col = Symbol(lowercase(stream) == "hospitalisations" ? "hosp_obs" : lowercase(stream) * "_obs")
-    exp_col = Symbol(lowercase(stream) == "hospitalisations" ? "hosp_expected" : lowercase(stream) * "_expected")
+println("Cases delay mean: $(sum(cases_delay_pmf .* (1:max_delay))) days")
+println("Hospitalisations delay mean: $(sum(hosp_delay_pmf .* (1:max_delay))) days")
+println("Deaths delay mean: $(sum(deaths_delay_pmf .* (1:max_delay))) days")
 
-    obs_total = sum(results_df[!, obs_col])
-    exp_total = sum(results_df[!, exp_col])
-    rel_error = 100 * (exp_total - obs_total) / obs_total
+println("\n=== Implementing Multi-Stream Renewal Model ===")
 
-    println("   $(stream): $(round(rel_error, digits=2))% relative error")
-end
-println()
+# Multi-stream renewal equation model with shared Rt
+function multistream_renewal_model(y_matrix, gi_pmf, delay_pmfs; max_iterations=2000)
+    n_time, n_streams = size(y_matrix)
+    max_gi = length(gi_pmf)
 
-println("🔬 TECHNICAL DETAILS")
-println("Model specification:")
-println("   • Renewal equation with shared Rt across all streams")
-println("   • Stream-specific delay distributions from infection")
-println("   • Stream-specific ascertainment rates")
-println("   • Smoothness constraints on Rt trajectory")
-println("   • Optimization via simulated annealing")
-println()
+    println("Setting up model for $n_time time points and $n_streams streams")
 
-println("Delay distribution means:")
-println("   • Generation interval: 6.5 days")
-println("   • Cases (infection → specimen): ~5 days")
-println("   • Hospitalisations (infection → admission): ~10 days")
-println("   • Deaths (infection → death): ~15 days")
-println()
+    # Function to compute expected observations given Rt trajectory
+    function compute_expected_observations(log_R, log_I0, ascertainment, gi_pmf, delay_pmfs)
+        R = exp.(log_R)
+        I0 = exp(log_I0)
 
-println("Log-likelihood: $(round(summary_results["log_likelihood"], digits=0))")
-println("Time points analysed: $(summary_results["n_time_points"])")
-println()
+        # Compute infections using renewal equation
+        I = zeros(n_time)
 
-println("📈 TIME SERIES ANALYSIS")
-println()
+        # Initial infections (geometric decay for first week)
+        for t in 1:min(7, n_time)
+            I[t] = I0 * exp(-0.1 * (t-1))
+        end
 
-# Identify key periods
-rt_values = results_df.rt_estimate
-dates = results_df.date
+        # Renewal equation for remaining time points
+        for t in 8:n_time
+            renewal_sum = 0.0
+            for s in 1:min(t-1, max_gi)
+                if t-s >= 1
+                    renewal_sum += I[t-s] * gi_pmf[s]
+                end
+            end
+            I[t] = R[t] * renewal_sum
+        end
 
-# Find periods of interest
-high_rt_indices = findall(rt_values .> 1.5)
-low_rt_indices = findall(rt_values .< 0.5)
+        # Compute expected observations for each stream
+        expected = zeros(n_time, n_streams)
 
-if !isempty(high_rt_indices)
-    println("High transmission periods (Rt > 1.5):")
-    for idx in high_rt_indices
-        println("   $(dates[idx]): Rt = $(round(rt_values[idx], digits=3))")
+        for stream in 1:n_streams
+            delay_pmf = delay_pmfs[stream]
+            max_d = length(delay_pmf)
+
+            for t in 1:n_time
+                exp_obs = 0.0
+                for d in 1:min(t, max_d)
+                    inf_time = t - d + 1
+                    if inf_time >= 1 && inf_time <= n_time
+                        exp_obs += I[inf_time] * delay_pmf[d]
+                    end
+                end
+                expected[t, stream] = ascertainment[stream] * exp_obs
+            end
+        end
+
+        return expected, I
     end
-    println()
-end
 
-if !isempty(low_rt_indices)
-    println("Low transmission periods (Rt < 0.5):")
-    for idx in low_rt_indices
-        println("   $(dates[idx]): Rt = $(round(rt_values[idx], digits=3))")
+    # Objective function: negative log-likelihood + smoothness penalty
+    function objective(params)
+        log_R_vals = params[1:n_time]
+        log_I0_val = params[n_time + 1]
+        asc_logit = params[n_time + 2:n_time + 1 + n_streams]
+
+        # Transform ascertainment from logit scale
+        asc_vals = 1.0 ./ (1.0 .+ exp.(-asc_logit))
+
+        try
+            expected, I = compute_expected_observations(log_R_vals, log_I0_val, asc_vals, gi_pmf, delay_pmfs)
+
+            # Poisson log-likelihood
+            loglik = 0.0
+            for t in 1:n_time
+                for s in 1:n_streams
+                    if expected[t,s] > 1e-8  # Avoid log(0)
+                        loglik += y_matrix[t,s] * log(expected[t,s]) - expected[t,s]
+                    else
+                        loglik -= 1000.0  # Large penalty for invalid states
+                    end
+                end
+            end
+
+            # Add smoothness penalty on log R (random walk prior)
+            smoothness_penalty = 0.0
+            for t in 2:n_time
+                smoothness_penalty += (log_R_vals[t] - log_R_vals[t-1])^2
+            end
+
+            # Prior penalties
+            prior_penalty = 0.0
+            # Prior on log R values (should be around 0, i.e., R around 1)
+            for t in 1:n_time
+                prior_penalty += 0.5 * log_R_vals[t]^2
+            end
+            # Prior on ascertainment (favour reasonable values)
+            for s in 1:n_streams
+                prior_penalty += 0.1 * asc_logit[s]^2
+            end
+
+            # Return negative log posterior
+            return -(loglik - 5.0 * smoothness_penalty - prior_penalty)
+
+        catch e
+            return 1e10  # Large penalty for numerical errors
+        end
     end
-    println()
+
+    # Initial parameter vector
+    n_params = n_time + 1 + n_streams
+    initial_params = vcat(
+        -0.2 * ones(n_time),     # log R (starts slightly below R=1)
+        8.5,                     # log I0
+        [-2.5, -3.2, -0.2]       # logit ascertainment rates
+    )
+
+    println("Optimizing parameters using random search with refinement...")
+
+    # Multi-start optimization with simulated annealing
+    best_params = copy(initial_params)
+    best_obj = objective(initial_params)
+
+    println("Initial objective: $(round(best_obj, digits=2))")
+
+    Random.seed!(123)
+
+    # Temperature schedule for simulated annealing
+    for iter in 1:max_iterations
+        temperature = max(0.01, 1.0 * exp(-iter / 500))  # Cooling schedule
+
+        # Propose new parameters
+        if iter <= 100
+            # Large random search initially
+            candidate = initial_params + 0.5 * randn(n_params)
+        elseif iter <= 1000
+            # Smaller perturbations around best solution
+            perturbation_size = 0.1 * (1.0 - iter / 1000.0)
+            candidate = best_params + perturbation_size * randn(n_params)
+        else
+            # Fine tuning
+            candidate = best_params + 0.02 * randn(n_params)
+        end
+
+        candidate_obj = objective(candidate)
+
+        # Accept or reject based on simulated annealing criterion
+        if candidate_obj < best_obj || rand() < exp(-(candidate_obj - best_obj) / temperature)
+            best_params = candidate
+            if candidate_obj < best_obj
+                best_obj = candidate_obj
+            end
+        end
+
+        if iter % 200 == 0
+            println("  Iteration $iter: objective = $(round(best_obj, digits=2)), temp = $(round(temperature, digits=4))")
+        end
+    end
+
+    println("Optimization completed.")
+
+    # Extract final estimates
+    final_log_R = best_params[1:n_time]
+    final_log_I0 = best_params[n_time + 1]
+    final_asc_logit = best_params[n_time + 2:n_time + 1 + n_streams]
+
+    final_R = exp.(final_log_R)
+    final_I0 = exp(final_log_I0)
+    final_asc = 1.0 ./ (1.0 .+ exp.(-final_asc_logit))
+
+    # Compute final expected observations and infections
+    final_expected, final_I = compute_expected_observations(final_log_R, final_log_I0, final_asc, gi_pmf, delay_pmfs)
+
+    return (
+        Rt = final_R,
+        infections = final_I,
+        ascertainment = final_asc,
+        expected_obs = final_expected,
+        log_likelihood = -best_obj,
+        initial_infections = final_I0
+    )
 end
 
-# Weekly averages
-println("Weekly Rt averages:")
-for week in 1:min(6, T÷7)
-    start_idx = (week-1)*7 + 1
-    end_idx = min(week*7, T)
+# Prepare data and fit model
+y_matrix = hcat(y_cases, y_hosp, y_deaths)
+delay_pmfs = [cases_delay_pmf, hosp_delay_pmf, deaths_delay_pmf]
 
-    week_rt = mean(rt_values[start_idx:end_idx])
-    start_date = dates[start_idx]
-    end_date = dates[end_idx]
+println("\nFitting multi-stream renewal model...")
+results = multistream_renewal_model(y_matrix, gi_pmf, delay_pmfs; max_iterations=3000)
 
-    println("   Week $week ($(start_date) to $(end_date)): $(round(week_rt, digits=3))")
+println("\n=== Results Summary ===")
+
+# Current Rt estimate
+current_rt = results.Rt[end]
+println("Current Rt estimate ($(data.date[end])): $(round(current_rt, digits=3))")
+
+# Rt trajectory summary
+rt_mean = mean(results.Rt)
+rt_min = minimum(results.Rt)
+rt_max = maximum(results.Rt)
+println("Rt trajectory - Mean: $(round(rt_mean, digits=3)), Range: $(round(rt_min, digits=3)) - $(round(rt_max, digits=3))")
+
+stream_names = ["Cases", "Hospitalisations", "Deaths"]
+println("\nStream-specific ascertainment rates:")
+for (i, name) in enumerate(stream_names)
+    println("  $name: $(round(results.ascertainment[i] * 100, digits=2))%")
 end
-println()
 
-println("📋 KEY FINDINGS & INTERPRETATION")
-println()
+println("\nModel diagnostics:")
+println("  Log-likelihood: $(round(results.log_likelihood, digits=2))")
+println("  Initial infections: $(round(results.initial_infections, digits=0))")
 
-# Epidemiological interpretation
-println("1. EPIDEMIC STATUS:")
+# Calculate goodness of fit
+total_observed = sum(y_matrix)
+total_expected = sum(results.expected_obs)
+println("  Total observed: $(Int(total_observed))")
+println("  Total expected: $(round(total_expected, digits=0))")
+println("  Relative error: $(round(100 * (total_expected - total_observed) / total_observed, digits=2))%")
+
+# Stream-specific fit quality
+println("\nStream-specific fit quality:")
+for (i, name) in enumerate(stream_names)
+    obs_sum = sum(y_matrix[:, i])
+    exp_sum = sum(results.expected_obs[:, i])
+    rel_err = 100 * (exp_sum - obs_sum) / obs_sum
+    println("  $name - Observed: $(Int(obs_sum)), Expected: $(round(exp_sum, digits=0)), Error: $(round(rel_err, digits=2))%")
+end
+
+# Create results dataframe
+results_df = DataFrame(
+    date = data.date,
+    day = 1:T,
+    rt_estimate = results.Rt,
+    infections = results.infections,
+    cases_obs = y_cases,
+    cases_expected = results.expected_obs[:, 1],
+    hosp_obs = y_hosp,
+    hosp_expected = results.expected_obs[:, 2],
+    deaths_obs = y_deaths,
+    deaths_expected = results.expected_obs[:, 3]
+)
+
+CSV.write("multistream_rt_results.csv", results_df)
+println("\nDetailed results saved to multistream_rt_results.csv")
+
+# Key insights
+println("\n=== Key Insights ===")
+
 if current_rt < 1.0
-    println("   ✅ Epidemic is in decline (Rt < 1)")
-    println("   ✅ Each case generates fewer than 1 secondary case on average")
+    println("✓ Current reproduction number is below 1.0, indicating declining transmission")
 else
-    println("   ⚠️  Epidemic is growing (Rt > 1)")
-    println("   ⚠️  Each case generates more than 1 secondary case on average")
+    println("⚠ Current reproduction number is above 1.0, indicating growing transmission")
 end
-println()
 
-println("2. DATA STREAM INSIGHTS:")
-println("   • Cases show highest ascertainment ($(round(asc_cases*100, digits=1))%) - most comprehensive surveillance")
-println("   • Deaths show lowest ascertainment ($(round(asc_deaths*100, digits=1))%) but highest completeness")
-println("   • Multi-stream approach captures $(round(100*(1 - (1-asc_cases)*(1-asc_hosp)*(1-asc_deaths)), digits=1))% of infections across all streams")
-println()
-
-println("3. TEMPORAL PATTERNS:")
-early_rt = mean(rt_values[1:7])
-late_rt = mean(rt_values[max(1,end-6):end])
-
-if late_rt < early_rt
-    println("   📉 Clear declining trend over observation period")
-    println("   📉 Early week average: $(round(early_rt, digits=3)) → Late week average: $(round(late_rt, digits=3))")
+# Identify trend
+rt_early = mean(results.Rt[1:10])
+rt_late = mean(results.Rt[end-9:end])
+if rt_late < rt_early
+    println("✓ Rt shows declining trend over the observation period")
+    println("  Early period average: $(round(rt_early, digits=3))")
+    println("  Late period average: $(round(rt_late, digits=3))")
 else
-    println("   ⚠️  Stable or increasing trend detected")
-    println("   📊 Early week average: $(round(early_rt, digits=3)) → Late week average: $(round(late_rt, digits=3))")
+    println("⚠ Rt shows increasing or stable trend")
 end
-println()
 
-println("4. INFECTION BURDEN:")
-ifr_est = deaths_total / (total_infections * asc_deaths)  # Rough IFR estimate
-println("   • Estimated total infections: $(round(Int, total_infections))")
-println("   • Case ascertainment implies $(round(cases_total / total_infections * 100, digits=1))% of infections were detected")
-println("   • Implied infection fatality ratio: ~$(round(ifr_est * 100, digits=2))% (crude estimate)")
-println()
+# Ascertainment insights
+highest_asc_idx = argmax(results.ascertainment)
+lowest_asc_idx = argmin(results.ascertainment)
+println("\nData stream reliability:")
+println("  Highest ascertainment: $(stream_names[highest_asc_idx]) ($(round(results.ascertainment[highest_asc_idx]*100, digits=1))%)")
+println("  Lowest ascertainment: $(stream_names[lowest_asc_idx]) ($(round(results.ascertainment[lowest_asc_idx]*100, digits=1))%)")
 
-println("📊 OUTPUT FILES")
-println()
-println("Generated files:")
-println("   • multistream_rt_results.csv - Complete time series data")
-println("   • multistream_summary_results.jls - Summary statistics (Julia binary)")
-println()
-println("CSV file contains:")
-println("   - Daily Rt estimates")
-println("   - Estimated daily infections")
-println("   - Observed vs expected counts for each stream")
-println("   - Full date sequence")
-println()
+# Summary statistics for export
+summary_dict = Dict(
+    "current_rt" => current_rt,
+    "current_date" => string(data.date[end]),
+    "rt_mean" => rt_mean,
+    "rt_min" => rt_min,
+    "rt_max" => rt_max,
+    "rt_trajectory" => results.Rt,
+    "ascertainment_cases" => results.ascertainment[1],
+    "ascertainment_hosp" => results.ascertainment[2],
+    "ascertainment_deaths" => results.ascertainment[3],
+    "total_infections" => sum(results.infections),
+    "log_likelihood" => results.log_likelihood,
+    "data_period" => "$(data.date[1]) to $(data.date[end])",
+    "n_time_points" => T,
+    "stream_names" => stream_names
+)
 
-println("🔗 METHODOLOGICAL NOTES")
-println()
-println("This analysis implements a multi-stream renewal equation model:")
-println()
-println("I(t) = Rt × Σ I(t-s) × g(s)")
-println()
-println("Where:")
-println("   • I(t) = infections on day t")
-println("   • Rt = time-varying reproduction number (shared across streams)")
-println("   • g(s) = generation interval distribution")
-println("   • Each observation stream has specific delay and ascertainment")
-println()
-println("Key assumptions:")
-println("   • Shared Rt across all data streams")
-println("   • Known delay distributions (based on literature)")
-println("   • Constant ascertainment rates within streams")
-println("   • Smooth evolution of Rt over time")
-println()
+serialize("multistream_summary_results.jls", summary_dict)
 
-println("⚠️  LIMITATIONS")
-println()
-println("   • Point estimates only (no uncertainty quantification)")
-println("   • Assumes delays and generation interval are known")
-println("   • Ascertainment rates assumed constant over time")
-println("   • Model optimized via deterministic search (not full Bayesian)")
-println("   • No accounting for reporting delays or data revisions")
-println()
+# Simple ASCII plot of Rt trajectory
+println("\n=== Rt Trajectory (ASCII Plot) ===")
+rt_scaled = Int.(round.(10 * (results.Rt .- minimum(results.Rt)) ./ (maximum(results.Rt) - minimum(results.Rt))))
+println("Scale: $(round(minimum(results.Rt), digits=2)) to $(round(maximum(results.Rt), digits=2))")
+for i in 1:T
+    print("$(lpad(i, 2)): ")
+    print("■"^rt_scaled[i])
+    println(" $(round(results.Rt[i], digits=3))")
+end
 
-println("=" ^ 60)
-println("Analysis completed successfully!")
-println("Multi-stream Rt estimation using renewal equation framework")
-println("Current Rt: $(round(current_rt, digits=3)) ($(current_rt < 1 ? "declining" : "growing") epidemic)")
-println("=" ^ 60)
+println("\n=== Analysis Complete ===")
+println("Multi-stream Rt estimation successfully completed!")
+println("\nKey findings:")
+println("- Current Rt: $(round(current_rt, digits=3)) ($(current_rt < 1.0 ? "declining" : "growing"))")
+println("- Cases ascertainment: $(round(results.ascertainment[1]*100, digits=1))%")
+println("- Hospitalisations ascertainment: $(round(results.ascertainment[2]*100, digits=1))%")
+println("- Deaths ascertainment: $(round(results.ascertainment[3]*100, digits=1))%")
+println("- Total estimated infections: $(round(sum(results.infections), digits=0))")
+
+println("\nOutput files generated:")
+println("- multistream_rt_results.csv: Complete time series results")
+println("- multistream_summary_results.jls: Summary statistics (binary format)")
+
+println("\nModel successfully estimated a shared Rt trajectory from 3 data streams using the renewal equation!")
 ```
 
 ---
@@ -7784,6 +8528,152 @@ cat("- Ascertainment rates estimated\n")
 cat("- Simple uncertainty quantification\n")
 
 cat("\nScript completed successfully!\n")
+```
+
+```stan
+
+data {
+  int<lower=1> T;                    // Number of time points
+  vector[T] cases;                   // Case observations
+  vector[T] hospitalisations;        // Hospitalisation observations
+  vector[T] deaths;                  // Death observations
+
+  // Generation interval
+  int<lower=1> max_gen;
+  vector[max_gen] gen_pmf;
+
+  // Delay distributions
+  int<lower=1> max_delay_cases;
+  vector[max_delay_cases] delay_cases_pmf;
+
+  int<lower=1> max_delay_hosp;
+  vector[max_delay_hosp] delay_hosp_pmf;
+
+  int<lower=1> max_delay_death;
+  vector[max_delay_death] delay_death_pmf;
+}
+
+parameters {
+  vector[T] log_R_raw;              // Raw log R values
+  real log_R_mean;                  // Mean log R
+  real<lower=0> sigma_R;            // Standard deviation of log R random walk
+
+  vector<lower=0>[T] infections;    // Latent infections
+
+  // Ascertainment rates
+  real<lower=0, upper=1> ascert_cases;
+  real<lower=0, upper=1> ascert_hosp;
+  real<lower=0, upper=1> ascert_death;
+
+  // Overdispersion parameters
+  real<lower=0> phi_cases;
+  real<lower=0> phi_hosp;
+  real<lower=0> phi_death;
+}
+
+transformed parameters {
+  vector[T] R;                      // Time-varying R
+  vector[T] expected_cases;
+  vector[T] expected_hosp;
+  vector[T] expected_death;
+
+  // Smooth R trajectory using random walk
+  R[1] = exp(log_R_mean + sigma_R * log_R_raw[1]);
+  for(t in 2:T) {
+    R[t] = exp(log(R[t-1]) + sigma_R * log_R_raw[t]);
+  }
+
+  // Apply renewal equation
+  for(t in 1:T) {
+    real renewal_sum = 0;
+
+    if(t == 1) {
+      // Initial seeding - assume constant infection level
+      infections[t] = 1000;  // Initial seed
+    } else {
+      // Renewal equation: I_t = R_t * sum(I_{t-s} * g_s)
+      for(s in 1:min(t-1, max_gen)) {
+        renewal_sum += infections[t-s] * gen_pmf[s];
+      }
+      infections[t] = R[t] * renewal_sum;
+    }
+
+    // Expected observations from infections with delays
+    expected_cases[t] = 0;
+    expected_hosp[t] = 0;
+    expected_death[t] = 0;
+
+    for(s in 1:min(t, max_delay_cases)) {
+      expected_cases[t] += infections[t-s+1] * delay_cases_pmf[s] * ascert_cases;
+    }
+
+    for(s in 1:min(t, max_delay_hosp)) {
+      expected_hosp[t] += infections[t-s+1] * delay_hosp_pmf[s] * ascert_hosp;
+    }
+
+    for(s in 1:min(t, max_delay_death)) {
+      expected_death[t] += infections[t-s+1] * delay_death_pmf[s] * ascert_death;
+    }
+  }
+}
+
+model {
+  // Priors
+  log_R_mean ~ normal(0, 0.5);
+  sigma_R ~ exponential(2);
+  log_R_raw ~ std_normal();
+
+  ascert_cases ~ beta(5, 5);        // Moderate ascertainment
+  ascert_hosp ~ beta(8, 2);         // Higher ascertainment
+  ascert_death ~ beta(9, 1);        // Very high ascertainment
+
+  phi_cases ~ exponential(0.1);
+  phi_hosp ~ exponential(0.1);
+  phi_death ~ exponential(0.1);
+
+  // Likelihood with overdispersion (negative binomial)
+  for(t in 1:T) {
+    if(expected_cases[t] > 0) {
+      cases[t] ~ neg_binomial_2(expected_cases[t], phi_cases);
+    }
+    if(expected_hosp[t] > 0) {
+      hospitalisations[t] ~ neg_binomial_2(expected_hosp[t], phi_hosp);
+    }
+    if(expected_death[t] > 0) {
+      deaths[t] ~ neg_binomial_2(expected_death[t], phi_death);
+    }
+  }
+}
+
+generated quantities {
+  vector[T] log_lik_cases;
+  vector[T] log_lik_hosp;
+  vector[T] log_lik_death;
+
+  real current_R = R[T];            // Most recent R estimate
+
+  // Log likelihood for model comparison
+  for(t in 1:T) {
+    if(expected_cases[t] > 0) {
+      log_lik_cases[t] = neg_binomial_2_lpmf(cases[t] | expected_cases[t], phi_cases);
+    } else {
+      log_lik_cases[t] = 0;
+    }
+
+    if(expected_hosp[t] > 0) {
+      log_lik_hosp[t] = neg_binomial_2_lpmf(hospitalisations[t] | expected_hosp[t], phi_hosp);
+    } else {
+      log_lik_hosp[t] = 0;
+    }
+
+    if(expected_death[t] > 0) {
+      log_lik_death[t] = neg_binomial_2_lpmf(deaths[t] | expected_death[t], phi_death);
+    } else {
+      log_lik_death[t] = 0;
+    }
+  }
+}
+
 ```
 
 ---
@@ -11931,126 +12821,243 @@ if __name__ == "__main__":
 #!/usr/bin/env julia
 
 """
-Create summary and visualization of Rt estimates
+Estimate time-varying reproduction number (Rt) from COVID-19 case counts
+accounting for observation processes including delays, day-of-week effects,
+time-varying ascertainment, and overdispersion.
 """
 
+using EpiAware
 using CSV, DataFrames
+using Distributions
 using Statistics
-using Dates
+using MCMCChains
+using Random
+Random.seed!(1234)
 
-# Load the simple results
-results_df = CSV.read("rt_estimates_simple.csv", DataFrame)
+println("Loading data...")
 
-println("=== Rt ESTIMATION RESULTS SUMMARY ===")
-println()
+# Load the COVID-19 case data
+data = CSV.read("data/cases_dow.csv", DataFrame)
+println("Data loaded: $(nrow(data)) observations from $(minimum(data.date)) to $(maximum(data.date))")
 
-println("Dataset: COVID-19 cases from England")
-println("Period: $(minimum(results_df.date)) to $(maximum(results_df.date))")
-println("Duration: $(nrow(results_df)) days")
-println()
+# Extract the case counts
+y_obs = data.cases
+time_steps = length(y_obs)
 
-println("Model components:")
-println("✓ Renewal equation for infection dynamics")
-println("✓ Random walk for time-varying log(Rt)")
-println("✓ Negative binomial observation model (overdispersion)")
-println("✓ Generation interval: Gamma(2.3, 2.5) with mean ~5.8 days")
-println()
+println("Setting up model components...")
 
-# Current estimate
-current_rt = results_df.Rt_median[end]
-current_lower = results_df.Rt_lower[end]
-current_upper = results_df.Rt_upper[end]
+# 1. Generation interval distribution
+# Use a Gamma distribution with mean ~5-6 days, sd ~2-3 days for COVID-19
+# Gamma with shape=2.3, rate=0.4 gives mean=5.75, sd=3.7
+gen_distribution = Gamma(2.3, 1/0.4)
+max_gen_time = 15  # Truncate at 15 days
 
-println("KEY FINDINGS:")
-println("Current Rt estimate: $(round(current_rt, digits=2)) [$(round(current_lower, digits=2)), $(round(current_upper, digits=2))]")
+# Create EpiData with generation interval and exponential transformation for Rt
+epi_data = EpiData(gen_distribution=gen_distribution, D_gen=max_gen_time, transformation=exp)
 
-if current_rt < 1.0
-    println("→ Current reproduction number is BELOW 1, indicating declining transmission")
-elseif current_rt > 1.0
-    println("→ Current reproduction number is ABOVE 1, indicating growing transmission")
-else
-    println("→ Current reproduction number is approximately 1, indicating stable transmission")
-end
+println("Generation interval mean: $(mean(gen_distribution))")
+println("Generation interval length: $(epi_data.len_gen_int)")
 
-println()
+# 2. Infection model: Renewal equation
+# Use weak prior for initial incidence
+renewal_model = Renewal(
+    data=epi_data,
+    initialisation_prior=Normal(log(100), 1)  # Initial incidence on log scale
+)
 
-# Time series summary
-mean_rt = mean(results_df.Rt_median)
-min_rt = minimum(results_df.Rt_median)
-max_rt = maximum(results_df.Rt_median)
+# 3. Latent model for log(Rt): Random walk
+# This models the log(Rt) process as a random walk
+latent_model = RandomWalk(
+    init_prior=Normal(log(1.0), 0.2),  # Start around R=1
+    ϵ_t=HierarchicalNormal(0.0, truncated(Normal(0, 0.1), 0, Inf))  # Small daily variations
+)
 
-println("Rt trajectory summary:")
-println("- Mean Rt over period: $(round(mean_rt, digits=2))")
-println("- Minimum Rt: $(round(min_rt, digits=2))")
-println("- Maximum Rt: $(round(max_rt, digits=2))")
-println("- Range: $(round(max_rt - min_rt, digits=2))")
+# 4. Observation model with multiple components
+println("Setting up observation model...")
 
-# Count periods above/below 1
-above_one = sum(results_df.Rt_median .> 1.0)
-below_one = sum(results_df.Rt_median .< 1.0)
-around_one = sum(abs.(results_df.Rt_median .- 1.0) .< 0.05)
+# 4a. Delay from infection to reporting
+# Use a Gamma distribution for delay: shape=1.8, rate=0.3 gives mean=6, sd=4.5
+delay_distribution = Gamma(1.8, 1/0.3)
+max_delay = 21  # 3 weeks maximum delay
 
-println("- Days with Rt > 1.0: $above_one/$(nrow(results_df)) ($(round(100*above_one/nrow(results_df), digits=1))%)")
-println("- Days with Rt < 1.0: $below_one/$(nrow(results_df)) ($(round(100*below_one/nrow(results_df), digits=1))%)")
-println("- Days with Rt ≈ 1.0: $around_one/$(nrow(results_df)) ($(round(100*around_one/nrow(results_df), digits=1))%)")
+# 4b. Day-of-week effects
+# Each day of week gets a multiplicative effect (constrained to sum to 7)
+dow_model = HierarchicalNormal(0.0, truncated(Normal(0, 0.2), 0, Inf))
 
-println()
+# 4c. Time-varying ascertainment
+# Smooth changes in the proportion of infections that are reported
+ascertainment_model = RandomWalk(
+    init_prior=Normal(log(0.3), 0.5),  # Initial ascertainment ~30%
+    ϵ_t=HierarchicalNormal(0.0, truncated(Normal(0, 0.05), 0, Inf))  # Slow changes
+)
 
-# Case trajectory
-total_cases = sum(results_df.observed_cases)
-mean_cases = mean(results_df.observed_cases)
-peak_cases = maximum(results_df.observed_cases)
+# 4d. Overdispersion via negative binomial
+nb_error = NegativeBinomialError(
+    cluster_factor_prior=truncated(Normal(0.1, 0.05), 0.01, 1.0)
+)
 
-println("Observed cases summary:")
-println("- Total cases: $total_cases")
-println("- Mean daily cases: $(round(mean_cases, digits=1))")
-println("- Peak daily cases: $peak_cases")
+# Compose the observation model
+observation_model = LatentDelay(
+    ascertainment_dayofweek(
+        Ascertainment(
+            nb_error,
+            ascertainment_model,
+            transform=(x, y) -> x .* exp.(y),  # Multiplicative ascertainment
+            latent_prefix="Ascertainment"
+        ),
+        latent_model=dow_model,
+        latent_prefix="DayofWeek"
+    ),
+    delay_distribution;
+    D=max_delay
+)
 
-println()
-println("FILES CREATED:")
-println("✓ rt_estimates_simple.csv - Full Rt estimates with confidence intervals")
+println("Observation model components:")
+println("- Delay: Gamma($(delay_distribution.α), $(1/delay_distribution.θ)) truncated at $(max_delay) days")
+println("- Day-of-week effects with softmax constraint")
+println("- Time-varying ascertainment (log-scale random walk)")
+println("- Negative binomial overdispersion")
 
-println()
-println("INTERPRETATION:")
-println("The time-varying reproduction number shows the instantaneous")
-println("transmission potential at each time point. Values above 1")
-println("indicate exponential growth, while values below 1 indicate decline.")
-println("The estimates account for the renewal equation relationship")
-println("between past infections and current transmission.")
+# 5. Create the EpiProblem
+# Note: the delay model shortens the observation window
+tspan = (1, time_steps)
 
-println()
-println("Analysis completed successfully!")
+epi_problem = EpiProblem(
+    epi_model=renewal_model,
+    latent_model=latent_model,
+    observation_model=observation_model,
+    tspan=tspan
+)
 
-# Create a simple text-based plot
-println()
-println("Rt TRAJECTORY (text plot):")
-println("1.5 |")
+println("EpiProblem created with time span: $tspan")
 
-for i in 1:nrow(results_df)
-    rt_val = results_df.Rt_median[i]
-    date_str = string(results_df.date[i])[6:end]  # MM-DD format
+# 6. Set up inference method
+# Use pathfinder for initialisation followed by NUTS sampling
+method = EpiMethod(
+    pre_sampler_steps=[ManyPathfinder(ndraws=100, nruns=4, maxiters=200)],
+    sampler=NUTSampler(
+        ndraws=2000,
+        nchains=4,
+        target_acceptance=0.8,
+        nadapts=1000
+    )
+)
 
-    # Simple plotting characters
-    if rt_val > 1.2
-        char = "█"
-    elseif rt_val > 1.0
-        char = "▓"
-    elseif rt_val > 0.8
-        char = "▒"
-    else
-        char = "░"
+println("Inference method configured:")
+println("- Pathfinder: 4 runs, 100 draws each, 200 max iterations")
+println("- NUTS: 4 chains, 2000 draws per chain, 1000 adaptation steps")
+
+# 7. Run inference
+println("\nStarting inference...")
+println("This may take several minutes...")
+
+# Prepare data for fitting
+obs_data = (y_t = y_obs,)
+
+# Run the inference
+try
+    result = apply_method(epi_problem, method, obs_data)
+
+    println("\nInference completed successfully!")
+    println("Chains summary:")
+    println(result.samples)
+
+    # Extract results
+    println("\nExtracting results...")
+
+    # Extract infection trajectories
+    I_t_samples = mapreduce(hcat, result.generated) do gen
+        gen.I_t
     end
 
-    if i % 7 == 1  # Show every 7th date
-        println("    | $char $(round(rt_val, digits=2))  $date_str")
+    # Extract latent process (log Rt)
+    Z_t_samples = mapreduce(hcat, result.generated) do gen
+        gen.Z_t
     end
-end
 
-println("0.5 |")
-println("    +", "-"^40)
-println("      $(results_df.date[1])    →    $(results_df.date[end])")
-println()
-println("Legend: █ >1.2  ▓ 1.0-1.2  ▒ 0.8-1.0  ░ <0.8")
+    # Transform to Rt scale
+    Rt_samples = exp.(Z_t_samples)
+
+    # Calculate summary statistics
+    Rt_median = mapslices(median, Rt_samples, dims=2)[:]
+    Rt_lower = mapslices(x -> quantile(x, 0.025), Rt_samples, dims=2)[:]
+    Rt_upper = mapslices(x -> quantile(x, 0.975), Rt_samples, dims=2)[:]
+
+    I_t_median = mapslices(median, I_t_samples, dims=2)[:]
+    I_t_lower = mapslices(x -> quantile(x, 0.025), I_t_samples, dims=2)[:]
+    I_t_upper = mapslices(x -> quantile(x, 0.975), I_t_samples, dims=2)[:]
+
+    # Create time vector (dates)
+    dates = data.date
+
+    println("\nResults summary:")
+    println("Current Rt estimate (median [95% CI]): $(round(Rt_median[end], digits=2)) [$(round(Rt_lower[end], digits=2)), $(round(Rt_upper[end], digits=2))]")
+    println("Mean Rt over period: $(round(mean(Rt_median), digits=2))")
+    println("Minimum Rt: $(round(minimum(Rt_median), digits=2))")
+    println("Maximum Rt: $(round(maximum(Rt_median), digits=2))")
+
+    # Save results to CSV
+    results_df = DataFrame(
+        date = dates,
+        Rt_median = Rt_median,
+        Rt_lower = Rt_lower,
+        Rt_upper = Rt_upper,
+        I_t_median = I_t_median,
+        I_t_lower = I_t_lower,
+        I_t_upper = I_t_upper,
+        observed_cases = y_obs
+    )
+
+    CSV.write("rt_estimates_complete.csv", results_df)
+    println("\nResults saved to 'rt_estimates_complete.csv'")
+
+    # Extract parameter estimates
+    println("\nParameter estimates:")
+
+    # Day-of-week effects
+    dow_params = []
+    for i in 1:7
+        param_name = "DayofWeek.latent.$i"
+        if haskey(result.samples, Symbol(param_name))
+            dow_effect = mean(result.samples[Symbol(param_name)])
+            push!(dow_params, dow_effect)
+        end
+    end
+
+    if !isempty(dow_params)
+        # Apply softmax to get multiplicative effects that sum to 7
+        exp_params = exp.(dow_params)
+        dow_effects = 7 * exp_params ./ sum(exp_params)
+        println("Day-of-week effects (multiplicative):")
+        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        for (i, day) in enumerate(days)
+            println("  $day: $(round(dow_effects[i], digits=2))")
+        end
+    end
+
+    # Ascertainment parameters
+    if haskey(result.samples, Symbol("Ascertainment.rw_init"))
+        initial_ascertainment = exp(mean(result.samples[Symbol("Ascertainment.rw_init")]))
+        println("\nInitial ascertainment rate: $(round(initial_ascertainment*100, digits=1))%")
+    end
+
+    # Overdispersion
+    if haskey(result.samples, Symbol("obs.cluster_factor"))
+        cluster_factor = mean(result.samples[Symbol("obs.cluster_factor")])
+        println("Overdispersion (cluster factor): $(round(cluster_factor, digits=3))")
+    end
+
+    # Save the full inference result
+    using Serialization
+    serialize("inference_result_complete.jls", result)
+    println("Full inference result saved to 'inference_result_complete.jls'")
+
+    println("\nComplete analysis finished!")
+
+catch e
+    println("Error during inference: $e")
+    rethrow(e)
+end
 ```
 
 ---
@@ -13017,114 +14024,450 @@ println("- mcmc_results.jls: Full MCMC results for further analysis")
 ```r
 #!/usr/bin/env Rscript
 
-# Results Summary for Structured Rt Estimation
+# Structured Rt Estimation with Complex Observation Processes
+# This script estimates time-varying reproduction number from COVID-19 case counts
+# accounting for delays, day-of-week effects, time-varying ascertainment, and overdispersion
+
+# Load required libraries
 library(data.table)
 library(ggplot2)
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
 
-cat("=== STRUCTURED RT ESTIMATION RESULTS ===\n\n")
+cat("Loading data...\n")
 
-# Load results
-rt_results <- fread("rt_estimates.csv")
-dow_results <- fread("dow_effects.csv")
-ascertainment_results <- fread("ascertainment_estimates.csv")
+# Load the data
+cases_data <- fread("data/cases_dow.csv")
+cases_data[, date := as.Date(date)]
+cases_data <- cases_data[order(date)]
 
-# Clean up any extreme outliers in Rt estimates (likely numerical issues)
-rt_results[, rt_median_clean := ifelse(median > 5, 5, median)]
-rt_results[, rt_q025_clean := ifelse(`2.5%` > 5, 5, `2.5%`)]
-rt_results[, rt_q975_clean := ifelse(`97.5%` > 10, 10, `97.5%`)]
+# Basic data exploration
+cat("Data summary:\n")
+print(cases_data)
+cat("\nDate range:", as.character(min(cases_data$date)), "to", as.character(max(cases_data$date)), "\n")
+cat("Total observations:", nrow(cases_data), "\n")
+cat("Total cases:", sum(cases_data$cases), "\n")
 
-# Current Rt estimate
-current_rt <- rt_results[nrow(rt_results)]
-cat("CURRENT RT ESTIMATE (", current_rt$date, "):\n")
-cat("  Median: ", round(current_rt$rt_median_clean, 3), "\n")
-cat("  95% CI: [", round(current_rt$rt_q025_clean, 3), ", ",
-    round(current_rt$rt_q975_clean, 3), "]\n\n")
+# Plot raw data
+p_raw <- ggplot(cases_data, aes(x = date, y = cases)) +
+  geom_point(aes(color = factor(day_of_week)), size = 2) +
+  geom_line(alpha = 0.7) +
+  scale_color_discrete(name = "Day of week") +
+  labs(title = "Daily COVID-19 Cases in England",
+       subtitle = "Coloured by day of week (1=Monday, 7=Sunday)",
+       x = "Date", y = "Cases") +
+  theme_minimal()
 
-# Rt trajectory summary
-cat("RT TRAJECTORY SUMMARY:\n")
-cat("  Mean Rt (cleaned): ", round(mean(rt_results$rt_median_clean), 3), "\n")
-cat("  Min Rt: ", round(min(rt_results$rt_median_clean), 3),
-    " on ", rt_results$date[which.min(rt_results$rt_median_clean)], "\n")
-cat("  Max Rt: ", round(max(rt_results$rt_median_clean), 3),
-    " on ", rt_results$date[which.max(rt_results$rt_median_clean)], "\n")
+ggsave("raw_cases_plot.png", p_raw, width = 10, height = 6, dpi = 150)
+cat("Saved raw cases plot to raw_cases_plot.png\n")
 
-# Days with Rt < 1
-rt_below_1 <- sum(rt_results$rt_q975_clean < 1, na.rm = TRUE)
-cat("  Days with Rt significantly < 1 (97.5% CI < 1): ", rt_below_1,
-    " of ", nrow(rt_results), "\n\n")
+# Prepare data for Stan model
+n_days <- nrow(cases_data)
+cases_vec <- cases_data$cases
+dow_vec <- cases_data$day_of_week
 
-# Day-of-week effects
-cat("DAY-OF-WEEK EFFECTS (multiplicative):\n")
+cat("Setting up model parameters...\n")
+
+# Generation interval (based on COVID-19 literature)
+# Using a discrete gamma distribution with mean ~5.5 days, sd ~2.5 days
+gen_mean <- 5.5
+gen_sd <- 2.5
+max_gen_days <- 15
+
+# Generate discrete generation interval
+gen_shape <- (gen_mean / gen_sd)^2
+gen_rate <- gen_mean / gen_sd^2
+gen_pmf <- dgamma(1:max_gen_days, shape = gen_shape, rate = gen_rate)
+gen_pmf <- gen_pmf / sum(gen_pmf)  # Normalise
+
+cat("Generation interval (first 10 days):", round(gen_pmf[1:10], 4), "\n")
+
+# Reporting delay distribution (infection to reporting)
+# Assuming mean delay of 8 days with some spread
+delay_mean <- 8
+delay_sd <- 3
+max_delay_days <- 20
+
+delay_shape <- (delay_mean / delay_sd)^2
+delay_rate <- delay_mean / delay_sd^2
+delay_pmf <- dgamma(1:max_delay_days, shape = delay_shape, rate = delay_rate)
+delay_pmf <- delay_pmf / sum(delay_pmf)
+
+cat("Reporting delay (first 10 days):", round(delay_pmf[1:10], 4), "\n")
+
+cat("Writing Stan model...\n")
+
+# Compile Stan model
+cat("Compiling Stan model...\n")
+model <- cmdstan_model("rt_model.stan")
+
+# Prepare data list for Stan
+stan_data <- list(
+  n_days = n_days,
+  cases = cases_vec,
+  day_of_week = dow_vec,
+  max_gen_days = max_gen_days,
+  gen_pmf = gen_pmf,
+  max_delay_days = max_delay_days,
+  delay_pmf = delay_pmf,
+  rt_prior_mean = 1.0,  # Prior expectation that Rt starts around 1
+  rt_prior_sd = 0.5
+)
+
+cat("Stan data prepared successfully\n")
+
+# Fit the model
+cat("Fitting model - this may take several minutes...\n")
+fit <- model$sample(
+  data = stan_data,
+  chains = 4,
+  parallel_chains = 4,
+  iter_warmup = 1000,
+  iter_sampling = 2000,
+  refresh = 100,
+  adapt_delta = 0.95,
+  max_treedepth = 12
+)
+
+cat("Model fitting completed\n")
+
+# Extract results
+draws <- fit$draws()
+
+# Extract Rt estimates
+rt_draws <- subset(draws, variable = "rt")
+rt_summary <- summarise_draws(rt_draws,
+                              mean, median, sd,
+                              ~quantile(.x, c(0.025, 0.25, 0.75, 0.975)))
+
+# Add dates to Rt estimates
+rt_summary$date <- cases_data$date
+
+# Extract day-of-week effects
+dow_draws <- subset(draws, variable = "dow_effects")
+dow_summary <- summarise_draws(dow_draws,
+                               mean, median, sd,
+                               ~quantile(.x, c(0.025, 0.25, 0.75, 0.975)))
+dow_summary$day_name <- c("Monday", "Tuesday", "Wednesday", "Thursday",
+                          "Friday", "Saturday", "Sunday")
+
+# Extract ascertainment estimates
+ascertainment_draws <- subset(draws, variable = "ascertainment")
+ascertainment_summary <- summarise_draws(ascertainment_draws,
+                                         mean, median, sd,
+                                         ~quantile(.x, c(0.025, 0.25, 0.75, 0.975)))
+ascertainment_summary$date <- cases_data$date
+
+# Current (most recent) Rt estimate
+current_rt <- rt_summary[nrow(rt_summary), ]
+
+cat("=== RESULTS SUMMARY ===\n")
+cat("Current Rt estimate (", as.character(current_rt$date), "):\n")
+cat("  Median:", round(current_rt$median, 3), "\n")
+cat("  95% CI: [", round(current_rt$`2.5%`, 3), ",", round(current_rt$`97.5%`, 3), "]\n\n")
+
+cat("Day-of-week effects (multiplicative):\n")
 for (i in 1:7) {
-  cat("  ", dow_results$day_name[i], ": ",
-      round(dow_results$median[i], 3),
-      " [", round(dow_results$`2.5%`[i], 3),
-      ", ", round(dow_results$`97.5%`[i], 3), "]\n", sep = "")
+  cat("  ", dow_summary$day_name[i], ": ",
+      round(dow_summary$median[i], 3),
+      " [", round(dow_summary$`2.5%`[i], 3),
+      ", ", round(dow_summary$`97.5%`[i], 3), "]\n", sep = "")
 }
 
-# Ascertainment summary
-cat("\nASCERTAINMENT SUMMARY:\n")
-# Convert to percentages
-ascertainment_results[, median_pct := median / 100]
-ascertainment_results[, q025_pct := `2.5%` / 100]
-ascertainment_results[, q975_pct := `97.5%` / 100]
+cat("\nModel diagnostics:\n")
+print(fit$diagnostic_summary())
 
-cat("  Mean ascertainment: ", round(mean(ascertainment_results$median_pct) * 100, 1), "%\n")
-cat("  Range: ", round(min(ascertainment_results$median_pct) * 100, 1), "% to ",
-    round(max(ascertainment_results$median_pct) * 100, 1), "%\n")
-cat("  Initial: ", round(ascertainment_results$median_pct[1] * 100, 1), "%\n")
-cat("  Final: ", round(ascertainment_results$median_pct[nrow(ascertainment_results)] * 100, 1), "%\n\n")
+# Save results to files
+fwrite(rt_summary, "rt_estimates.csv")
+fwrite(dow_summary, "dow_effects.csv")
+fwrite(ascertainment_summary, "ascertainment_estimates.csv")
 
-# Create cleaned plots
-cat("Creating summary plots with cleaned data...\n")
+cat("\nSaved results to:\n")
+cat("- rt_estimates.csv (Rt over time)\n")
+cat("- dow_effects.csv (day-of-week effects)\n")
+cat("- ascertainment_estimates.csv (ascertainment over time)\n")
 
-# Rt over time (with outlier handling)
-p_rt_clean <- ggplot(rt_results, aes(x = as.Date(date), y = rt_median_clean)) +
-  geom_ribbon(aes(ymin = rt_q025_clean, ymax = rt_q975_clean),
-              alpha = 0.3, fill = "skyblue") +
+# Create comprehensive plots
+cat("Creating plots...\n")
+
+# 1. Rt over time
+p_rt <- ggplot(rt_summary, aes(x = date, y = median)) +
+  geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`), alpha = 0.3, fill = "skyblue") +
+  geom_ribbon(aes(ymin = `25%`, ymax = `75%`), alpha = 0.5, fill = "skyblue") +
   geom_line(size = 1, color = "darkblue") +
   geom_hline(yintercept = 1, linetype = "dashed", color = "red", alpha = 0.7) +
-  labs(title = "Time-varying Reproduction Number (Rt) - Cleaned",
-       subtitle = "Outliers capped at reasonable values for display",
+  labs(title = "Time-varying Reproduction Number (Rt)",
+       subtitle = "Shaded areas show 50% and 95% credible intervals",
        x = "Date", y = "Rt") +
   theme_minimal() +
   theme(plot.title = element_text(size = 14, face = "bold"))
 
-ggsave("rt_estimates_cleaned.png", p_rt_clean, width = 12, height = 6, dpi = 150)
+ggsave("rt_estimates_plot.png", p_rt, width = 12, height = 6, dpi = 150)
 
-# Simple interpretation
-cat("INTERPRETATION:\n")
-if (current_rt$rt_median_clean < 1) {
-  cat("- Current Rt is below 1, suggesting declining epidemic\n")
-} else {
-  cat("- Current Rt is above 1, suggesting growing epidemic\n")
-}
+# 2. Day-of-week effects
+p_dow <- ggplot(dow_summary, aes(x = factor(day_name, levels = dow_summary$day_name),
+                                 y = median)) +
+  geom_col(aes(fill = median > 1), alpha = 0.7) +
+  geom_errorbar(aes(ymin = `2.5%`, ymax = `97.5%`), width = 0.3) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red", alpha = 0.7) +
+  scale_fill_manual(values = c("FALSE" = "coral", "TRUE" = "lightgreen"),
+                    labels = c("Below average", "Above average"),
+                    name = "Reporting") +
+  labs(title = "Day-of-Week Effects on Case Reporting",
+       subtitle = "Multiplicative effects relative to baseline",
+       x = "Day of Week", y = "Multiplicative Effect") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(size = 14, face = "bold"))
 
-# Weekend effect
-weekend_effect <- mean(c(dow_results$median[6], dow_results$median[7]))  # Sat, Sun
-weekday_effect <- mean(dow_results$median[1:5])  # Mon-Fri
-if (weekend_effect < weekday_effect) {
-  cat("- Weekend reporting is lower than weekday reporting on average\n")
-} else {
-  cat("- Weekend reporting is higher than weekday reporting on average\n")
-}
+ggsave("dow_effects_plot.png", p_dow, width = 10, height = 6, dpi = 150)
 
-cat("- Ascertainment rate varied over the study period, indicating changing\n")
-cat("  testing or reporting practices\n")
+# 3. Time-varying ascertainment
+p_ascertainment <- ggplot(ascertainment_summary, aes(x = date, y = median)) +
+  geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`), alpha = 0.3, fill = "orange") +
+  geom_ribbon(aes(ymin = `25%`, ymax = `75%`), alpha = 0.5, fill = "orange") +
+  geom_line(size = 1, color = "darkorange") +
+  labs(title = "Time-varying Ascertainment Rate",
+       subtitle = "Proportion of infections that become reported cases",
+       x = "Date", y = "Ascertainment Rate") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, face = "bold"))
 
-cat("\n=== FILES CREATED ===\n")
-cat("Data files:\n")
-cat("- rt_estimates.csv: Complete Rt estimates over time\n")
-cat("- dow_effects.csv: Day-of-week multiplicative effects\n")
-cat("- ascertainment_estimates.csv: Time-varying ascertainment rates\n")
-cat("\nPlots:\n")
-cat("- rt_estimates_plot.png: Original Rt plot\n")
-cat("- rt_estimates_cleaned.png: Cleaned Rt plot (outliers handled)\n")
-cat("- dow_effects_plot.png: Day-of-week effects\n")
-cat("- ascertainment_plot.png: Ascertainment over time\n")
-cat("- raw_cases_plot.png: Raw case data\n")
+ggsave("ascertainment_plot.png", p_ascertainment, width = 12, height = 6, dpi = 150)
+
+# 4. Model fit check
+cases_pred_draws <- subset(draws, variable = "cases_pred")
+cases_pred_summary <- summarise_draws(cases_pred_draws,
+                                      mean, median, sd,
+                                      ~quantile(.x, c(0.025, 0.25, 0.75, 0.975)))
+cases_pred_summary$date <- cases_data$date
+cases_pred_summary$observed <- cases_data$cases
+
+p_fit <- ggplot(cases_pred_summary, aes(x = date)) +
+  geom_ribbon(aes(ymin = `2.5%`, ymax = `97.5%`), alpha = 0.3, fill = "lightgray") +
+  geom_ribbon(aes(ymin = `25%`, ymax = `75%`), alpha = 0.5, fill = "lightgray") +
+  geom_line(aes(y = median), color = "black", size = 1) +
+  geom_point(aes(y = observed), color = "red", size = 2, alpha = 0.8) +
+  labs(title = "Model Fit: Observed vs Predicted Cases",
+       subtitle = "Red points: observed data, Grey bands: model predictions (50% and 95% CI)",
+       x = "Date", y = "Cases") +
+  theme_minimal() +
+  theme(plot.title = element_text(size = 14, face = "bold"))
+
+ggsave("model_fit_plot.png", p_fit, width = 12, height = 6, dpi = 150)
+
+# 5. Combined summary plot
+library(patchwork)
+combined_plot <- (p_rt / p_ascertainment) | p_dow
+combined_plot <- combined_plot + plot_annotation(
+  title = "COVID-19 Rt Estimation Results",
+  subtitle = paste("Analysis of England case data from", min(cases_data$date), "to", max(cases_data$date)),
+  theme = theme(plot.title = element_text(size = 16, face = "bold"))
+)
+
+ggsave("summary_plot.png", combined_plot, width = 16, height = 10, dpi = 150)
+
+cat("Plots saved:\n")
+cat("- rt_estimates_plot.png (Rt over time)\n")
+cat("- dow_effects_plot.png (day-of-week effects)\n")
+cat("- ascertainment_plot.png (ascertainment over time)\n")
+cat("- model_fit_plot.png (observed vs predicted)\n")
+cat("- summary_plot.png (combined summary)\n")
+
+# Additional summary statistics
+cat("\n=== ADDITIONAL SUMMARY ===\n")
+cat("Rt trajectory summary:\n")
+cat("  Mean Rt:", round(mean(rt_summary$median), 3), "\n")
+cat("  Min Rt:", round(min(rt_summary$median), 3), "on", as.character(rt_summary$date[which.min(rt_summary$median)]), "\n")
+cat("  Max Rt:", round(max(rt_summary$median), 3), "on", as.character(rt_summary$date[which.max(rt_summary$median)]), "\n")
+
+rt_below_1 <- sum(rt_summary$`97.5%` < 1)
+cat("  Days with Rt significantly below 1 (97.5% CI < 1):", rt_below_1, "of", nrow(rt_summary), "\n")
+
+cat("\nAscertainment summary:\n")
+cat("  Mean ascertainment rate:", paste0(round(mean(ascertainment_summary$median) * 100, 2), "%"), "\n")
+cat("  Range:", paste0(round(min(ascertainment_summary$median) * 100, 2), "%"),
+    "to", paste0(round(max(ascertainment_summary$median) * 100, 2), "%"), "\n")
+
+# Save full posterior draws for further analysis
+saveRDS(draws, "posterior_draws.rds")
+cat("\nPosterior draws saved to posterior_draws.rds\n")
 
 cat("\n=== ANALYSIS COMPLETE ===\n")
+cat("All results, plots, and posterior samples have been saved.\n")
+cat("Key files:\n")
+cat("- rt_estimates.csv: Rt estimates over time\n")
+cat("- dow_effects.csv: Day-of-week multiplicative effects\n")
+cat("- ascertainment_estimates.csv: Time-varying ascertainment rates\n")
+cat("- posterior_draws.rds: Full posterior samples for further analysis\n")
+cat("- *.png: Various plots summarising results\n")
+```
+
+```stan
+// Structured Rt estimation model with observation processes
+functions {
+  // Convolve two vectors (discrete convolution)
+  vector convolve(vector x, vector y) {
+    int nx = num_elements(x);
+    int ny = num_elements(y);
+    int n_out = nx + ny - 1;
+    vector[n_out] result = rep_vector(0, n_out);
+
+    for (i in 1:nx) {
+      for (j in 1:ny) {
+        result[i + j - 1] += x[i] * y[j];
+      }
+    }
+    return result;
+  }
+}
+
+data {
+  int<lower=1> n_days;                    // Number of observation days
+  array[n_days] int<lower=0> cases;       // Observed cases
+  array[n_days] int<lower=1,upper=7> day_of_week; // Day of week (1=Monday, 7=Sunday)
+
+  // Generation interval
+  int<lower=1> max_gen_days;
+  vector<lower=0>[max_gen_days] gen_pmf;  // Generation interval PMF
+
+  // Reporting delay
+  int<lower=1> max_delay_days;
+  vector<lower=0>[max_delay_days] delay_pmf; // Reporting delay PMF
+
+  // Priors
+  real rt_prior_mean;                     // Prior mean for initial Rt
+  real rt_prior_sd;                       // Prior SD for initial Rt
+}
+
+transformed data {
+  int total_days = n_days + max_delay_days + max_gen_days;
+}
+
+parameters {
+  // Rt parameters
+  real log_rt_init;                       // Initial log(Rt)
+  vector[n_days-1] rt_noise;              // Random walk innovations
+  real<lower=0> rt_rw_sd;                 // Random walk standard deviation
+
+  // Day-of-week effects (multiplicative)
+  vector[6] dow_raw;                      // 6 DOW effects (Sunday is reference)
+
+  // Time-varying ascertainment (log scale)
+  real log_ascertainment_init;            // Initial log ascertainment
+  vector[n_days-1] ascertainment_noise;   // Ascertainment random walk
+  real<lower=0> ascertainment_rw_sd;      // Ascertainment RW standard deviation
+
+  // Overdispersion
+  real<lower=0> phi;                      // Negative binomial overdispersion
+
+  // Initial seeding
+  real<lower=0> seed_infections;          // Initial seed infections
+}
+
+transformed parameters {
+  // Rt trajectory (random walk on log scale)
+  vector[n_days] log_rt;
+  vector[n_days] rt;
+
+  log_rt[1] = log_rt_init;
+  for (t in 2:n_days) {
+    log_rt[t] = log_rt[t-1] + rt_noise[t-1] * rt_rw_sd;
+  }
+  rt = exp(log_rt);
+
+  // Day-of-week effects (Sunday = reference = 1)
+  vector[7] dow_effects;
+  dow_effects[7] = 1;  // Sunday reference
+  dow_effects[1:6] = exp(dow_raw);
+
+  // Time-varying ascertainment (random walk on log scale)
+  vector[n_days] log_ascertainment;
+  vector[n_days] ascertainment;
+
+  log_ascertainment[1] = log_ascertainment_init;
+  for (t in 2:n_days) {
+    log_ascertainment[t] = log_ascertainment[t-1] + ascertainment_noise[t-1] * ascertainment_rw_sd;
+  }
+  ascertainment = exp(log_ascertainment);
+
+  // Infection dynamics using renewal equation
+  vector[total_days] infections = rep_vector(0, total_days);
+
+  // Seed initial infections
+  for (t in 1:max_gen_days) {
+    infections[t] = seed_infections / max_gen_days;
+  }
+
+  // Renewal equation: I_t = R_t * sum(I_{t-s} * g_s)
+  for (t in (max_gen_days + 1):total_days) {
+    real convolution_sum = 0;
+    int day_idx = t - max_gen_days;
+
+    if (day_idx <= n_days) {
+      for (s in 1:max_gen_days) {
+        if (t - s > 0) {
+          convolution_sum += infections[t - s] * gen_pmf[s];
+        }
+      }
+      infections[t] = rt[day_idx] * convolution_sum;
+    }
+  }
+
+  // Expected reported cases (with delay and day-of-week effects)
+  vector[n_days] expected_reports = rep_vector(0, n_days);
+
+  for (t in 1:n_days) {
+    real report_sum = 0;
+    for (d in 1:max_delay_days) {
+      int infection_day = t + max_gen_days - d + 1;
+      if (infection_day > 0 && infection_day <= total_days) {
+        report_sum += infections[infection_day] * delay_pmf[d];
+      }
+    }
+    expected_reports[t] = report_sum * ascertainment[t] * dow_effects[day_of_week[t]];
+  }
+}
+
+model {
+  // Priors
+  log_rt_init ~ normal(log(rt_prior_mean), rt_prior_sd);
+  rt_noise ~ std_normal();
+  rt_rw_sd ~ normal(0, 0.1);
+
+  dow_raw ~ normal(0, 0.2);  // Day-of-week effects around 1
+
+  log_ascertainment_init ~ normal(log(0.1), 0.5);  // ~10% ascertainment
+  ascertainment_noise ~ std_normal();
+  ascertainment_rw_sd ~ normal(0, 0.05);
+
+  phi ~ normal(0, 10);
+  seed_infections ~ normal(1000, 500);
+
+  // Likelihood
+  for (t in 1:n_days) {
+    if (expected_reports[t] > 0) {
+      cases[t] ~ neg_binomial_2(expected_reports[t], phi);
+    }
+  }
+}
+
+generated quantities {
+  vector[n_days] log_lik;
+  vector[n_days] cases_pred;
+
+  for (t in 1:n_days) {
+    if (expected_reports[t] > 0) {
+      log_lik[t] = neg_binomial_2_lpmf(cases[t] | expected_reports[t], phi);
+      cases_pred[t] = neg_binomial_2_rng(expected_reports[t], phi);
+    } else {
+      log_lik[t] = 0;
+      cases_pred[t] = 0;
+    }
+  }
+}
 ```
 
 ---

@@ -38,61 +38,24 @@ get_all_runs <- function() {
   runs
 }
 
-# Find the last code file written and executed by the LLM from conversation.jsonl
-get_final_code_file <- function(run_dir) {
-  conv_file <- file.path(run_dir, "conversation.jsonl")
-  if (!file.exists(conv_file)) return(NULL)
+# Load manually curated mapping of final code files per run
+load_final_files <- function() {
+  read_csv(file.path(REVIEW_DIR, "final_files.csv"),
+           col_types = cols(.default = "c"))
+}
 
-  raw <- readLines(conv_file, warn = FALSE)
-  raw <- paste(raw, collapse = "\n")
-
-  exts <- paste(tolower(CODE_EXTENSIONS), collapse = "|")
-
-  # Find all files that were written (Write tool calls)
-  write_pattern <- paste0('"file_path":"[^"]*?/([^/"]+[.](?:', exts, '))","content"')
-  write_matches <- gregexpr(write_pattern, raw, ignore.case = TRUE, perl = TRUE)
-  written_files <- character(0)
-  if (write_matches[[1]][1] != -1) {
-    for (pos in write_matches[[1]]) {
-      chunk <- substr(raw, pos, pos + 300)
-      m <- regmatches(chunk, regexec(write_pattern, chunk,
-                                     ignore.case = TRUE, perl = TRUE))[[1]]
-      if (length(m) >= 2) written_files <- c(written_files, m[2])
-    }
+# Get the final code file(s) for a run from the curated mapping
+get_final_code_files <- function(scenario, condition, run_id, run_dir, final_files_df) {
+  row <- final_files_df |>
+    filter(.data$scenario == .env$scenario,
+           .data$condition == .env$condition,
+           .data$run_id == as.character(.env$run_id))
+  if (nrow(row) == 0 || is.na(row$final_file[1]) || row$final_file[1] == "") {
+    return(character(0))
   }
-
-  # Find all files that were executed (Bash command calls)
-  exec_pattern <- paste0('"command":"[^"]*?([\\w_-]+[.](?:', exts, '))')
-  exec_matches <- gregexpr(exec_pattern, raw, ignore.case = TRUE, perl = TRUE)
-  executed_files <- character(0)
-  if (exec_matches[[1]][1] != -1) {
-    for (pos in exec_matches[[1]]) {
-      chunk <- substr(raw, pos, pos + 500)
-      m <- regmatches(chunk, regexec(exec_pattern, chunk,
-                                     ignore.case = TRUE, perl = TRUE))[[1]]
-      if (length(m) >= 2) executed_files <- c(executed_files, m[2])
-    }
-  }
-
-  # Last file that was both written and executed, excluding auxiliary scripts
-  aux_pattern <- "^(plot|create_plot|simple_plot|summary|final_summary|show_result|monitor|inspect|extract|fix_plot|test|explore|debug|install)"
-  both <- intersect(written_files, executed_files)
-  if (length(both) > 1) {
-    non_aux <- both[!grepl(aux_pattern, both, ignore.case = TRUE)]
-    if (length(non_aux) > 0) both <- non_aux
-  }
-  if (length(both) == 0) {
-    if (length(written_files) == 0) return(NULL)
-    both <- written_files
-    non_aux <- both[!grepl(aux_pattern, both, ignore.case = TRUE)]
-    if (length(non_aux) > 0) both <- non_aux
-  }
-
-  # Pick the last one (most recent in conversation order)
-  final <- both[length(both)]
-
-  filepath <- file.path(run_dir, final)
-  if (file.exists(filepath)) filepath else NULL
+  filenames <- trimws(strsplit(row$final_file[1], ";")[[1]])
+  paths <- file.path(run_dir, filenames)
+  paths[file.exists(paths)]
 }
 
 # Determine execution status: SUCCESS if any CSV with "rt" in name exists
@@ -156,13 +119,17 @@ generate_review_materials <- function() {
     ""
   )
 
+  final_files_df <- load_final_files()
+
   for (i in order_idx) {
     sub_id <- mapping$submission_id[i]
     scenario <- mapping$scenario[i]
     execution <- mapping$execution[i]
     run <- runs[[i]]
 
-    final_file <- get_final_code_file(run$run_dir)
+    code_files <- get_final_code_files(
+      run$scenario, run$condition, run$run_id, run$run_dir, final_files_df
+    )
 
     code_lines <- c(code_lines,
       sprintf("## %s", sub_id),
@@ -171,19 +138,21 @@ generate_review_materials <- function() {
       ""
     )
 
-    if (is.null(final_file)) {
+    if (length(code_files) == 0) {
       code_lines <- c(code_lines, "*No code files found.*", "")
     } else {
-      ext <- tools::file_ext(final_file)
-      lang <- ext_to_lang(ext)
-      file_content <- readLines(final_file, warn = FALSE)
+      for (cf in code_files) {
+        ext <- tools::file_ext(cf)
+        lang <- ext_to_lang(ext)
+        file_content <- readLines(cf, warn = FALSE)
 
-      code_lines <- c(code_lines,
-        sprintf("```%s", lang),
-        file_content,
-        "```",
-        ""
-      )
+        code_lines <- c(code_lines,
+          sprintf("```%s", lang),
+          file_content,
+          "```",
+          ""
+        )
+      }
     }
 
     code_lines <- c(code_lines, "---", "")
