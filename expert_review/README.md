@@ -36,20 +36,7 @@ Acceptable approaches include:
 - Gaussian process
 - Splines
 
-## Departure Categories
-
-When counting departures, classify each into one of these categories:
-
-| Category | Definition | Examples |
-|----------|------------|----------|
-| **(A) Equivalent alternative** | Different but equally valid | GP instead of AR(1) for Rt smoothness; different parameterisation of same distribution |
-| **(B) Minor error** | Small mistake, unlikely to substantially affect results | Slightly off generation interval mean (e.g., 4 vs 5 days); missing day-of-week adjustment |
-| **(C) Major error** | Significant mistake that would bias results | No delay convolution; Poisson instead of NegBin with overdispersed data; overly tight priors |
-| **(D) Fundamental misunderstanding** | Indicates lack of understanding | Naive ratio method; negative Rt values possible; confusing Rt with growth rate |
-
 ## Overall Assessment
-
-Based on your departure counts:
 
 | Rating | Criteria |
 |--------|----------|
@@ -127,16 +114,12 @@ Continuous-to-discrete time conversion not handled appropriately. Generation int
 
 ##### `other_departures`
 Free text for any departures not covered above.
-| `count_A_equivalent` | Count of category A departures (different but equally valid approaches) |
-| `count_B_minor` | Count of category B departures (small mistakes, unlikely to substantially affect results) |
-| `count_C_major` | Count of category C departures (significant mistakes that would bias results) |
-| `count_D_fundamental` | Count of category D departures (fundamental misunderstanding of the method) |
 
 #### Overall assessment
 
 | Column | Description |
 |--------|-------------|
-| `overall` | Summary judgement based on departure counts. |
+| `overall` | Summary judgement based on departures. |
 
 Valid values:
 - `acceptable` - No C or D departures; would produce reasonable Rt estimates

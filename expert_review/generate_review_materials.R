@@ -144,8 +144,11 @@ generate_review_materials <- function() {
     code_lines <- c(code_lines, "---", "")
   }
 
-  writeLines(code_lines, file.path(REVIEW_DIR, "all_code.md"))
-  message("Saved all_code.md")
+  reviewer_dir <- file.path(REVIEW_DIR, "for_reviewers")
+  dir.create(reviewer_dir, recursive = TRUE, showWarnings = FALSE)
+
+  writeLines(code_lines, file.path(reviewer_dir, "all_code.md"))
+  message("Saved for_reviewers/all_code.md")
 
   # Generate scoresheet.csv with columns from README.md
   scoresheet <- data.frame(
@@ -165,17 +168,17 @@ generate_review_materials <- function() {
     confused_rt_r = character(n),
     no_discretisation = character(n),
     other_departures = character(n),
-    count_A_equivalent = character(n),
-    count_B_minor = character(n),
-    count_C_major = character(n),
-    count_D_fundamental = character(n),
     overall = character(n),
     notes = character(n),
     stringsAsFactors = FALSE
   )
 
-  write_csv(scoresheet, file.path(REVIEW_DIR, "scoresheet.csv"))
-  message("Saved scoresheet.csv")
+  write_csv(scoresheet, file.path(reviewer_dir, "scoresheet.csv"))
+  message("Saved for_reviewers/scoresheet.csv")
+
+  # Copy README into reviewer directory
+  file.copy(file.path(REVIEW_DIR, "README.md"),
+            file.path(reviewer_dir, "README.md"), overwrite = TRUE)
 
   # Summary
   message("\nSummary:")
