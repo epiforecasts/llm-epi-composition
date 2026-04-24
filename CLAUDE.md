@@ -6,14 +6,13 @@
 
 ## Current status
 
-Phase 2 design committed; phase 1 artefacts removed. No phase 2 code yet. Next items from the plan:
+Phase 2 design committed; phase 1 artefacts removed. Simulation generator produces data + truth for 8 variants x 3 replicates under `simulations/`. Next items from the plan:
 
-- Simulation generator producing `simulations/{variant}/{truth,data}/` per the Data generation procedure section
-- Reference-solution sanity check on canonical DGP (EpiAware must recover true Rt within tolerance before any LLM is queried)
-- Phase 2 prompts under the information-provision rules in Protocol → Prompt construction
-- `evaluation/run_agentic.sh` revision for simulation runs (copy from `simulations/{variant}/data/`)
-- Automated correctness detectors per Evaluation → Diagnostic: Automated correctness detectors
-- Prompt paraphrase and temperature randomisation harness
+- Reference-solution sanity check on canonical DGP (EpiAware must recover true Rt within tolerance before any LLM is queried). Reference solutions in `reference_solutions/*.jl` are phase 1 artefacts still reading from `data/cases.csv`; adapt them to read `simulations/canonical/rep_01/data/cases.csv` and validate recovery.
+- Phase 2 prompts under the information-provision rules in Protocol → Prompt construction (old prompts under `prompts/scenario_*/` are obsolete — no-spec/julia/epiaware axis, no disease label).
+- `evaluation/run_agentic.sh` revision for simulation runs: copy from `simulations/{variant}/rep_{rr}/data/`, filter streams by scenario (1a/1b/2 → cases only; 3 → all three).
+- Automated correctness detectors per Evaluation → Diagnostic: Automated correctness detectors.
+- Prompt paraphrase and temperature randomisation harness.
 
 ## Project gotchas
 
