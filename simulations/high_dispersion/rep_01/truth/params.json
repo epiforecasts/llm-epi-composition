@@ -1,0 +1,67 @@
+{
+    "rt_knots": {
+        "days": [
+            1,
+            50,
+            100,
+            150
+        ],
+        "values": [
+            0.8,
+            1.5,
+            0.8,
+            0.8
+        ]
+    },
+    "phi_deaths": 2,
+    "replicate_index": 1,
+    "gi": {
+        "family": "Gamma",
+        "shape": 7.5625,
+        "scale": 0.7272727272727273,
+        "mean": 5.5,
+        "sd": 2
+    },
+    "lambda_0": 100,
+    "T_days": 150,
+    "i_ref": 100,
+    "dt": 0.05,
+    "dow_multiplier_mon_to_sun": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0.5,
+        0.5
+    ],
+    "euler_lotka_r0": -0.03980342035816875,
+    "variant": "high_dispersion",
+    "phi_hospitalisations": 2,
+    "start_date": "2023-01-01",
+    "tau_max": 20,
+    "D_max": 20,
+    "delay_hospitalisations": {
+        "mu_log": 2.2594962448735196,
+        "family": "LogNormal",
+        "sigma_log": 0.29356037920852396,
+        "mean": 10.000000000000002,
+        "sd": 3.000000000000002
+    },
+    "delay_cases": {
+        "mu_log": 1.5352279098749637,
+        "family": "LogNormal",
+        "sigma_log": 0.38525317015992644,
+        "mean": 4.999999999999999,
+        "sd": 1.9999999999999993
+    },
+    "delay_deaths": {
+        "mu_log": 2.9654199626457736,
+        "family": "LogNormal",
+        "sigma_log": 0.24622067706923975,
+        "mean": 19.999999999999996,
+        "sd": 4.999999999999999
+    },
+    "seed": 101,
+    "phi_cases": 2
+}
