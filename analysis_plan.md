@@ -92,12 +92,12 @@ Primary evaluation is on simulated data with known Rt trajectory. Real UK COVID 
 
 #### Primary (canonical) DGP
 
-Daily-resolution stochastic renewal model. The renewal equation is the expectation of an underlying age-dependent branching process (Mishra et al. 2020); we generate from a moment-closed form that matches that process at the marginal level per time step:
+Daily-resolution stochastic renewal model. The renewal equation describes the expectation of an underlying age-dependent branching process (Mishra et al. 2020 derive this rigorously; the result holds for arbitrary offspring distributions). We generate infections from a phenomenological NegBinL marginal:
 
-**Infection process (NegBinL form, Lloyd-Smith offspring heterogeneity):**
+**Infection process (NegBinL marginal):**
 $$I_t \mid I_{<t} \sim \mathrm{NegBin}\!\left(\mu_t = R_t \cdot \Lambda_t,\; k \cdot \Lambda_t\right), \qquad \Lambda_t = \sum_{s=1}^{S} g_s \cdot I_{t-s}$$
 
-with $\mathrm{Var}(I_t \mid I_{<t}) = \mu_t (1 + R_t/k)$. The dispersion parameter $k$ is the offspring overdispersion (Lloyd-Smith et al. 2005); $k \to \infty$ recovers the Poisson renewal model (Cori et al. 2013).
+with $\mathrm{Var}(I_t \mid I_{<t}) = \mu_t (1 + R_t/k)$. The dispersion parameter $k$ is the moment-matched offspring dispersion; $k \to \infty$ recovers the Poisson renewal model (Cori et al. 2013).
 
 **Observation process (incomplete observation; Poisson measurement):**
 $$\mathbb{E}[C_t] = \alpha_t \cdot w_{\mathrm{dow}(t)} \cdot \sum_{e=0}^{E} f_e \cdot I_{t-e}$$
@@ -105,7 +105,7 @@ $$C_t \sim \mathrm{Poisson}(\mathbb{E}[C_t])$$
 
 The recovery target is $R_t$ — the parameter $R(d)$ of the infection process, definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
 
-**Sources of overdispersion.** Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The mechanistically grounded source is individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): under a Bellman–Harris age-dependent branching process with NegBin individual offspring distributions and a continuous generation interval, the population-level infection counts at each time step are NegBinL with dispersion proportional to $\Lambda_t$ (Mishra et al. 2020 establishes the BP-renewal correspondence; the NegBinL marginal is a standard derivation). All overdispersion in the GT is at the infection level via this mechanism. Observations are Poisson conditional on infections — consistent with binomial-thinning of NegBinL infections plus measurement Poisson noise — without an additional free observation-level dispersion knob.
+**Sources of overdispersion.** Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The mechanistic motivation is individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. How this individual-level heterogeneity propagates to the population-level marginal $I_t \mid I_{<t}$ under a Bellman–Harris branching process is non-trivial — the exact marginal is a non-NegBin compound distribution (a sum of NegBins with shared shape but cohort-dependent means). The NegBinL form used here is a phenomenological marginal model that NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) are designed to fit; it is not a strict derivation from a Lloyd-Smith Bellman–Harris process. Observations are Poisson — consistent with binomial-thinning of infections plus measurement Poisson noise — without an additional free observation-level dispersion knob.
 
 **Parameters (canonical):**
 - $T = 150$ days, nominal start date 2023-01-01

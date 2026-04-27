@@ -221,10 +221,8 @@ function expected_reports(I::Vector{Float64}, I_seed::Vector{Float64},
 end
 
 function sample_obs(E, rng)
-    # Observation noise is Poisson: cases are binomial-thinned + delay-distributed
-    # samples from the realised infection trajectory, plus measurement Poisson.
-    # Overdispersion of cases inherits from NegBinL infections (Mishra et al. 2020;
-    # Lloyd-Smith et al. 2005), not from a free observation-level dispersion.
+    # Observation noise is Poisson: cases inherit overdispersion from the
+    # NegBinL-distributed infections; no free observation-level dispersion knob.
     out = Vector{Int}(undef, length(E))
     for i in eachindex(E)
         out[i] = rand(rng, Poisson(max(E[i], 1e-12)))
@@ -287,9 +285,8 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
         "start_date"               => string(START_DATE),
         "rt_knots"                 => Dict("days"   => v.rt_knots.days,
                                            "values" => v.rt_knots.values),
-        "rt_target_definition"     => "(c) parameter R(d) of the daily renewal model (Funk, Abbott & Bracher 2022); renewal equation is the expectation of the underlying age-dependent branching process (Mishra et al. 2020)",
-        "infection_model"          => "I_d ~ NegBin(μ = R(d) Σ_s g_s I_{d-s}, k Σ_s g_s I_{d-s}); k → ∞ recovers Poisson",
-        "infection_overdispersion_mechanism" => "individual offspring heterogeneity (Lloyd-Smith et al. 2005); k is the offspring dispersion",
+        "rt_target_definition"     => "(c) parameter R(d) of the daily renewal model (Funk, Abbott & Bracher 2022); the renewal equation is the expectation of an age-dependent branching process (Mishra et al. 2020), regardless of offspring distribution",
+        "infection_model"          => "I_d ~ NegBin(μ = R(d) Σ_s g_s I_{d-s}, k Σ_s g_s I_{d-s}); k → ∞ recovers Poisson; phenomenological NegBinL marginal motivated by — but not strictly derived from — individual offspring heterogeneity (Lloyd-Smith et al. 2005)",
         "observation_model"        => "X_d ~ Poisson(α(d) · w_dow(d) · Σ_e f_e · I_{d-e})",
         "discretisation"           => "double interval censoring (P(D=d) = ∫_0^1 [F(d+1-p) - F(d-p)] dp)",
         "gi"                       => dist_spec(v.gi),
