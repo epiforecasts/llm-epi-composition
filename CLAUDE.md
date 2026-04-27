@@ -6,7 +6,7 @@
 
 ## Current status
 
-Phase 2 design committed; phase 1 artefacts removed. Simulation generator produces data + truth for 8 variants × 20 replicates from an individual-level Lloyd-Smith Bellman-Harris BP under `simulations/` (moment-closed NegBinL fallback retained as `generate_popn.jl`). Reference EpiAware sanity check passed on canonical (BP RMSE 0.09, popn RMSE 0.12, both with coverage ≈ 1.0; see `simulations/robustness_epiaware.csv`). Next items from the plan:
+Phase 2 design committed; phase 1 artefacts removed. Simulation generator produces data + truth for 8 variants × 20 replicates from an individual-level Lloyd-Smith Bellman-Harris BP under `simulations/`. Reference EpiAware sanity check on canonical passed (RMSE 0.09, coverage ≈ 1.0). Next items from the plan:
 
 - Phase 2 prompts under the information-provision rules in Protocol → Prompt construction (old prompts under `prompts/scenario_*/` are obsolete — no-spec/julia/epiaware axis, no disease label).
 - `evaluation/run_agentic.sh` revision for simulation runs: copy from `simulations/{variant}/rep_{rr}/data/`, filter streams by scenario (1a/1b/2 → cases only; 3 → all three).

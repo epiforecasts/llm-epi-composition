@@ -109,7 +109,7 @@ where $I_d$ is the realised count of branching-process infections born in day $d
 
 **Sources of overdispersion.** Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The DGP captures this through individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. The population-level marginal $I_t \mid I_{<t}$ under this branching process is a compound (non-NegBin) distribution — a sum of NegBins with shared shape parameter but cohort-dependent means. NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) fit a NegBinL approximation to this marginal; the approximation is good but not exact. Observations are Poisson — consistent with binomial-thinning of branching-process infections plus measurement noise — without an additional free observation-level dispersion knob.
 
-**GT-vs-estimator structural mismatch.** All standard population-level renewal estimators (Poisson or NegBin) fit a moment-closed marginal to the data, while the GT is the realised individual-level branching process. The mismatch is fundamental: the exact population marginal of a Lloyd-Smith BP is non-NegBin, so even a correctly-specified NegBin renewal estimator is mildly misspecified relative to truth. This mismatch is a fixed mathematical property that applies equally to all submissions, so it does not bias relative comparisons across conditions, scenarios, or LLMs. The pre-registered predictions are framed as relative comparisons. As a robustness check, a moment-closed NegBinL generator (`simulations/generate_popn.jl`) is retained; the canonical-DGP recovery for the reference EpiAware solutions can be compared between the two GTs to verify that absolute scores shift but relative rankings are stable.
+**GT-vs-estimator structural mismatch.** All standard population-level renewal estimators (Poisson or NegBin) fit a moment-closed marginal to the data, while the GT is the realised individual-level branching process. The mismatch is fundamental: the exact population marginal of a Lloyd-Smith BP is non-NegBin, so even a correctly-specified NegBin renewal estimator is mildly misspecified relative to truth. This mismatch is a fixed mathematical property that applies equally to all submissions, so it does not bias relative comparisons across conditions, scenarios, or LLMs. The pre-registered predictions are framed as relative comparisons.
 
 **Parameters (canonical):**
 - $T = 150$ days, nominal start date 2023-01-01
@@ -170,8 +170,6 @@ For scenarios 1a/1b/2, only `cases.csv` is copied into the agent sandbox; scenar
 - Discretisation enters only at the observation step (delay PMF) via double interval censoring. The infection-process GI is continuous (per-individual draws).
 
 **Sanity check before running any LLM condition.** The reference EpiAware implementations are applied to the canonical DGP and must recover the true $R_t$ within tolerance (e.g. mean RMSE < 0.1, coverage within 10pp of nominal). If not, the simulation or the reference is wrong; fix before proceeding.
-
-**Optional robustness check.** Generate the canonical DGP from the moment-closed population NegBinL (`simulations/generate_popn.jl`) and compare reference recovery between the two GTs. Absolute RMSE/coverage may shift; relative rankings of submissions across conditions and scenarios should be stable. Reported in supplementary.
 
 #### Adversarial DGPs
 
