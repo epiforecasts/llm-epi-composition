@@ -92,42 +92,42 @@ Primary evaluation is on simulated data with known Rt trajectory. Real UK COVID 
 
 #### Primary (canonical) DGP
 
-Daily-resolution stochastic Poisson renewal model (Cori et al. 2013):
+Daily-resolution stochastic renewal model. The renewal equation is the expectation of an underlying age-dependent branching process (Mishra et al. 2020); we generate from a moment-closed form that matches that process at the marginal level per time step:
 
-**Infection process:**
-$$I_t \mid I_{<t} \sim \mathrm{Poisson}\!\left(R_t \sum_{s=1}^{S} g_s \cdot I_{t-s}\right)$$
+**Infection process (NegBinL form, Lloyd-Smith offspring heterogeneity):**
+$$I_t \mid I_{<t} \sim \mathrm{NegBin}\!\left(\mu_t = R_t \cdot \Lambda_t,\; k \cdot \Lambda_t\right), \qquad \Lambda_t = \sum_{s=1}^{S} g_s \cdot I_{t-s}$$
 
-**Observation process (deterministic mean):**
+with $\mathrm{Var}(I_t \mid I_{<t}) = \mu_t (1 + R_t/k)$. The dispersion parameter $k$ is the offspring overdispersion (Lloyd-Smith et al. 2005); $k \to \infty$ recovers the Poisson renewal model (Cori et al. 2013).
+
+**Observation process (incomplete observation; Poisson measurement):**
 $$\mathbb{E}[C_t] = \alpha_t \cdot w_{\mathrm{dow}(t)} \cdot \sum_{e=0}^{E} f_e \cdot I_{t-e}$$
-
-**Observation model:**
-$$C_t \sim \mathrm{NegBin}(\mu = \mathbb{E}[C_t], \phi)$$
+$$C_t \sim \mathrm{Poisson}(\mathbb{E}[C_t])$$
 
 The recovery target is $R_t$ — the parameter $R(d)$ of the infection process, definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
 
-**Sources of overdispersion.** Empirically reported case counts are overdispersed. The infection process here is Poisson — a deliberate simplification: individual-level offspring heterogeneity (Lloyd-Smith et al. 2005), which would imply infection-level overdispersion, is omitted from the data-generating process. NegBin enters only at the observation step and is interpreted as overdispersion arising from incomplete observation (binomial reporting of Poisson infections gives marginal NegBin under standard approximations). Including offspring heterogeneity in the GT would make every standard renewal-equation estimator misspecified relative to truth, which tests a different question from the LLM-composition focus of this study.
+**Sources of overdispersion.** Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The mechanistically grounded source is individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): under a Bellman–Harris age-dependent branching process with NegBin individual offspring distributions and a continuous generation interval, the population-level infection counts at each time step are NegBinL with dispersion proportional to $\Lambda_t$ (Mishra et al. 2020 establishes the BP-renewal correspondence; the NegBinL marginal is a standard derivation). All overdispersion in the GT is at the infection level via this mechanism. Observations are Poisson conditional on infections — consistent with binomial-thinning of NegBinL infections plus measurement Poisson noise — without an additional free observation-level dispersion knob.
 
 **Parameters (canonical):**
 - $T = 150$ days, nominal start date 2023-01-01
 - $R_t$ trajectory: piecewise-linear, $R_t(1)=0.8$ → $R_t(50)=1.5$ → $R_t(100)=0.8$ → $R_t(150)=0.8$ (rise, fall, plateau)
 - Generation interval: Gamma, mean 5.5 days, SD 2 days; truncation at $\tau_{\max} = 20$ days
 - Delay (infection → report): log-normal, mean 5 days, SD 2 days; truncation at $D_{\max} = 30$ days
-- Ascertainment $\alpha_t$: $0.4 + 0.2\sin(2\pi t / T)$
+- Ascertainment $\alpha_t$: $0.4 + 0.2\sin(2\pi t / T)$ (incomplete observation rate)
 - Day-of-week multiplier $w_{\mathrm{dow}(t)}$: $\{1, 1, 1, 1, 1, 0.5, 0.5\}$ for Mon–Sun
-- Dispersion $\phi = 10$
+- Offspring dispersion $k = 1.0$ (within Lloyd-Smith respiratory-pathogen range)
 - Initialisation: 20 days of pre-observation infection history $I_d = 100 \cdot \exp(r_0 \cdot d)$ for $d = -19, \ldots, 0$, where $r_0$ is the exponential growth rate consistent with $R_t(1) = 0.8$ under the discretised GI (Euler–Lotka root of $1 = R_0 \sum_s g_s e^{-r (s-1)}$). The pre-observation segment is deterministic float; the observation period $d = 1, \ldots, T$ is stochastic Poisson branching.
 
 **Multi-stream parameters (scenario 3):**
 
 Shared $R_t$ and shared latent $I_t$; each stream has its own delay distribution, ascertainment trajectory, and dispersion.
 
-| Stream | Delay (log-normal) | Ascertainment $\alpha_{\text{stream}}(t)$ | Dispersion $\phi$ |
-|---|---|---|---|
-| Cases | mean 5d, SD 2d | $0.40 + 0.20\sin(2\pi t / T)$ | 10 |
-| Hospitalisations | mean 10d, SD 3d | $0.040 + 0.020\sin(2\pi t / T + \pi/3)$ | 10 |
-| Deaths | mean 20d, SD 5d | $0.008 + 0.004\cos(2\pi t / (1.5 T))$ | 20 |
+| Stream | Delay (log-normal) | Ascertainment $\alpha_{\text{stream}}(t)$ |
+|---|---|---|
+| Cases | mean 5d, SD 2d | $0.40 + 0.20\sin(2\pi t / T)$ |
+| Hospitalisations | mean 10d, SD 3d | $0.040 + 0.020\sin(2\pi t / T + \pi/3)$ |
+| Deaths | mean 20d, SD 5d | $0.008 + 0.004\cos(2\pi t / (1.5 T))$ |
 
-Ascertainment trajectories are phase-shifted or use a different period across streams so that the three series carry partially independent ascertainment signals rather than a single sinusoidal structure scaled three ways. Values are plausible for a moderately severe respiratory pathogen; the DGP is not labelled as a specific disease.
+Ascertainment trajectories are phase-shifted or use a different period across streams so that the three series carry partially independent ascertainment signals rather than a single sinusoidal structure scaled three ways. Values are plausible for a moderately severe respiratory pathogen; the DGP is not labelled as a specific disease. Per-stream observations share the same Poisson measurement model and inherit infection-level overdispersion through $k$.
 
 **Disease labelling.** The simulation is not labelled as COVID-19 or any other specific disease. Data files, prompts, and metadata describe "an infectious disease outbreak" with no country or pathogen named. This prevents the LLM from leaning on disease-specific priors or memorised parameter values from training data.
 
@@ -180,8 +180,8 @@ Each variant differs from the canonical DGP in exactly one parameter:
 | Long delay | Log-normal mean 10d, SD 3d | Delay handling | Rt estimate lagged/compressed near end |
 | Strong DoW | Weekend multiplier 0.25 | Observation model | Oscillating Rt |
 | High ascertainment variability | $\alpha_t = 0.4 + 0.35\sin(2\pi t / T)$ | Ascertainment model | Spurious Rt trend |
-| Low dispersion | $\phi = 1000$ (near-Poisson) | Likelihood | No effect — null condition |
-| High dispersion | $\phi = 2$ | Likelihood | Overconfident intervals if Poisson used |
+| Low dispersion | $k = 1000$ (near-Poisson infections) | Likelihood / overdispersion | No effect — null condition |
+| High dispersion | $k = 0.1$ (extreme superspreading) | Likelihood / overdispersion | Overconfident intervals if Poisson used |
 | Abrupt change | $R_t$ drops 1.5 → 0.5 over 3 days around day 75 | Smoothness prior | Over-smoothed estimators lag the drop |
 
 **Rationale for DGP selection.** Each variant stresses one of the components that appears in the canonical DGP and in the reference specification (GI, delay, observation model with DoW, ascertainment, dispersion / likelihood, smoothness prior). The adversarial DGPs are therefore not hand-picked to match failures we expect to find; they enumerate the modelling decisions that a correctly-specified renewal-equation model must handle. Any component *not* adversarially stressed would be a gap in the evaluation.
@@ -190,7 +190,7 @@ The low-dispersion (Poisson-like) variant is included deliberately as a null con
 
 **Short-GI caveat.** The short-GI perturbation changes both discretisation sensitivity (the intended stress) and epidemic dynamics (shorter GI → sharper rise and peak under the same $R_t$). The two effects cannot be fully separated within a single variant without departing from the "perturb one parameter" principle. Recovery on short_gi is therefore interpreted as a combined stress on discretisation handling and estimator robustness to faster dynamics; this is noted when reporting the adversarial-panel results.
 
-**Omission noted.** No variant introduces infection-level overdispersion via offspring heterogeneity (Lloyd-Smith et al. 2005). This is consistent with the GT being a Poisson renewal process at the infection level (see "Sources of overdispersion" above). A future extension could add a NegBinL-infection variant to test estimator robustness when individual-level heterogeneity is present in the data, but doing so within this study would make all standard renewal estimators misspecified vs truth.
+**Mechanism of dispersion variants.** The low/high dispersion adversarial variants perturb the offspring dispersion $k$ (Lloyd-Smith parameter) at the infection level — varying the population-level NegBin mass-shape implied by individual-level offspring heterogeneity. Estimators that model NegBin observations (e.g. EpiNow2's `cluster_factor`) absorb this overdispersion through their observation likelihood; estimators that assume Poisson observations (e.g. EpiEstim) will show undercoverage on `high_dispersion`.
 
 **Why simulation-based evaluation addresses contamination.** The DGP is canonical (LLMs have seen renewal-equation structure in training data) but the specific data does not match any training example. Grading on recovery against truth detects cases where the model recalls textbook machinery but implements it with missing components, because missing components cause bias in scenario-specific ways.
 
@@ -444,7 +444,7 @@ Predictions 3–5 are the load-bearing composition claims. If they do not hold, 
 - **No independent replication.** We publish the full harness and invite replication with a pre-specified concordance criterion (e.g., primary recovery claim replicated if point estimates within 10pp and same qualitative ordering).
 - **Simulation realism.** Real-data secondary check may reveal issues not captured in simulation.
 - **Rt-definition ambiguity.** Under any stochastic generator, "$R_t$" admits multiple legitimate definitions — the parameter, the realised ratio, and (in some models) a per-step random multiplier (Funk, Abbott & Bracher 2022). Recovery is scored against the parameter $R(d)$. Methods that target the realised ratio (e.g. Wallinga–Teunis) recover a noisier quantity that converges to the parameter at scale; observed disagreement with truth in their case partly reflects target choice rather than implementation error, and is flagged in the scenario 1a method-identification subsample.
-- **Infection-level overdispersion absent.** The GT does not include individual offspring heterogeneity (Lloyd-Smith et al. 2005). Real-world overdispersion that arises from this mechanism is not represented; the NegBin observation noise absorbs incomplete-observation overdispersion only. Estimators correctly fitting a NegBinL infection process would not be advantaged on this GT.
+- **Single mechanism for overdispersion.** All overdispersion in the GT arises from infection-level offspring heterogeneity (Lloyd-Smith et al. 2005). Other plausible sources (random reporting effort, batched-report processing artefacts, day-of-day administrative noise) are not modelled. Estimators that absorb such effects via NegBin observation likelihoods may handle real data better than they handle our GT, where the same parameter is doing different mechanistic work.
 - **Reviewer blinding.** Package imports are strippable; structural features (multi-stream handling, Julia vs R syntax patterns) may leak condition information. Blinding failure rate is tested and reported.
 
 ## Pre-registration

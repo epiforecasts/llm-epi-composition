@@ -108,9 +108,7 @@ struct Variant
     alpha_hosp::Function
     alpha_deaths::Function
     dow_mult::Vector{Float64}
-    phi_cases::Float64
-    phi_hosp::Float64
-    phi_deaths::Float64
+    k::Float64                        # offspring dispersion (Lloyd-Smith); k → ∞ is Poisson
     rt_knots::RtKnots
 end
 
@@ -125,42 +123,44 @@ function all_variants()
     del_h   = lognormal_from_mean_sd(10.0, 3.0)
     del_dd  = lognormal_from_mean_sd(20.0, 5.0)
 
+    K_CANON = 1.0     # moderate offspring dispersion (within Lloyd-Smith range)
+
     canon = Variant("canonical", gi_c, del_c, del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
-        DOW_MULT_CANON, 10.0, 10.0, 20.0, RT_KNOTS_CANON)
+        DOW_MULT_CANON, K_CANON, RT_KNOTS_CANON)
 
     short_gi = Variant("short_gi", gamma_from_mean_sd(2.5, 1.0),
         del_c, del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
-        DOW_MULT_CANON, 10.0, 10.0, 20.0, RT_KNOTS_CANON)
+        DOW_MULT_CANON, K_CANON, RT_KNOTS_CANON)
 
     long_delay = Variant("long_delay", gi_c,
         lognormal_from_mean_sd(10.0, 3.0), del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
-        DOW_MULT_CANON, 10.0, 10.0, 20.0, RT_KNOTS_CANON)
+        DOW_MULT_CANON, K_CANON, RT_KNOTS_CANON)
 
     strong_dow = Variant("strong_dow", gi_c, del_c, del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
         [1.0, 1.0, 1.0, 1.0, 1.0, 0.25, 0.25],
-        10.0, 10.0, 20.0, RT_KNOTS_CANON)
+        K_CANON, RT_KNOTS_CANON)
 
     high_asc_var = Variant("high_asc_var", gi_c, del_c, del_h, del_dd,
         t -> 0.40 + 0.35 * sin(2π * t / T_DAYS),
         ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
-        DOW_MULT_CANON, 10.0, 10.0, 20.0, RT_KNOTS_CANON)
+        DOW_MULT_CANON, K_CANON, RT_KNOTS_CANON)
 
     low_disp = Variant("low_dispersion", gi_c, del_c, del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
-        DOW_MULT_CANON, 1000.0, 1000.0, 1000.0, RT_KNOTS_CANON)
+        DOW_MULT_CANON, 1000.0, RT_KNOTS_CANON)
 
     high_disp = Variant("high_dispersion", gi_c, del_c, del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
-        DOW_MULT_CANON, 2.0, 2.0, 2.0, RT_KNOTS_CANON)
+        DOW_MULT_CANON, 0.1, RT_KNOTS_CANON)
 
     abrupt_knots = RtKnots([1.0, 50.0, 74.0, 77.0, 150.0], [0.8, 1.5, 1.5, 0.5, 0.5])
     abrupt = Variant("abrupt_change", gi_c, del_c, del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
-        DOW_MULT_CANON, 10.0, 10.0, 20.0, abrupt_knots)
+        DOW_MULT_CANON, K_CANON, abrupt_knots)
 
     return [canon, short_gi, long_delay, strong_dow, high_asc_var, low_disp, high_disp, abrupt]
 end
@@ -177,17 +177,25 @@ function simulate_infections(v::Variant, rng::AbstractRNG)
     n_seed = TAU_MAX
     I_seed = [I_REF * exp(r0 * d) for d in (-(n_seed - 1)):0]   # length 20
 
-    I = zeros(Float64, T_DAYS)   # Float64 to mix with seed; values are Poisson integers
+    I = zeros(Float64, T_DAYS)
     for d in 1:T_DAYS
         Rd = r_at(v.rt_knots, Float64(d))
         Λ = 0.0
         @inbounds for s in 1:n_g
             past = d - s
-            past_val = past >= 1 ? I[past] : I_seed[end + past]   # past in -(n_seed-1)..0 → end+past
+            past_val = past >= 1 ? I[past] : I_seed[end + past]
             Λ += g[s] * past_val
         end
         μ = max(Rd * Λ, 0.0)
-        I[d] = Float64(rand(rng, Poisson(μ)))
+        if !isfinite(v.k) || μ == 0
+            I[d] = Float64(rand(rng, Poisson(μ)))
+        else
+            # NegBinL: I_d ~ NegBin(μ_d = R Λ, k Λ), with Var = μ(1 + R/k)
+            # Distributions.jl NegativeBinomial(r, p): mean = r(1-p)/p
+            r_param = v.k * Λ
+            p_param = v.k / (Rd + v.k)
+            I[d] = Float64(rand(rng, NegativeBinomial(r_param, p_param)))
+        end
     end
     return I, I_seed, g, r0
 end
@@ -212,12 +220,14 @@ function expected_reports(I::Vector{Float64}, I_seed::Vector{Float64},
     return E, dates, f
 end
 
-function sample_negbin(E, ϕ, rng)
+function sample_obs(E, rng)
+    # Observation noise is Poisson: cases are binomial-thinned + delay-distributed
+    # samples from the realised infection trajectory, plus measurement Poisson.
+    # Overdispersion of cases inherits from NegBinL infections (Mishra et al. 2020;
+    # Lloyd-Smith et al. 2005), not from a free observation-level dispersion.
     out = Vector{Int}(undef, length(E))
     for i in eachindex(E)
-        μ = max(E[i], 1e-12)
-        p = ϕ / (μ + ϕ)
-        out[i] = rand(rng, NegativeBinomial(ϕ, p))
+        out[i] = rand(rng, Poisson(max(E[i], 1e-12)))
     end
     return out
 end
@@ -252,9 +262,9 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
     E_h, _,     f_h = expected_reports(I, I_seed, v.delay_hosp,   v.alpha_hosp,   v.dow_mult)
     E_d, _,     f_d = expected_reports(I, I_seed, v.delay_deaths, v.alpha_deaths, v.dow_mult)
 
-    cases  = sample_negbin(E_c, v.phi_cases, rng)
-    hosp   = sample_negbin(E_h, v.phi_hosp,  rng)
-    deaths = sample_negbin(E_d, v.phi_deaths, rng)
+    cases  = sample_obs(E_c, rng)
+    hosp   = sample_obs(E_h, rng)
+    deaths = sample_obs(E_d, rng)
 
     n_days = length(dates)
     Rt_true = [r_at(v.rt_knots, Float64(d)) for d in 1:n_days]
@@ -277,8 +287,10 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
         "start_date"               => string(START_DATE),
         "rt_knots"                 => Dict("days"   => v.rt_knots.days,
                                            "values" => v.rt_knots.values),
-        "rt_target_definition"     => "(c) parameter R(d) of the daily Poisson renewal model (Funk, Abbott & Bracher 2022)",
-        "infection_model"          => "Poisson(R(d) · Σ_s g_s · I_{d-s})",
+        "rt_target_definition"     => "(c) parameter R(d) of the daily renewal model (Funk, Abbott & Bracher 2022); renewal equation is the expectation of the underlying age-dependent branching process (Mishra et al. 2020)",
+        "infection_model"          => "I_d ~ NegBin(μ = R(d) Σ_s g_s I_{d-s}, k Σ_s g_s I_{d-s}); k → ∞ recovers Poisson",
+        "infection_overdispersion_mechanism" => "individual offspring heterogeneity (Lloyd-Smith et al. 2005); k is the offspring dispersion",
+        "observation_model"        => "X_d ~ Poisson(α(d) · w_dow(d) · Σ_e f_e · I_{d-e})",
         "discretisation"           => "double interval censoring (P(D=d) = ∫_0^1 [F(d+1-p) - F(d-p)] dp)",
         "gi"                       => dist_spec(v.gi),
         "delay_cases"              => dist_spec(v.delay_cases),
@@ -289,9 +301,7 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
         "delay_pmf_hospitalisations" => f_h,
         "delay_pmf_deaths"         => f_d,
         "dow_multiplier_mon_to_sun"=> v.dow_mult,
-        "phi_cases"                => v.phi_cases,
-        "phi_hospitalisations"     => v.phi_hosp,
-        "phi_deaths"               => v.phi_deaths,
+        "k_offspring_dispersion"   => v.k,
         "i_ref"                    => I_REF,
         "euler_lotka_r0"           => r0,
         "seed_pre_obs"             => I_seed,

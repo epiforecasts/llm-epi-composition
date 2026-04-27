@@ -15,7 +15,6 @@
             0.5
         ]
     },
-    "phi_deaths": 20,
     "replicate_index": 16,
     "gi": {
         "family": "Gamma",
@@ -35,6 +34,7 @@
         0.5,
         0.5
     ],
+    "observation_model": "X_d ~ Poisson(α(d) · w_dow(d) · Σ_e f_e · I_{d-e})",
     "seed_pre_obs": [
         213.64706249335435,
         205.2789682076737,
@@ -93,8 +93,9 @@
         0.011729916393248097
     ],
     "discretisation": "double interval censoring (P(D=d) = ∫_0^1 [F(d+1-p) - F(d-p)] dp)",
-    "infection_model": "Poisson(R(d) · Σ_s g_s · I_{d-s})",
-    "phi_hospitalisations": 10,
+    "infection_model": "I_d ~ NegBin(μ = R(d) Σ_s g_s I_{d-s}, k Σ_s g_s I_{d-s}); k → ∞ recovers Poisson",
+    "k_offspring_dispersion": 1,
+    "infection_overdispersion_mechanism": "individual offspring heterogeneity (Lloyd-Smith et al. 2005); k is the offspring dispersion",
     "start_date": "2023-01-01",
     "delay_pmf_cases": [
         2.714422709114018e-6,
@@ -129,7 +130,7 @@
         4.466720928543313e-7,
         2.8286476595594884e-7
     ],
-    "rt_target_definition": "(c) parameter R(d) of the daily Poisson renewal model (Funk, Abbott & Bracher 2022)",
+    "rt_target_definition": "(c) parameter R(d) of the daily renewal model (Funk, Abbott & Bracher 2022); renewal equation is the expectation of the underlying age-dependent branching process (Mishra et al. 2020)",
     "tau_max": 20,
     "D_max": 30,
     "delay_hospitalisations": {
@@ -187,7 +188,6 @@
         "sd": 4.999999999999999
     },
     "seed": 116,
-    "phi_cases": 10,
     "gi_pmf": [
         2.7798761781633183e-5,
         0.003666414316729704,
