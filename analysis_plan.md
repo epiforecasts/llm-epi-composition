@@ -92,20 +92,24 @@ Primary evaluation is on simulated data with known Rt trajectory. Real UK COVID 
 
 #### Primary (canonical) DGP
 
-Daily-resolution stochastic renewal model. The renewal equation describes the expectation of an underlying age-dependent branching process (Mishra et al. 2020 derive this rigorously; the result holds for arbitrary offspring distributions). We generate infections from a phenomenological NegBinL marginal:
+Individual-level Lloyd-Smith Bellman–Harris age-dependent branching process. The renewal equation is the expectation of this process (Mishra et al. 2020 derive this rigorously for arbitrary offspring distributions); we simulate the realised process directly rather than a moment-closed marginal approximation.
 
-**Infection process (NegBinL marginal):**
-$$I_t \mid I_{<t} \sim \mathrm{NegBin}\!\left(\mu_t = R_t \cdot \Lambda_t,\; k \cdot \Lambda_t\right), \qquad \Lambda_t = \sum_{s=1}^{S} g_s \cdot I_{t-s}$$
+**Infection process (Lloyd-Smith branching).** Each infection at continuous time $t_i$:
+- draws an individual reproduction number $\nu_i \sim \mathrm{Gamma}(k, R(t_i)/k)$ (Lloyd-Smith et al. 2005);
+- produces $Z_i \sim \mathrm{Poisson}(\nu_i)$ offspring;
+- the $j$-th offspring is born at $t_i + \tau_{ij}$ with $\tau_{ij} \overset{\text{iid}}{\sim} g(\tau)$ (continuous Gamma generation interval).
 
-with $\mathrm{Var}(I_t \mid I_{<t}) = \mu_t (1 + R_t/k)$. The dispersion parameter $k$ is the moment-matched offspring dispersion; $k \to \infty$ recovers the Poisson renewal model (Cori et al. 2013).
+Marginally $Z_i \sim \mathrm{NegBin}(R(t_i), k)$. As $k \to \infty$, individual heterogeneity vanishes and the process reduces to a Poisson branching process whose expectation also satisfies the renewal equation (Cori et al. 2013).
 
 **Observation process (incomplete observation; Poisson measurement):**
 $$\mathbb{E}[C_t] = \alpha_t \cdot w_{\mathrm{dow}(t)} \cdot \sum_{e=0}^{E} f_e \cdot I_{t-e}$$
 $$C_t \sim \mathrm{Poisson}(\mathbb{E}[C_t])$$
 
-The recovery target is $R_t$ — the parameter $R(d)$ of the infection process, definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
+where $I_d$ is the realised count of branching-process infections born in day $d$ (the count is integer-valued by construction). The delay PMF $f_e$ is daily-discretised by double interval censoring of the continuous delay distribution. The recovery target is $R_t$ — the parameter $R(d)$ of the branching process, definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
 
-**Sources of overdispersion.** Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The mechanistic motivation is individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. How this individual-level heterogeneity propagates to the population-level marginal $I_t \mid I_{<t}$ under a Bellman–Harris branching process is non-trivial — the exact marginal is a non-NegBin compound distribution (a sum of NegBins with shared shape but cohort-dependent means). The NegBinL form used here is a phenomenological marginal model that NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) are designed to fit; it is not a strict derivation from a Lloyd-Smith Bellman–Harris process. Observations are Poisson — consistent with binomial-thinning of infections plus measurement Poisson noise — without an additional free observation-level dispersion knob.
+**Sources of overdispersion.** Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The DGP captures this through individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. The population-level marginal $I_t \mid I_{<t}$ under this branching process is a compound (non-NegBin) distribution — a sum of NegBins with shared shape parameter but cohort-dependent means. NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) fit a NegBinL approximation to this marginal; the approximation is good but not exact. Observations are Poisson — consistent with binomial-thinning of branching-process infections plus measurement noise — without an additional free observation-level dispersion knob.
+
+**GT-vs-estimator structural mismatch.** All standard population-level renewal estimators (Poisson or NegBin) fit a moment-closed marginal to the data, while the GT is the realised individual-level branching process. The mismatch is fundamental: the exact population marginal of a Lloyd-Smith BP is non-NegBin, so even a correctly-specified NegBin renewal estimator is mildly misspecified relative to truth. This mismatch is a fixed mathematical property that applies equally to all submissions, so it does not bias relative comparisons across conditions, scenarios, or LLMs. The pre-registered predictions are framed as relative comparisons. As a robustness check, a moment-closed NegBinL generator (`simulations/generate_popn.jl`) is retained; the canonical-DGP recovery for the reference EpiAware solutions can be compared between the two GTs to verify that absolute scores shift but relative rankings are stable.
 
 **Parameters (canonical):**
 - $T = 150$ days, nominal start date 2023-01-01
@@ -115,7 +119,7 @@ The recovery target is $R_t$ — the parameter $R(d)$ of the infection process, 
 - Ascertainment $\alpha_t$: $0.4 + 0.2\sin(2\pi t / T)$ (incomplete observation rate)
 - Day-of-week multiplier $w_{\mathrm{dow}(t)}$: $\{1, 1, 1, 1, 1, 0.5, 0.5\}$ for Mon–Sun
 - Offspring dispersion $k = 1.0$ (within Lloyd-Smith respiratory-pathogen range)
-- Initialisation: 20 days of pre-observation infection history $I_d = 100 \cdot \exp(r_0 \cdot d)$ for $d = -19, \ldots, 0$, where $r_0$ is the exponential growth rate consistent with $R_t(1) = 0.8$ under the discretised GI (Euler–Lotka root of $1 = R_0 \sum_s g_s e^{-r (s-1)}$). The pre-observation segment is deterministic float; the observation period $d = 1, \ldots, T$ is stochastic Poisson branching.
+- Initialisation: seed individuals placed in the pre-observation window $t \in [-\tau_{\max}, 0]$ with continuous timestamps. Daily seed counts are Poisson with rate $(1 - R_0) \cdot 100 \cdot \exp(r_0 \cdot d)$, where $r_0$ is the Euler–Lotka root for $R_0 = R_t(1) = 0.8$ under the daily-discretised GI; the $(1 - R_0)$ rescaling compensates for the geometric inflation $\sim 1/(1-R_0)$ that arises when seed individuals are propagated through the BP. Each seed produces offspring per the Lloyd-Smith mechanism; seed individuals themselves do not count as new obs-window infections.
 
 **Multi-stream parameters (scenario 3):**
 
@@ -143,30 +147,31 @@ In a stochastic data-generating process, "$R_t$" admits multiple legitimate defi
 
 #### Generation procedure
 
-For each DGP variant, observed data is generated by the following procedure:
+For each DGP variant and replicate seed:
 
-1. Compute the daily-discretised GI PMF $g_s$ for $s = 0, \ldots, \tau_{\max}$ and per-stream delay PMFs $f_e$ for $e = 0, \ldots, D_{\max}$ by **double interval censoring** of the continuous distributions, using numerical quadrature:
+1. Compute the per-stream delay PMFs $f_e^{\text{stream}}$ for $e = 0, \ldots, D_{\max}$ by **double interval censoring** of the continuous delay distribution via numerical quadrature:
    $$P(D = d) = \int_0^1 \big[F(d + 1 - p) - F(\max(d - p, 0))\big] dp$$
-   then renormalise to sum to 1.
-2. Solve the Euler–Lotka equation $1 = R_0 \sum_s g_s e^{-r(s-1)}$ for $r_0$ at $R_0 = R_t(1)$ to set the seed growth rate.
-3. Initialise pre-observation infections deterministically: $I_d = I_{\mathrm{ref}} \cdot \exp(r_0 \cdot d)$ for $d = -(\tau_{\max} - 1), \ldots, 0$, with $I_{\mathrm{ref}} = 100$.
-4. Set seed fixed per (variant, replicate) and sample the infection trajectory:
-   $$I_d \sim \mathrm{Poisson}\!\left(R_t(d) \sum_{s=1}^{\tau_{\max}} g_s \cdot I_{d-s}\right) \quad \text{for } d = 1, \ldots, T.$$
-   $R_t(d)$ is linearly interpolated between the trajectory knots; for the seed window $I_{d-s}$ uses the deterministic float values from step 3.
-5. For each observation stream, compute the deterministic expected report:
+   renormalised over the truncation window. Compute the daily-discretised GI PMF $g_s$ similarly (used only for the Euler–Lotka root). The GI itself is treated as a continuous distribution in the BP simulation.
+2. Solve $1 = R_0 \sum_s g_s e^{-r(s-1)}$ for $r_0$ at $R_0 = R_t(1)$.
+3. Place seed individuals in the pre-observation window with continuous timestamps. Per day $d \in [-(\tau_{\max} - 1), 0]$, draw $n_d \sim \mathrm{Poisson}\big((1 - R_0) \int_{d-1}^d 100 \exp(r_0 t) dt\big)$ and place each individual at a uniformly distributed sub-day time within the day. The $(1 - R_0)$ rescaling compensates for the geometric inflation that would otherwise arise from BP propagation of a seed whose rate is itself the equilibrium rate.
+4. **BP propagation.** Each seed individual generates offspring per Lloyd-Smith: draw $\nu_i \sim \mathrm{Gamma}(k, R(t_i)/k)$, $Z_i \sim \mathrm{Poisson}(\nu_i)$, each offspring's continuous GI $\tau_{ij} \sim g(\tau)$, offspring birth at $t_i + \tau_{ij}$. Each offspring is added to a time-ordered queue and processed in turn by the same procedure, generating its own offspring, until the queue is exhausted or all timestamps exceed $T$. Seed individuals themselves do not count as new infections; their descendants do.
+5. Aggregate realised infections to integer daily counts $I_d$ for $d = 1, \ldots, T$ (and similarly for the seed-window aggregate, which is used only as input to the observation convolution for early obs days).
+6. For each observation stream, compute the deterministic expected report:
    $$\mathbb{E}[C_d^{\text{stream}}] = \alpha_{\text{stream}}(d) \cdot w_{\mathrm{dow}(d)} \cdot \sum_{e=0}^{D_{\max}} f_e^{\text{stream}} \cdot I_{d-e}.$$
-6. Sample $C_d^{\text{stream}} \sim \mathrm{NegBin}(\mu = \mathbb{E}[C_d^{\text{stream}}], \phi_{\text{stream}})$ per day per stream.
-7. Write `data/cases.csv` (+ `hospitalisations.csv`, `deaths.csv`), `truth/true_rt.csv`, `truth/true_infections.csv`, `truth/true_expected.csv`, `truth/params.json`, `truth/sim_script.jl`.
+7. Sample $C_d^{\text{stream}} \sim \mathrm{Poisson}(\mathbb{E}[C_d^{\text{stream}}])$ per day per stream.
+8. Write `data/cases.csv` (+ `hospitalisations.csv`, `deaths.csv`), `truth/true_rt.csv`, `truth/true_infections.csv`, `truth/true_expected.csv`, `truth/params.json`, `truth/sim_script.jl`.
 
 For scenarios 1a/1b/2, only `cases.csv` is copied into the agent sandbox; scenario 3 receives all three streams.
 
 **Choices fixed in the plan:**
-- Infection dynamics stochastic via Poisson branching; observation noise additionally stochastic via NegBin. The recovery target is the parameter $R(d)$, not any realisation-level quantity.
-- Twenty independent replicates per variant, seeds $\{101, \ldots, 120\}$. Across replicates, both the realised infection trajectory and the observation noise vary. Recovery metrics computed per (submission, variant, replicate) and averaged; within-cell variance across replicates is reported as a distribution.
+- Infections are realised samples from an individual-level Lloyd-Smith Bellman–Harris age-dependent branching process. The recovery target is the parameter $R(d)$ governing the offspring distribution, not any realisation-level quantity.
+- Twenty independent replicates per variant, seeds $\{101, \ldots, 120\}$. Across replicates, both the realised branching trajectory and the observation noise vary. Within-cell variance across replicates is reported as a distribution.
 - Dates are synthetic; no calendar features beyond day-of-week.
-- Discretisation: double interval censoring at daily resolution. This is a generator-side choice, recorded in `params.json` per replicate. Estimators choose their own discretisation; the short-GI variant tests whether the estimator's choice matches the generator's well enough to recover $R(d)$ in the regime where discretisation matters most.
+- Discretisation enters only at the observation step (delay PMF) via double interval censoring. The infection-process GI is continuous (per-individual draws).
 
 **Sanity check before running any LLM condition.** The reference EpiAware implementations are applied to the canonical DGP and must recover the true $R_t$ within tolerance (e.g. mean RMSE < 0.1, coverage within 10pp of nominal). If not, the simulation or the reference is wrong; fix before proceeding.
+
+**Optional robustness check.** Generate the canonical DGP from the moment-closed population NegBinL (`simulations/generate_popn.jl`) and compare reference recovery between the two GTs. Absolute RMSE/coverage may shift; relative rankings of submissions across conditions and scenarios should be stable. Reported in supplementary.
 
 #### Adversarial DGPs
 

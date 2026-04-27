@@ -13,6 +13,7 @@
             0.8
         ]
     },
+    "discretisation_note": "GI is continuous (per-individual draws); only the delay PMF for the observation convolution is daily-discretised by double interval censoring",
     "replicate_index": 17,
     "gi": {
         "family": "Gamma",
@@ -32,29 +33,7 @@
         0.5,
         0.5
     ],
-    "observation_model": "X_d ~ Poisson(α(d) · w_dow(d) · Σ_e f_e · I_{d-e})",
-    "seed_pre_obs": [
-        213.64706249335435,
-        205.2789682076737,
-        197.23863411282747,
-        189.51322254960343,
-        182.09039868219082,
-        174.95831080367316,
-        168.1055714129123,
-        161.52123903260994,
-        155.1948007395167,
-        149.11615537889494,
-        143.27559743643496,
-        137.66380154187354,
-        132.27180757957197,
-        127.09100638228101,
-        122.11312598524981,
-        117.33021841873199,
-        112.73464701780063,
-        108.31907422921043,
-        104.07644989583879,
-        100.0
-    ],
+    "observation_model": "X_d ~ Poisson(α(d) · w_dow(d) · Σ_e f_e · I_{d-e})  (delay PMF is double-interval-censored)",
     "euler_lotka_r0": -0.03995553825546949,
     "variant": "high_dispersion",
     "delay_pmf_deaths": [
@@ -90,8 +69,8 @@
         0.015328337785940619,
         0.011729916393248097
     ],
-    "discretisation": "double interval censoring (P(D=d) = ∫_0^1 [F(d+1-p) - F(d-p)] dp)",
-    "infection_model": "I_d ~ NegBin(μ = R(d) Σ_s g_s I_{d-s}, k Σ_s g_s I_{d-s}); k → ∞ recovers Poisson; phenomenological NegBinL marginal motivated by — but not strictly derived from — individual offspring heterogeneity (Lloyd-Smith et al. 2005)",
+    "n_total_individuals": 30110,
+    "infection_model": "individual-level Lloyd-Smith Bellman-Harris branching process: ν_i ~ Gamma(k, R(t_i)/k), Z_i ~ Poisson(ν_i), τ_ij ~ g(τ); k → ∞ recovers Poisson offspring",
     "k_offspring_dispersion": 0.1,
     "start_date": "2023-01-01",
     "delay_pmf_cases": [
@@ -127,7 +106,7 @@
         4.466720928543313e-7,
         2.8286476595594884e-7
     ],
-    "rt_target_definition": "(c) parameter R(d) of the daily renewal model (Funk, Abbott & Bracher 2022); the renewal equation is the expectation of an age-dependent branching process (Mishra et al. 2020), regardless of offspring distribution",
+    "rt_target_definition": "(c) parameter R(d) of the renewal equation; renewal equation is the expectation of the underlying age-dependent branching process (Mishra et al. 2020); see Funk, Abbott & Bracher 2022 for the multiple-Rt-definitions issue",
     "tau_max": 20,
     "D_max": 30,
     "delay_hospitalisations": {
@@ -184,28 +163,5 @@
         "mean": 19.999999999999996,
         "sd": 4.999999999999999
     },
-    "seed": 117,
-    "gi_pmf": [
-        2.7798761781633183e-5,
-        0.003666414316729704,
-        0.036676168551464675,
-        0.11434359688483282,
-        0.18673916070700927,
-        0.2054539543621792,
-        0.17404633045652512,
-        0.12262870326337433,
-        0.07539031428682733,
-        0.04174105742509833,
-        0.021273085834345243,
-        0.010137750583100524,
-        0.004570463685802713,
-        0.0019667232018761084,
-        0.0008133809385973574,
-        0.0003250843523446262,
-        0.0001261165654738655,
-        4.766452229922559e-5,
-        1.7602263237251667e-5,
-        6.367711680880875e-6,
-        2.2613254197036085e-6
-    ]
+    "seed": 117
 }

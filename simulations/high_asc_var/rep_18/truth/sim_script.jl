@@ -1,16 +1,23 @@
 #!/usr/bin/env julia
-# Ground-truth simulation generator for the LLM composition study.
+# Ground-truth simulation generator: individual-level Lloyd-Smith Bellman-Harris
+# branching process. The renewal equation is the expectation of this process
+# (Mishra et al. 2020); we generate the realised process explicitly.
 #
-# Daily-resolution stochastic Poisson renewal:
-#   I_d ~ Poisson(R(d) * Σ_s g_s · I_{d-s})
-#   E[C_d^stream] = α_stream(d) · w_dow(d) · Σ_e f_e^stream · I_{d-e}
-#   C_d^stream ~ NegBin(E[C_d^stream], φ_stream)
+# Each infection at continuous time t_i:
+#   - draws an individual reproduction number  ν_i ~ Gamma(k, R(t_i)/k)
+#   - draws an offspring count                 Z_i ~ Poisson(ν_i)
+#   - each offspring j draws a continuous GI   τ_ij ~ g(τ)
+#   - the j-th offspring is born at            t_j = t_i + τ_ij
 #
-# GI and per-stream delay daily PMFs computed by double interval censoring
-# (CDF-difference of [d-1+p, d+p] integrated over p ~ U(0,1) via quadrature).
+# k → ∞ recovers Poisson offspring (no individual heterogeneity).
 #
-# The recovery target is R(d) — the parameter (definition (c) in Funk, Abbott
-# & Bracher 2022, J R Stat Soc A).
+# Daily aggregation only enters at the observation step:
+#   E[C_d^stream] = α(d) · w_dow(d) · Σ_e f_e^stream · I_{d-e}
+#   C_d^stream    ~ Poisson(E[C_d^stream])
+# where I_{d-e} is the realised count in day d-e and f_e is the daily-PMF
+# (double interval censoring) of the continuous delay.
+#
+# The recovery target is R(d) — definition (c) of Funk, Abbott & Bracher 2022.
 #
 # Usage:
 #   julia --project=simulations simulations/generate.jl                  # all variants × all reps
@@ -24,16 +31,17 @@ using DataFrames
 using JSON3
 using Dates
 using QuadGK
+using DataStructures
 
 # ---- Fixed configuration ----
 
 const TAU_MAX           = 20         # GI truncation (days)
-const D_MAX             = 30         # delay truncation (days; longer for deaths)
+const D_MAX             = 30         # delay truncation (days)
 const T_DAYS            = 150
 const START_DATE        = Date(2023, 1, 1)
 const REPLICATES        = collect(101:120)
 const DOW_MULT_CANON    = [1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5]   # Mon..Sun
-const I_REF             = 100.0       # seed reference incidence at d = 0
+const I_REF             = 100.0       # seed reference incidence at t = 0
 
 # ---- Distribution parameterisations ----
 
@@ -43,10 +51,7 @@ function lognormal_from_mean_sd(m, s)
     LogNormal(log(m) - σ² / 2, sqrt(σ²))
 end
 
-# ---- Daily PMF via double interval censoring ----
-# P(D = d) = ∫_0^1 [F(d + 1 - p) - F(d - p)] dp
-# For d = 0 the lower CDF clips at 0; non-negative continuous distributions
-# already vanish for negative arguments.
+# ---- Daily PMF via double interval censoring (used for delays only) ----
 
 function double_censored_pmf(dist, dmax)
     pmf = Vector{Float64}(undef, dmax + 1)
@@ -59,7 +64,7 @@ function double_censored_pmf(dist, dmax)
     return pmf
 end
 
-# ---- Euler–Lotka growth rate (matches discrete-day Poisson renewal mean) ----
+# ---- Euler-Lotka growth rate (for seeding the equilibrium-like profile) ----
 
 function euler_lotka_r(R0, g; tol = 1e-12, maxiter = 200)
     f(r) = R0 * sum(g[s] * exp(-r * (s - 1)) for s in 1:length(g)) - 1
@@ -69,11 +74,7 @@ function euler_lotka_r(R0, g; tol = 1e-12, maxiter = 200)
     for _ in 1:maxiter
         mid = 0.5 * (lo + hi)
         fm = f(mid)
-        if sign(fm) == sign(flo)
-            lo, flo = mid, fm
-        else
-            hi, fhi = mid, fm
-        end
+        if sign(fm) == sign(flo); lo, flo = mid, fm; else; hi, fhi = mid, fm; end
         abs(hi - lo) < tol && break
     end
     return 0.5 * (lo + hi)
@@ -108,7 +109,7 @@ struct Variant
     alpha_hosp::Function
     alpha_deaths::Function
     dow_mult::Vector{Float64}
-    k::Float64                        # offspring dispersion (Lloyd-Smith); k → ∞ is Poisson
+    k::Float64
     rt_knots::RtKnots
 end
 
@@ -123,7 +124,7 @@ function all_variants()
     del_h   = lognormal_from_mean_sd(10.0, 3.0)
     del_dd  = lognormal_from_mean_sd(20.0, 5.0)
 
-    K_CANON = 1.0     # moderate offspring dispersion (within Lloyd-Smith range)
+    K_CANON = 1.0
 
     canon = Variant("canonical", gi_c, del_c, del_h, del_dd,
         ALPHA_CASES_CANON, ALPHA_HOSP_CANON, ALPHA_DEATHS_CANON,
@@ -165,52 +166,104 @@ function all_variants()
     return [canon, short_gi, long_delay, strong_dow, high_asc_var, low_disp, high_disp, abrupt]
 end
 
-# ---- Forward simulation (daily) ----
+# ---- Bellman-Harris BP simulation ----
 
-function simulate_infections(v::Variant, rng::AbstractRNG)
-    g = double_censored_pmf(v.gi, TAU_MAX)
-    n_g = length(g)
+function bp_simulate(v::Variant, rng::AbstractRNG)
+    g_dist = v.gi
+    k = v.k
 
-    r0 = euler_lotka_r(r_at(v.rt_knots, 1.0), g)
+    # Place seed individuals at rate (1 − R₀)·I_REF·exp(r₀·t) per day so that,
+    # after BP propagation through descendants in the pre-obs window, the
+    # realised rate at t = 0 equilibrates to ≈ I_REF. Without the (1 − R₀)
+    # rescaling, the geometric chain of offspring inflates the realised rate
+    # by ≈ 1/(1 − R₀). Seeds themselves do not count as new infections in the
+    # obs window — their descendants do.
+    g_pmf_for_r0 = double_censored_pmf(v.gi, TAU_MAX)
+    R0 = r_at(v.rt_knots, 1.0)
+    r0 = euler_lotka_r(R0, g_pmf_for_r0)
+    seed_scale = max(1.0 - R0, 0.0)
 
-    # Pre-obs seed: deterministic float exponential profile, indexed -19..0
-    n_seed = TAU_MAX
-    I_seed = [I_REF * exp(r0 * d) for d in (-(n_seed - 1)):0]   # length 20
-
-    I = zeros(Float64, T_DAYS)
-    for d in 1:T_DAYS
-        Rd = r_at(v.rt_knots, Float64(d))
-        Λ = 0.0
-        @inbounds for s in 1:n_g
-            past = d - s
-            past_val = past >= 1 ? I[past] : I_seed[end + past]
-            Λ += g[s] * past_val
-        end
-        μ = max(Rd * Λ, 0.0)
-        if !isfinite(v.k) || μ == 0
-            I[d] = Float64(rand(rng, Poisson(μ)))
+    seeds = Float64[]
+    for d in (-(TAU_MAX - 1)):0
+        λ_int = if abs(r0) > 1e-9
+            seed_scale * I_REF * (exp(r0 * d) - exp(r0 * (d - 1))) / r0
         else
-            # NegBinL: I_d ~ NegBin(μ_d = R Λ, k Λ), with Var = μ(1 + R/k)
-            # Distributions.jl NegativeBinomial(r, p): mean = r(1-p)/p
-            r_param = v.k * Λ
-            p_param = v.k / (Rd + v.k)
-            I[d] = Float64(rand(rng, NegativeBinomial(r_param, p_param)))
+            seed_scale * I_REF
+        end
+        n_d = rand(rng, Poisson(max(λ_int, 0.0)))
+        for _ in 1:n_d
+            push!(seeds, d - 1 + rand(rng))
         end
     end
-    return I, I_seed, g, r0
+
+    queue = BinaryMinHeap{Float64}()
+    for t_i in seeds
+        R_i = r_at(v.rt_knots, t_i)
+        R_i > 0 || continue
+        ν_i = !isfinite(k) ? R_i : rand(rng, Gamma(k, R_i / k))
+        Z_i = rand(rng, Poisson(max(ν_i, 0.0)))
+        for _ in 1:Z_i
+            τ = rand(rng, g_dist)
+            t_j = t_i + τ
+            if t_j > -TAU_MAX && t_j <= T_DAYS
+                push!(queue, t_j)
+            end
+        end
+    end
+
+    realised = Float64[]
+    while !isempty(queue)
+        t_i = pop!(queue)
+        t_i > T_DAYS && continue
+        push!(realised, t_i)
+        R_i = r_at(v.rt_knots, t_i)
+        R_i > 0 || continue
+        ν_i = !isfinite(k) ? R_i : rand(rng, Gamma(k, R_i / k))
+        Z_i = rand(rng, Poisson(max(ν_i, 0.0)))
+        for _ in 1:Z_i
+            τ = rand(rng, g_dist)
+            t_j = t_i + τ
+            if t_j > -TAU_MAX && t_j <= T_DAYS
+                push!(queue, t_j)
+            end
+        end
+    end
+
+    return realised, r0
 end
 
-function expected_reports(I::Vector{Float64}, I_seed::Vector{Float64},
+function aggregate_daily(realised, day_lo::Int, day_hi::Int)
+    n = day_hi - day_lo + 1
+    out = zeros(Int, n)
+    for t in realised
+        if t > day_lo - 1 && t <= day_hi
+            d = Int(ceil(t)) - day_lo + 1
+            out[d] += 1
+        end
+    end
+    return out
+end
+
+# ---- Observation process ----
+
+function expected_reports(I_obs::Vector{Int}, I_seed::Vector{Int},
                           delay_dist, alpha_fn, dow_mult)
     f = double_censored_pmf(delay_dist, D_MAX)
     n_f = length(f)
+    n_seed = length(I_seed)
     dates = [START_DATE + Day(d - 1) for d in 1:T_DAYS]
     E = zeros(Float64, T_DAYS)
     for d in 1:T_DAYS
         s = 0.0
         @inbounds for e in 1:n_f
-            past = d - (e - 1)        # delay e-1 means same-day for e=1
-            past_val = past >= 1 ? I[past] : (past >= -(length(I_seed) - 1) ? I_seed[end + past] : 0.0)
+            past = d - (e - 1)
+            past_val = if past >= 1
+                Float64(I_obs[past])
+            elseif past >= -(n_seed - 1)
+                Float64(I_seed[end + past])
+            else
+                0.0
+            end
             s += f[e] * past_val
         end
         α_d = alpha_fn(Float64(d))
@@ -221,8 +274,6 @@ function expected_reports(I::Vector{Float64}, I_seed::Vector{Float64},
 end
 
 function sample_obs(E, rng)
-    # Observation noise is Poisson: cases inherit overdispersion from the
-    # NegBinL-distributed infections; no free observation-level dispersion knob.
     out = Vector{Int}(undef, length(E))
     for i in eachindex(E)
         out[i] = rand(rng, Poisson(max(E[i], 1e-12)))
@@ -255,10 +306,14 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
     mkpath(truth_dir); mkpath(data_dir)
 
     rng = MersenneTwister(seed)
-    I, I_seed, g, r0 = simulate_infections(v, rng)
-    E_c, dates, f_c = expected_reports(I, I_seed, v.delay_cases,  v.alpha_cases,  v.dow_mult)
-    E_h, _,     f_h = expected_reports(I, I_seed, v.delay_hosp,   v.alpha_hosp,   v.dow_mult)
-    E_d, _,     f_d = expected_reports(I, I_seed, v.delay_deaths, v.alpha_deaths, v.dow_mult)
+    realised, r0 = bp_simulate(v, rng)
+
+    I_seed_arr = aggregate_daily(realised, -(TAU_MAX - 1), 0)
+    I_obs      = aggregate_daily(realised,  1, T_DAYS)
+
+    E_c, dates, f_c = expected_reports(I_obs, I_seed_arr, v.delay_cases,  v.alpha_cases,  v.dow_mult)
+    E_h, _,     f_h = expected_reports(I_obs, I_seed_arr, v.delay_hosp,   v.alpha_hosp,   v.dow_mult)
+    E_d, _,     f_d = expected_reports(I_obs, I_seed_arr, v.delay_deaths, v.alpha_deaths, v.dow_mult)
 
     cases  = sample_obs(E_c, rng)
     hosp   = sample_obs(E_h, rng)
@@ -270,10 +325,10 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
     CSV.write(joinpath(truth_dir, "true_rt.csv"),
         DataFrame(day = 1:n_days, date = dates, R_t = Rt_true))
     CSV.write(joinpath(truth_dir, "true_infections.csv"),
-        DataFrame(day = 1:n_days, I = Int.(I)))
+        DataFrame(day = 1:n_days, I = I_obs))
     CSV.write(joinpath(truth_dir, "true_expected.csv"),
-        DataFrame(day = 1:n_days,
-                  E_cases = E_c, E_hospitalisations = E_h, E_deaths = E_d))
+        DataFrame(day = 1:n_days, E_cases = E_c,
+                  E_hospitalisations = E_h, E_deaths = E_d))
 
     params_dict = Dict(
         "variant"                  => v.name,
@@ -285,15 +340,14 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
         "start_date"               => string(START_DATE),
         "rt_knots"                 => Dict("days"   => v.rt_knots.days,
                                            "values" => v.rt_knots.values),
-        "rt_target_definition"     => "(c) parameter R(d) of the daily renewal model (Funk, Abbott & Bracher 2022); the renewal equation is the expectation of an age-dependent branching process (Mishra et al. 2020), regardless of offspring distribution",
-        "infection_model"          => "I_d ~ NegBin(μ = R(d) Σ_s g_s I_{d-s}, k Σ_s g_s I_{d-s}); k → ∞ recovers Poisson; phenomenological NegBinL marginal motivated by — but not strictly derived from — individual offspring heterogeneity (Lloyd-Smith et al. 2005)",
-        "observation_model"        => "X_d ~ Poisson(α(d) · w_dow(d) · Σ_e f_e · I_{d-e})",
-        "discretisation"           => "double interval censoring (P(D=d) = ∫_0^1 [F(d+1-p) - F(d-p)] dp)",
+        "rt_target_definition"     => "(c) parameter R(d) of the renewal equation; renewal equation is the expectation of the underlying age-dependent branching process (Mishra et al. 2020); see Funk, Abbott & Bracher 2022 for the multiple-Rt-definitions issue",
+        "infection_model"          => "individual-level Lloyd-Smith Bellman-Harris branching process: ν_i ~ Gamma(k, R(t_i)/k), Z_i ~ Poisson(ν_i), τ_ij ~ g(τ); k → ∞ recovers Poisson offspring",
+        "observation_model"        => "X_d ~ Poisson(α(d) · w_dow(d) · Σ_e f_e · I_{d-e})  (delay PMF is double-interval-censored)",
+        "discretisation_note"      => "GI is continuous (per-individual draws); only the delay PMF for the observation convolution is daily-discretised by double interval censoring",
         "gi"                       => dist_spec(v.gi),
         "delay_cases"              => dist_spec(v.delay_cases),
         "delay_hospitalisations"   => dist_spec(v.delay_hosp),
         "delay_deaths"             => dist_spec(v.delay_deaths),
-        "gi_pmf"                   => g,
         "delay_pmf_cases"          => f_c,
         "delay_pmf_hospitalisations" => f_h,
         "delay_pmf_deaths"         => f_d,
@@ -301,7 +355,7 @@ function write_replicate(v::Variant, rep_idx::Int, seed::Int, script_path::Strin
         "k_offspring_dispersion"   => v.k,
         "i_ref"                    => I_REF,
         "euler_lotka_r0"           => r0,
-        "seed_pre_obs"             => I_seed,
+        "n_total_individuals"      => length(realised),
     )
     open(joinpath(truth_dir, "params.json"), "w") do io
         JSON3.pretty(io, params_dict)
