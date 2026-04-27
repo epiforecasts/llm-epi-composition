@@ -6,11 +6,20 @@
 
 ## Current status
 
-Phase 2 design committed; phase 1 artefacts removed. Simulation generator produces data + truth for 8 variants × 20 replicates from an individual-level Lloyd-Smith Bellman-Harris BP under `simulations/`. Reference EpiAware sanity check on canonical passed (RMSE 0.09, coverage ≈ 1.0). Next items from the plan:
+Phase 2 design committed; phase 1 artefacts removed. In place:
 
-- Reference solutions in `reference_solutions/*.jl` are phase 1 artefacts still reading from `data/cases.csv`; adapt them to read `simulations/canonical/rep_01/data/cases.csv` for any phase-2 use beyond the canonical sanity check we already ran.
-- Automated correctness detectors per Evaluation → Diagnostic: Automated correctness detectors.
-- Prompt paraphrase and temperature randomisation harness.
+- Simulation generator: 8 variants × 20 replicates from an individual-level Lloyd-Smith Bellman-Harris BP (`simulations/generate.jl`).
+- Reference sanity check passed on canonical (RMSE 0.09, coverage ≈ 1.0).
+- Twelve base prompts under `prompts/{scenario}/paraphrases/{condition}/01.md`.
+- Turing.jl + EpiAware API docs under `prompts/{turing,epiaware}_api_docs.md`.
+- Per-run isolation in `evaluation/run_agentic.sh`; study driver in `evaluation/run_study.sh`.
+- Automated correctness detectors in `evaluation/detectors.py`.
+- LLM paraphrase generator skeleton in `evaluation/generate_paraphrases.py`.
+
+Outstanding:
+
+- LLM-paraphrase wave: run `evaluation/generate_paraphrases.py` once the paraphraser model is chosen. The manual paraphrase wave (one author blinded to hypothesis direction) is a separate task and edits the same files in place.
+- Temperature randomisation: Claude Code CLI does not expose `temperature`; the temperature axis of the randomisation requires invoking the Anthropic API directly. Currently absent from `evaluation/run_agentic.sh` and `evaluation/run_study.sh`; will need a separate API-mode runner before the temperature axis can be exercised.
 
 ## Project gotchas
 

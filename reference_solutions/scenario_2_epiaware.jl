@@ -18,7 +18,10 @@ using Random
 Random.seed!(42)
 
 # ---- Load Data ----
-data = CSV.read("data/cases.csv", DataFrame)
+const REP_DIR = get(ENV, "REP_DIR", "simulations/canonical/rep_01")
+const OUT_DIR = get(ENV, "OUT_DIR", joinpath(REP_DIR, "outputs"))
+mkpath(OUT_DIR)
+data = CSV.read(joinpath(REP_DIR, "data", "cases.csv"), DataFrame)
 cases = data.cases
 n_days = length(cases)
 
@@ -142,5 +145,5 @@ summary_df = DataFrame(
 println("\nRt estimates (first 10 days):")
 println(first(summary_df, 10))
 
-CSV.write("outputs/scenario_2_rt_estimates.csv", summary_df)
-@info "Results saved to outputs/scenario_2_rt_estimates.csv"
+CSV.write(joinpath(OUT_DIR, "scenario_2_rt_estimates.csv"), summary_df)
+@info "Results saved to $(joinpath(OUT_DIR, "scenario_2_rt_estimates.csv"))"

@@ -18,10 +18,12 @@ using Random
 Random.seed!(42)
 
 # ---- Load Data ----
-data = CSV.read("data/observations.csv", DataFrame)
-cases = data.cases
-hospitalisations = data.hospitalisations
-deaths = data.deaths
+const REP_DIR = get(ENV, "REP_DIR", "simulations/canonical/rep_01")
+const OUT_DIR = get(ENV, "OUT_DIR", joinpath(REP_DIR, "outputs"))
+mkpath(OUT_DIR)
+cases            = CSV.read(joinpath(REP_DIR, "data", "cases.csv"), DataFrame).cases
+hospitalisations = CSV.read(joinpath(REP_DIR, "data", "hospitalisations.csv"), DataFrame).hospitalisations
+deaths           = CSV.read(joinpath(REP_DIR, "data", "deaths.csv"), DataFrame).deaths
 n_days = length(cases)
 
 # ---- Define Epidemiological Parameters ----
@@ -167,8 +169,8 @@ summary_df = DataFrame(
 println("\nRt estimates from joint model (first 10 days):")
 println(first(summary_df, 10))
 
-CSV.write("outputs/scenario_3_rt_estimates.csv", summary_df)
-@info "Results saved to outputs/scenario_3_rt_estimates.csv"
+CSV.write(joinpath(OUT_DIR, "scenario_3_rt_estimates.csv"), summary_df)
+@info "Results saved to $(joinpath(OUT_DIR, "scenario_3_rt_estimates.csv"))"
 
 # ---- Additional: Compare information from each stream ----
 @info "Joint inference uses information from all three streams to estimate shared Rt"

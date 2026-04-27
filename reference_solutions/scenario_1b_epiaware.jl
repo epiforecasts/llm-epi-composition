@@ -16,7 +16,11 @@ using Random
 Random.seed!(42)
 
 # ---- Load Data ----
-data = CSV.read("data/cases.csv", DataFrame)
+# Reads from $REP_DIR/data/cases.csv; defaults to canonical rep_01.
+const REP_DIR = get(ENV, "REP_DIR", "simulations/canonical/rep_01")
+const OUT_DIR = get(ENV, "OUT_DIR", joinpath(REP_DIR, "outputs"))
+mkpath(OUT_DIR)
+data = CSV.read(joinpath(REP_DIR, "data", "cases.csv"), DataFrame)
 cases = data.cases
 
 # ---- Define Epidemiological Parameters ----
@@ -123,5 +127,5 @@ println("\nLast 10 days:")
 println(last(summary_df, 10))
 
 # Save results
-CSV.write("outputs/scenario_1b_rt_estimates.csv", summary_df)
-@info "Results saved to outputs/scenario_1b_rt_estimates.csv"
+CSV.write(joinpath(OUT_DIR, "scenario_1b_rt_estimates.csv"), summary_df)
+@info "Results saved to $(joinpath(OUT_DIR, "scenario_1b_rt_estimates.csv"))"
