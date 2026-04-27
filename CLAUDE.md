@@ -8,8 +8,8 @@
 
 Phase 2 design committed; phase 1 artefacts removed. Simulation generator produces data + truth for 8 variants × 20 replicates from an individual-level Lloyd-Smith Bellman-Harris BP under `simulations/`. Reference EpiAware sanity check on canonical passed (RMSE 0.09, coverage ≈ 1.0). Next items from the plan:
 
-- Phase 2 prompts under the information-provision rules in Protocol → Prompt construction (old prompts under `prompts/scenario_*/` are obsolete — no-spec/julia/epiaware axis, no disease label).
-- `evaluation/run_agentic.sh` revision for simulation runs: copy from `simulations/{variant}/rep_{rr}/data/`, filter streams by scenario (1a/1b/2 → cases only; 3 → all three).
+- Turing.jl API reference for the `julia` condition (`prompts/turing_api_docs.md`) — currently referenced by the prompts but the file does not exist. Must be assembled before any `julia` runs (MWK principle: API docs only, no end-to-end Rt examples).
+- `evaluation/run_agentic.sh` revision for simulation runs: copy from `simulations/{variant}/rep_{rr}/data/`, filter streams by scenario (1a/1b/2 → cases only; 3 → all three). Also copy `prompts/turing_api_docs.md` for the `julia` condition (parallel to the existing `epiaware_api_docs.md` copy logic).
 - Reference solutions in `reference_solutions/*.jl` are phase 1 artefacts still reading from `data/cases.csv`; adapt them to read `simulations/canonical/rep_01/data/cases.csv` for any phase-2 use beyond the canonical sanity check we already ran.
 - Automated correctness detectors per Evaluation → Diagnostic: Automated correctness detectors.
 - Prompt paraphrase and temperature randomisation harness.
