@@ -4,6 +4,18 @@ API documentation for the EpiAware Julia package (CDCgov/Rt-without-renewal).
 
 EpiAware is a compositional framework for epidemiological modelling built on top of the Turing probabilistic programming language. Models are composed from three main components: an **infection model** (how infections arise), a **latent model** (the underlying time-varying process), and an **observation model** (how infections become observed data). These are combined into an `EpiProblem` and solved with `apply_method`.
 
+**Required imports for sampling.** `apply_method` (and the underlying `Turing.NUTS`) uses `AutoReverseDiff(compile=true)` by default. The corresponding `LogDensityProblemsAD` package extension only activates when `ReverseDiff` and `LogDensityProblemsAD` are loaded explicitly. A working sampling script therefore needs:
+
+```julia
+using EpiAware
+using Turing
+using Distributions
+using ReverseDiff
+using LogDensityProblemsAD
+```
+
+If `ReverseDiff` is not loaded, sampling fails with `MethodError: no method matching ADgradient(::Val{:ReverseDiff}, ...)`.
+
 ---
 
 ## EpiAwareBase

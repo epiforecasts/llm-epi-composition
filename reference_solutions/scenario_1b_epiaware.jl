@@ -7,6 +7,8 @@
 using EpiAware
 using Distributions
 using Turing
+using ReverseDiff
+using LogDensityProblemsAD
 using CSV
 using DataFrames
 using Random

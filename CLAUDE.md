@@ -6,17 +6,18 @@
 
 ## Current status
 
-Phase 2 design committed; phase 1 artefacts removed. Simulation generator produces data + truth for 8 variants x 3 replicates under `simulations/`. Next items from the plan:
+Phase 2 design committed; phase 1 artefacts removed. Simulation generator produces data + truth for 8 variants × 20 replicates from an individual-level Lloyd-Smith Bellman-Harris BP under `simulations/` (moment-closed NegBinL fallback retained as `generate_popn.jl`). Reference EpiAware sanity check passed on canonical (BP RMSE 0.09, popn RMSE 0.12, both with coverage ≈ 1.0; see `simulations/robustness_epiaware.csv`). Next items from the plan:
 
-- Reference-solution sanity check on canonical DGP (EpiAware must recover true Rt within tolerance before any LLM is queried). Reference solutions in `reference_solutions/*.jl` are phase 1 artefacts still reading from `data/cases.csv`; adapt them to read `simulations/canonical/rep_01/data/cases.csv` and validate recovery.
 - Phase 2 prompts under the information-provision rules in Protocol → Prompt construction (old prompts under `prompts/scenario_*/` are obsolete — no-spec/julia/epiaware axis, no disease label).
 - `evaluation/run_agentic.sh` revision for simulation runs: copy from `simulations/{variant}/rep_{rr}/data/`, filter streams by scenario (1a/1b/2 → cases only; 3 → all three).
+- Reference solutions in `reference_solutions/*.jl` are phase 1 artefacts still reading from `data/cases.csv`; adapt them to read `simulations/canonical/rep_01/data/cases.csv` for any phase-2 use beyond the canonical sanity check we already ran.
 - Automated correctness detectors per Evaluation → Diagnostic: Automated correctness detectors.
 - Prompt paraphrase and temperature randomisation harness.
 
 ## Project gotchas
 
 - **EpiAware API (v0.2.0).** `EpiData(gen_int_pmf, exp)` positional or `EpiData(gen_distribution=Gamma(...))` keyword. Transformation must be `exp`; `identity` fails Pathfinder on negative Rt values. Reference solutions already use `exp`.
+- **EpiAware sampling needs `using ReverseDiff`.** `apply_method` defaults to `AutoReverseDiff(compile=true)`, but the `LogDensityProblemsADReverseDiffExt` package extension only activates when both `ReverseDiff` and `LogDensityProblemsAD` are loaded. Without these `using` statements, sampling fails with `MethodError: no method matching ADgradient(::Val{:ReverseDiff}, ...)`. The reference solutions and the EpiAware API docs (`prompts/epiaware_api_docs.md`) include the requirement; LLM submissions in the EpiAware condition must follow it.
 - **Experiment isolation.** Agentic runs receive only prompt + observed data copied into a `mktemp` working directory. For simulation runs, copy only `simulations/{variant}/data/`; the `truth/` subdirectory must not enter the agent's sandbox. See `evaluation/run_agentic.sh` for the existing pattern.
 
 ## Writing style for plan/protocol documents
