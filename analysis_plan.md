@@ -92,26 +92,30 @@ Primary evaluation is on simulated data with known Rt trajectory. Real UK COVID 
 
 #### Primary (canonical) DGP
 
-Renewal equation dynamics:
+Daily-resolution stochastic Poisson renewal model (Cori et al. 2013):
 
 **Infection process:**
-$$I_t = R_t \sum_{s=1}^{S} I_{t-s} \cdot g_s$$
+$$I_t \mid I_{<t} \sim \mathrm{Poisson}\!\left(R_t \sum_{s=1}^{S} g_s \cdot I_{t-s}\right)$$
 
-**Observation process:**
-$$\mathbb{E}[C_t] = \alpha_t \sum_{d=0}^{D} I_{t-d} \cdot f_d$$
+**Observation process (deterministic mean):**
+$$\mathbb{E}[C_t] = \alpha_t \cdot w_{\mathrm{dow}(t)} \cdot \sum_{e=0}^{E} f_e \cdot I_{t-e}$$
 
 **Observation model:**
-$$C_t \sim \text{NegBin}(\mu = \mathbb{E}[C_t], \phi)$$
+$$C_t \sim \mathrm{NegBin}(\mu = \mathbb{E}[C_t], \phi)$$
+
+The recovery target is $R_t$ — the parameter $R(d)$ of the infection process, definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
+
+**Sources of overdispersion.** Empirically reported case counts are overdispersed. The infection process here is Poisson — a deliberate simplification: individual-level offspring heterogeneity (Lloyd-Smith et al. 2005), which would imply infection-level overdispersion, is omitted from the data-generating process. NegBin enters only at the observation step and is interpreted as overdispersion arising from incomplete observation (binomial reporting of Poisson infections gives marginal NegBin under standard approximations). Including offspring heterogeneity in the GT would make every standard renewal-equation estimator misspecified relative to truth, which tests a different question from the LLM-composition focus of this study.
 
 **Parameters (canonical):**
 - $T = 150$ days, nominal start date 2023-01-01
 - $R_t$ trajectory: piecewise-linear, $R_t(1)=0.8$ → $R_t(50)=1.5$ → $R_t(100)=0.8$ → $R_t(150)=0.8$ (rise, fall, plateau)
 - Generation interval: Gamma, mean 5.5 days, SD 2 days; truncation at $\tau_{\max} = 20$ days
-- Delay (infection → report): log-normal, mean 5 days, SD 2 days; truncation at $D_{\max} = 20$ days
+- Delay (infection → report): log-normal, mean 5 days, SD 2 days; truncation at $D_{\max} = 30$ days
 - Ascertainment $\alpha_t$: $0.4 + 0.2\sin(2\pi t / T)$
 - Day-of-week multiplier $w_{\mathrm{dow}(t)}$: $\{1, 1, 1, 1, 1, 0.5, 0.5\}$ for Mon–Sun
 - Dispersion $\phi = 10$
-- Initialisation: 20 days of pre-observation infection history on the sub-day grid, with $\lambda(t) = \lambda_0 \exp(r_0 \cdot t)$ on that interval, where $r_0$ is the exponential growth rate consistent with $R_t(1) = 0.8$ under the GI (Euler–Lotka root of $1 = R_0 \sum_s w_s e^{-r \cdot s \cdot \Delta t}$, with $w_s$ the sub-day CDF-bin weights of the GI) and $\lambda_0 = 100$ (reference incidence at $t = 0$, the end of the seed and start of the observation period).
+- Initialisation: 20 days of pre-observation infection history $I_d = 100 \cdot \exp(r_0 \cdot d)$ for $d = -19, \ldots, 0$, where $r_0$ is the exponential growth rate consistent with $R_t(1) = 0.8$ under the discretised GI (Euler–Lotka root of $1 = R_0 \sum_s g_s e^{-r (s-1)}$). The pre-observation segment is deterministic float; the observation period $d = 1, \ldots, T$ is stochastic Poisson branching.
 
 **Multi-stream parameters (scenario 3):**
 
@@ -127,36 +131,42 @@ Ascertainment trajectories are phase-shifted or use a different period across st
 
 **Disease labelling.** The simulation is not labelled as COVID-19 or any other specific disease. Data files, prompts, and metadata describe "an infectious disease outbreak" with no country or pathogen named. This prevents the LLM from leaning on disease-specific priors or memorised parameter values from training data.
 
+#### Definition of $R_t$
+
+In a stochastic data-generating process, "$R_t$" admits multiple legitimate definitions (Funk, Abbott & Bracher 2022). For a daily Poisson renewal model these include:
+
+(a) the realised ratio $I_t / \Lambda_t$ where $\Lambda_t = \sum_s g_s I_{t-s}$ — a noisy quantity that fluctuates around the rate due to Poisson sampling;
+(b) a per-step random multiplier (does not arise in the model used here, which has no random R per time step);
+(c) the parameter $R(d)$ — the deterministic function plugged into the renewal equation as the rate's multiplier.
+
+**The recovery target is (c) — the parameter $R(d)$.** This is the quantity targeted by EpiEstim, EpiNow2, and renewal-equation Bayesian methods (the dominant approaches in the literature and the predicted default for LLM submissions). Methods that target (a) — notably Wallinga–Teunis — recover a noisy version of $R(d)$ that converges to (c) at large counts but disagrees at finite counts; this disagreement does not reflect implementation error and is flagged in expert review on the scenario 1a method-identification subsample.
+
 #### Generation procedure
 
-Ground truth is defined by the **continuous-time** renewal integral equation. Discretisation is not baked into the generator; no GI PMF or delay PMF is produced by the generator. Estimator-side discretisation is tested against a continuous-process truth.
+For each DGP variant, observed data is generated by the following procedure:
 
-For each DGP variant, observed data is generated by the following deterministic-infection, stochastic-observation procedure:
-
-1. Set seed fixed per (variant, replicate). Seed affects only the NegBin observation sampling; the infection trajectory is deterministic.
-2. On a sub-day grid with step $\Delta t = 0.05$ days (20 steps/day), covering $t \in [-\tau_{\max}, T]$ in sub-day units, solve the continuous-time renewal integral equation
-   $$\lambda(t) = R(t) \int_0^{\tau_{\max}} \lambda(t - \tau)\, g(\tau)\, d\tau$$
-   stepwise (trapezoidal quadrature of the convolution). $R(t)$ is linearly interpolated between the trajectory knots. The pre-observation segment $t \in [-\tau_{\max}, 0)$ is seeded from the Euler–Lotka exponential growth profile (see Parameters, canonical).
-3. Aggregate to daily infection incidence $I_d = \int_{d-1}^{d} \lambda(t)\, dt$.
-4. For each observation stream, compute the continuous-time expected report rate $r_{\text{stream}}(t) = \int_0^{D_{\max}} \lambda(t - u)\, f_{\text{stream}}(u)\, du$ on the sub-day grid, then aggregate:
-   $$\mathbb{E}[C_d^{\text{stream}}] = \alpha_{\text{stream}}(d) \cdot w_{\mathrm{dow}(d)} \cdot \int_{d-1}^{d} r_{\text{stream}}(t)\, dt.$$
-   ($\alpha_{\text{stream}}$ and $w_{\mathrm{dow}}$ are applied at the day level, treating ascertainment and DoW reporting effects as piecewise-constant within a day.)
-5. Sample $C_d^{\text{stream}} \sim \mathrm{NegBin}(\mu = \mathbb{E}[C_d^{\text{stream}}], \phi_{\text{stream}})$ per day per stream.
-6. Write `data/cases.csv` (+ `hospitalisations.csv`, `deaths.csv`), `truth/true_rt.csv`, `truth/true_infections.csv`, `truth/true_expected.csv`, `truth/params.json`, `truth/sim_script.jl`.
+1. Compute the daily-discretised GI PMF $g_s$ for $s = 0, \ldots, \tau_{\max}$ and per-stream delay PMFs $f_e$ for $e = 0, \ldots, D_{\max}$ by **double interval censoring** of the continuous distributions, using numerical quadrature:
+   $$P(D = d) = \int_0^1 \big[F(d + 1 - p) - F(\max(d - p, 0))\big] dp$$
+   then renormalise to sum to 1.
+2. Solve the Euler–Lotka equation $1 = R_0 \sum_s g_s e^{-r(s-1)}$ for $r_0$ at $R_0 = R_t(1)$ to set the seed growth rate.
+3. Initialise pre-observation infections deterministically: $I_d = I_{\mathrm{ref}} \cdot \exp(r_0 \cdot d)$ for $d = -(\tau_{\max} - 1), \ldots, 0$, with $I_{\mathrm{ref}} = 100$.
+4. Set seed fixed per (variant, replicate) and sample the infection trajectory:
+   $$I_d \sim \mathrm{Poisson}\!\left(R_t(d) \sum_{s=1}^{\tau_{\max}} g_s \cdot I_{d-s}\right) \quad \text{for } d = 1, \ldots, T.$$
+   $R_t(d)$ is linearly interpolated between the trajectory knots; for the seed window $I_{d-s}$ uses the deterministic float values from step 3.
+5. For each observation stream, compute the deterministic expected report:
+   $$\mathbb{E}[C_d^{\text{stream}}] = \alpha_{\text{stream}}(d) \cdot w_{\mathrm{dow}(d)} \cdot \sum_{e=0}^{D_{\max}} f_e^{\text{stream}} \cdot I_{d-e}.$$
+6. Sample $C_d^{\text{stream}} \sim \mathrm{NegBin}(\mu = \mathbb{E}[C_d^{\text{stream}}], \phi_{\text{stream}})$ per day per stream.
+7. Write `data/cases.csv` (+ `hospitalisations.csv`, `deaths.csv`), `truth/true_rt.csv`, `truth/true_infections.csv`, `truth/true_expected.csv`, `truth/params.json`, `truth/sim_script.jl`.
 
 For scenarios 1a/1b/2, only `cases.csv` is copied into the agent sandbox; scenario 3 receives all three streams.
 
 **Choices fixed in the plan:**
-- Infection dynamics deterministic; observation noise stochastic. (Stochastic infection dynamics would make "true $R_t$" ambiguous; deterministic infections keep the recovery target well-defined. A consequence is that estimators which correctly model early-phase demographic stochasticity will have structurally wider intervals in the subcritical phase than the deterministic truth requires; this is a known asymmetry in the coverage metric and is noted as a limitation.)
-- Three independent replicates per variant, seeds $\{101, 102, 103\}$. Across replicates, only NegBin sampling differs; the infection trajectory is identical. Recovery metrics computed per (submission, variant, replicate) and averaged.
+- Infection dynamics stochastic via Poisson branching; observation noise additionally stochastic via NegBin. The recovery target is the parameter $R(d)$, not any realisation-level quantity.
+- Twenty independent replicates per variant, seeds $\{101, \ldots, 120\}$. Across replicates, both the realised infection trajectory and the observation noise vary. Recovery metrics computed per (submission, variant, replicate) and averaged; within-cell variance across replicates is reported as a distribution.
 - Dates are synthetic; no calendar features beyond day-of-week.
-- Sub-day step $\Delta t = 0.05$ day applied uniformly across variants.
+- Discretisation: double interval censoring at daily resolution. This is a generator-side choice, recorded in `params.json` per replicate. Estimators choose their own discretisation; the short-GI variant tests whether the estimator's choice matches the generator's well enough to recover $R(d)$ in the regime where discretisation matters most.
 
-**Sanity checks before running any LLM condition.**
-1. **Numerical convergence.** Halve $\Delta t$ to 0.025 and confirm daily $I_d$ and $\mathbb{E}[C_d^{\text{stream}}]$ agree to within 1% relative tolerance on the canonical DGP. (The sub-day left-Riemann convolution is $O(\Delta t)$; the tolerance is chosen to be well below estimator-side Rt RMSE targets and is sufficient as a numerical adequacy check.)
-2. **Reference recovery.** The reference EpiAware implementations are applied to the canonical DGP and must recover the true $R_t$ within tolerance (e.g. mean RMSE < 0.1, coverage within 10pp of nominal).
-
-If either check fails, the simulation or the reference is wrong; fix before proceeding.
+**Sanity check before running any LLM condition.** The reference EpiAware implementations are applied to the canonical DGP and must recover the true $R_t$ within tolerance (e.g. mean RMSE < 0.1, coverage within 10pp of nominal). If not, the simulation or the reference is wrong; fix before proceeding.
 
 #### Adversarial DGPs
 
@@ -180,6 +190,8 @@ The low-dispersion (Poisson-like) variant is included deliberately as a null con
 
 **Short-GI caveat.** The short-GI perturbation changes both discretisation sensitivity (the intended stress) and epidemic dynamics (shorter GI → sharper rise and peak under the same $R_t$). The two effects cannot be fully separated within a single variant without departing from the "perturb one parameter" principle. Recovery on short_gi is therefore interpreted as a combined stress on discretisation handling and estimator robustness to faster dynamics; this is noted when reporting the adversarial-panel results.
 
+**Omission noted.** No variant introduces infection-level overdispersion via offspring heterogeneity (Lloyd-Smith et al. 2005). This is consistent with the GT being a Poisson renewal process at the infection level (see "Sources of overdispersion" above). A future extension could add a NegBinL-infection variant to test estimator robustness when individual-level heterogeneity is present in the data, but doing so within this study would make all standard renewal estimators misspecified vs truth.
+
 **Why simulation-based evaluation addresses contamination.** The DGP is canonical (LLMs have seen renewal-equation structure in training data) but the specific data does not match any training example. Grading on recovery against truth detects cases where the model recalls textbook machinery but implements it with missing components, because missing components cause bias in scenario-specific ways.
 
 #### Isolation of simulation parameters from agent runs
@@ -193,7 +205,7 @@ simulations/
   Manifest.toml
   {variant}/                # canonical, short_gi, long_delay, strong_dow,
                             #   high_asc_var, low_dispersion, high_dispersion, abrupt_change
-    rep_{01,02,03}/
+    rep_{01..20}/
       truth/                # true_rt.csv, true_infections.csv, true_expected.csv,
                             #   params.json, sim_script.jl — never exposed to agent
       data/                 # cases.csv (+ hospitalisations.csv, deaths.csv for scenario 3)
@@ -202,14 +214,16 @@ simulations/
 
 `run_agentic.sh` copies `simulations/{variant}/rep_{rr}/data/` (and the prompt + docs bundle per condition) into a `mktemp` working directory; nothing else from the repository is visible to the agent. For scenarios 1a/1b/2 only `cases.csv` is copied; scenario 3 receives all three stream files. Observed files are formatted identically to real-data files so the agent cannot distinguish simulated from real data by file structure. Evaluation (RMSE, coverage) runs outside the agent's sandbox after the run completes, using the truth files the agent never saw.
 
-#### Discretisation and Censoring (estimator side)
+#### Discretisation and Censoring
 
-The ground truth is generated from the continuous-time renewal equation and continuous delay densities; discretisation is a choice made by the estimator, not by the generator. A discrete-time estimator operating on daily data requires a discretised GI and delay. Proper discretisation should account for **double interval censoring**:
+The generator operates at daily resolution and discretises continuous GI / delay distributions to daily PMFs by **double interval censoring**:
 
-- **Primary censoring**: primary event (infection) occurs at an unknown time within its observation interval
-- **Secondary censoring**: secondary event (onset, reporting) also occurs at an unknown time within its interval
+- **Primary censoring**: primary event (infection) occurs at an unknown time within its day
+- **Secondary censoring**: secondary event (onset, reporting) also occurs at an unknown time within its day
 
-Naive discretisation (evaluating PDF at integer points) does not account for this and can introduce bias, particularly for distributions with short means relative to the discretisation interval. The short-GI adversarial DGP is chosen so that a correctly censored PMF recovers the continuous-process truth within tolerance while a PDF-at-integers discretisation shows a detectable bias.
+Per-day mass: $P(D = d) = \int_0^1 [F(d + 1 - p) - F(\max(d - p, 0))] dp$, computed by numerical quadrature and renormalised to sum to 1 over the truncation window.
+
+A discrete-time estimator operating on daily data requires a discretised GI and delay. Naive discretisation (evaluating the PDF at integer points) is inconsistent with the generator and biased for short means; the short-GI adversarial variant tests this directly. Estimators that use double interval censoring or another method that explicitly addresses the censoring problem are aligned with the generator and should recover $R(d)$ within tolerance.
 
 Acceptable estimator-side approaches:
 - Double interval censoring (e.g. EpiAware's `censored_pmf()`)
@@ -429,7 +443,8 @@ Predictions 3–5 are the load-bearing composition claims. If they do not hold, 
 - **Model coverage.** Two model families (Claude, Llama). Findings may not generalise.
 - **No independent replication.** We publish the full harness and invite replication with a pre-specified concordance criterion (e.g., primary recovery claim replicated if point estimates within 10pp and same qualitative ordering).
 - **Simulation realism.** Real-data secondary check may reveal issues not captured in simulation.
-- **Deterministic-trajectory asymmetry.** Ground truth uses a deterministic infection trajectory. Estimators that correctly model early-phase demographic stochasticity will have structurally wider intervals in the subcritical phase than the deterministic truth requires, mildly deflating their coverage metric. No accepted alternative preserves a well-defined "true $R_t$"; the asymmetry is accepted and reported.
+- **Rt-definition ambiguity.** Under any stochastic generator, "$R_t$" admits multiple legitimate definitions — the parameter, the realised ratio, and (in some models) a per-step random multiplier (Funk, Abbott & Bracher 2022). Recovery is scored against the parameter $R(d)$. Methods that target the realised ratio (e.g. Wallinga–Teunis) recover a noisier quantity that converges to the parameter at scale; observed disagreement with truth in their case partly reflects target choice rather than implementation error, and is flagged in the scenario 1a method-identification subsample.
+- **Infection-level overdispersion absent.** The GT does not include individual offspring heterogeneity (Lloyd-Smith et al. 2005). Real-world overdispersion that arises from this mechanism is not represented; the NegBin observation noise absorbs incomplete-observation overdispersion only. Estimators correctly fitting a NegBinL infection process would not be advantaged on this GT.
 - **Reviewer blinding.** Package imports are strippable; structural features (multi-stream handling, Julia vs R syntax patterns) may leak condition information. Blinding failure rate is tested and reported.
 
 ## Pre-registration
