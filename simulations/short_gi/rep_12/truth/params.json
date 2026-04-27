@@ -69,7 +69,7 @@
         0.015328337785940619,
         0.011729916393248097
     ],
-    "n_total_individuals": 1065120,
+    "n_total_individuals": 2946274,
     "infection_model": "individual-level Lloyd-Smith Bellman-Harris branching process: ν_i ~ Gamma(k, R(t_i)/k), Z_i ~ Poisson(ν_i), τ_ij ~ g(τ); k → ∞ recovers Poisson offspring",
     "k_offspring_dispersion": 1,
     "start_date": "2023-01-01",
