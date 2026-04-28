@@ -68,10 +68,13 @@ Within **no-spec**, record language and package selection. If (as predicted) mos
 
 | Model | Type | Rationale |
 |---|---|---|
-| Claude Sonnet 4.6 | Commercial frontier | Current frontier capability |
-| Llama 3.1 8B | Open-source | LMIC accessibility, reproducibility |
+| Claude Sonnet 4.6 (Anthropic) | Commercial frontier | Current Anthropic frontier-class capability |
+| GPT-5 (OpenAI) | Commercial frontier | Frontier-class comparison from a different model family; supports the cross-family generalisation claim |
+| Llama 3.1 8B (Meta) | Open-source, small | Tertiary; included to demonstrate local inference on consumer hardware (LMIC accessibility) and to bound expected performance at the low end of the model-scale range |
 
-Llama 3.1 8B (rather than 70B) is chosen to demonstrate local inference on consumer hardware, relevant to LMIC resource constraints. Findings may not generalise to other model families.
+Two frontier-class models from different families (Anthropic, OpenAI) form the primary basis for cross-family generalisation of any conclusion. Llama 3.1 8B is run with reduced sample size (see Sample size and crossing → Llama) and is reported as a tertiary comparison only; conclusions that hold only on Llama and not on the frontier pair are reported but not generalised.
+
+Findings may not generalise to other model families (Gemini, Qwen, Mistral, DeepSeek, ...). This is a documented limitation.
 
 ### Scenarios
 
@@ -119,7 +122,7 @@ where $I_d$ is the realised count of branching-process infections born in day $d
 - Ascertainment $\alpha_t$: $0.4 + 0.2\sin(2\pi t / T)$ (incomplete observation rate)
 - Day-of-week multiplier $w_{\mathrm{dow}(t)}$: $\{1, 1, 1, 1, 1, 0.5, 0.5\}$ for Mon–Sun
 - Offspring dispersion $k = 1.0$ (within Lloyd-Smith respiratory-pathogen range)
-- Initialisation: seed individuals placed in the pre-observation window $t \in [-\tau_{\max}, 0]$ with continuous timestamps. Daily seed counts are Poisson with rate $(1 - R_0) \cdot 100 \cdot \exp(r_0 \cdot d)$, where $r_0$ is the Euler–Lotka root for $R_0 = R_t(1) = 0.8$ under the daily-discretised GI; the $(1 - R_0)$ rescaling compensates for the geometric inflation $\sim 1/(1-R_0)$ that arises when seed individuals are propagated through the BP. Each seed produces offspring per the Lloyd-Smith mechanism; seed individuals themselves do not count as new obs-window infections.
+- Initialisation: seed individuals placed in the pre-observation window $t \in [-\tau_{\max}, 0]$ with continuous timestamps. The seed-count *expected rate* per day follows the Euler–Lotka equilibrium profile $\lambda(d) = c \cdot 100 \cdot \exp(r_0 \cdot d)$ (with $r_0$ the equilibrium growth rate matching $R_t(1) = 0.8$ under the daily-discretised GI; $c = 0.3$ chosen so that the BP's realised rate at $t = 1$ matches the moment-closed expectation). The realised seed *counts* per day are Poisson draws around that expected rate, and the seed individuals' sub-day timestamps are uniform within their day. Each seed individual then produces offspring per the Lloyd-Smith mechanism, and those offspring produce their own offspring recursively through the pre-observation window before the observation window begins. Seed individuals themselves do not count as new obs-window infections; their realised descendants do. The BP is thus stochastic from seed onwards, but the expected seed rate is a deterministic anchor (replacing it with a longer pure-BP burn-in starting from a single ancestor far in the past is feasible but adds inter-replicate variance not relevant to the LLM-composition test).
 
 **Multi-stream parameters (scenario 3):**
 
@@ -190,16 +193,17 @@ Each variant differs from the canonical DGP in exactly one parameter:
 | Strong DoW | Weekend multiplier 0.25 | Observation model | Oscillating Rt |
 | High ascertainment variability | $\alpha_t = 0.4 + 0.35\sin(2\pi t / T)$ | Ascertainment model | Spurious Rt trend |
 | Low dispersion | $k = 1000$ (near-Poisson infections) | Likelihood / overdispersion | No effect — null condition |
-| High dispersion | $k = 0.1$ (extreme superspreading) | Likelihood / overdispersion | Overconfident intervals if Poisson used |
+| Extreme dispersion | $k = 0.1$ (stress test beyond observed pathogen ranges; Lloyd-Smith $k$ for SARS was ~0.16) | Likelihood / overdispersion | Overconfident intervals if Poisson used |
 | Abrupt change | $R_t$ drops 1.5 → 0.5 over 3 days around day 75 | Smoothness prior | Over-smoothed estimators lag the drop |
+| Sinusoidal Rt | $R(t) = 1.0 + 0.4\sin(2\pi t / 60)$ — three full cycles across 150 days | Smoothness prior choice | Estimators with priors that prefer piecewise-linear (or that over-smooth) recover Rt only in a low-pass-filtered form |
 
 **Rationale for DGP selection.** Each variant stresses one of the components that appears in the canonical DGP and in the reference specification (GI, delay, observation model with DoW, ascertainment, dispersion / likelihood, smoothness prior). The adversarial DGPs are therefore not hand-picked to match failures we expect to find; they enumerate the modelling decisions that a correctly-specified renewal-equation model must handle. Any component *not* adversarially stressed would be a gap in the evaluation.
 
-The low-dispersion (Poisson-like) variant is included deliberately as a null condition: Poisson submissions should perform comparably to NegBin submissions here, but diverge specifically on high dispersion. This controls for the possibility that "bad" submissions just fail everywhere (making the adversarial panel uninformative) versus failing in component-specific ways (making it diagnostic).
+The low-dispersion (Poisson-like) variant is included deliberately as a null condition: Poisson submissions should perform comparably to NegBin submissions here, but diverge specifically on `extreme_dispersion`. This controls for the possibility that "bad" submissions just fail everywhere (making the adversarial panel uninformative) versus failing in component-specific ways (making it diagnostic).
 
 **Short-GI caveat.** The short-GI perturbation changes both discretisation sensitivity (the intended stress) and epidemic dynamics (shorter GI → sharper rise and peak under the same $R_t$). The two effects cannot be fully separated within a single variant without departing from the "perturb one parameter" principle. Recovery on short_gi is therefore interpreted as a combined stress on discretisation handling and estimator robustness to faster dynamics; this is noted when reporting the adversarial-panel results.
 
-**Mechanism of dispersion variants.** The low/high dispersion adversarial variants perturb the offspring dispersion $k$ (Lloyd-Smith parameter) at the infection level — varying the population-level NegBin mass-shape implied by individual-level offspring heterogeneity. Estimators that model NegBin observations (e.g. EpiNow2's `cluster_factor`) absorb this overdispersion through their observation likelihood; estimators that assume Poisson observations (e.g. EpiEstim) will show undercoverage on `high_dispersion`.
+**Mechanism of dispersion variants.** The `low_dispersion` and `extreme_dispersion` adversarial variants perturb the offspring dispersion $k$ (Lloyd-Smith parameter) at the infection level — varying the population-level NegBin mass-shape implied by individual-level offspring heterogeneity. Estimators that model NegBin observations (e.g. EpiNow2's `cluster_factor`) absorb this overdispersion through their observation likelihood; estimators that assume Poisson observations (e.g. EpiEstim) will show undercoverage on `extreme_dispersion`. The `extreme_dispersion` $k = 0.1$ value is *beyond* the range observed in nature; it is a deliberate stress test, not a realistic-pathogen scenario (Lloyd-Smith reported $k \approx 0.16$ for SARS).
 
 **Why simulation-based evaluation addresses contamination.** The DGP is canonical (LLMs have seen renewal-equation structure in training data) but the specific data does not match any training example. Grading on recovery against truth detects cases where the model recalls textbook machinery but implements it with missing components, because missing components cause bias in scenario-specific ways.
 
@@ -213,7 +217,8 @@ simulations/
   Project.toml
   Manifest.toml
   {variant}/                # canonical, short_gi, long_delay, strong_dow,
-                            #   high_asc_var, low_dispersion, high_dispersion, abrupt_change
+                            #   high_asc_var, low_dispersion, extreme_dispersion,
+                            #   abrupt_change, sinusoidal_rt
     rep_{01..20}/
       truth/                # true_rt.csv, true_infections.csv, true_expected.csv,
                             #   params.json, sim_script.jl — never exposed to agent
@@ -277,20 +282,20 @@ Recorded per run:
 
 Reported per condition. If hallucination rate is materially higher in `epiaware` despite the bundled API reference, or in `julia` despite the Turing.jl reference, that is a finding about in-context docs use independent of the composition result.
 
-### Diagnostic: Automated correctness detectors
+### Diagnostic: Automated structural-pattern detectors
 
-Static-analysis detectors for mechanically detectable departures. Developed and validated on a training subsample; applied uniformly.
+Static-analysis detectors that **flag mechanically detectable structural patterns** in submitted code and outputs. Each flag identifies a pattern, not a "correctness departure" — the appropriate model for any given task is a judgment call that depends on the data-generating mechanism. Detectors are developed on a training subsample and calibrated against expert review (Cohen's kappa). They are diagnostic instruments for analysis, not graders. Implemented in `evaluation/detectors.py`.
 
-| Departure | Detector approach | Feasibility |
-|---|---|---|
-| `poisson` vs `negbin` | AST/regex on likelihood specification | Clean |
-| `no_smoothing` | Absence of AR/RW/GP/spline terms | Clean |
-| `no_delay` | Absence of delay convolution or delay distribution | Mostly clean |
-| `no_uncertainty` | Output check — intervals present | Clean |
-| `no_discretisation` | Continuous density at integer points, no integration | Partial |
-| `negative_rt` | Posterior check — any negative Rt samples | Clean |
-| `wrong_likelihood` | Partial — catches some patterns | Partial |
-| `confused_rt_r` | Semantic | Hard |
+| Detector flag | Pattern detected | Approach | Feasibility |
+|---|---|---|---|
+| `flag_poisson_only` | Poisson observation likelihood without NegBin alternative | AST/regex | Clean |
+| `flag_no_smoothing_term` | No AR/RW/GP/spline term on Rt or its log | Regex (with known false negatives — e.g., custom multivariate Normal priors with smoothing covariance) | Clean |
+| `flag_no_delay_handling` | No reporting-delay convolution or delay distribution use | Regex | Mostly clean |
+| `flag_no_uncertainty` | Output file has no `Rt_lower`/`Rt_upper` columns | Output check | Clean |
+| `flag_naive_density_at_integers` | Continuous density evaluated at integer points without integration | Regex (heuristic) | Partial |
+| `flag_negative_rt` | Output contains negative Rt entries | Output check | Clean |
+| `flag_normal_observation` | Observation modelled with `Normal`/`Gaussian` rather than count distribution | Regex (heuristic) | Partial |
+| `flag_confused_rt_r` | Confusion between $R$ (fixed) and $R_t$ (time-varying) | Semantic — expert review only | Hard |
 
 Dropped from the taxonomy given the revised design (GI and delay are provided as fixed known distributions):
 
@@ -321,13 +326,16 @@ Classification is cross-referenced with recovery: a "C" classification with good
 
 ### Prompt paraphrases
 
-For each (scenario, condition), k=5 paraphrases generated by:
+For each (scenario, condition), k=5 paraphrases generated by three waves:
 
-1. Manual rewrite by an author blinded to hypothesis direction (not the original prompt author).
-2. Manual rewrite by a third-party infectious-disease modeller external to the project, briefed only on the task and the constraint to preserve every fact and vary every word.
-3. Paraphrasing via a separate LLM instance, blinded to study design.
+1. **Original** (paraphrase 01): the base prompt as written by the project authors.
+2. **Internal blinded rewrite** (paraphrase 02): manual rewrite by a project author other than the original prompt author, blinded to the hypothesis direction during paraphrasing (i.e. given only the rule "preserve every fact, vary every word" and not the predictions document).
+3. **External blinded rewrite** (paraphrases 03–04): manual rewrites by a third-party infectious-disease modeller external to the project, recruited specifically for paraphrase generation and not given the study design document, the predictions, or any indication that we are testing composition vs retrieval. They receive only the rule and the target base prompts. The third-party modeller is named and acknowledged in the paper. Their pre-task brief is committed to the repository as `prompts/paraphrase_brief.md` so that the information they had access to is auditable.
+4. **LLM paraphrase** (paraphrase 05): a separate LLM instance, prompted with the same rule and given no study context.
 
-Five paraphrases × 4 scenarios × 3 conditions = 60 prompt variants. Paraphrase 01 is the original prompt; paraphrases 02–05 are filled by waves (1)–(3) in some allocation (recorded per cell).
+Five paraphrases × 4 scenarios × 3 conditions = 60 prompt variants. Paraphrase 01 is fixed; 02 is by an internal author; 03–04 are by the external paraphraser; 05 is LLM-generated.
+
+In addition, the third-party modeller validates the bundled API docs (`turing_api_docs.md`, `epiaware_api_docs.md`): they are asked to flag any content that constitutes a worked Rt example or otherwise violates the MWK operational rule. Their findings are addressed before pre-registration is finalised.
 
 ### Runs
 
@@ -441,7 +449,7 @@ Stated here before any model is queried under this revised design. Each predicti
 4. **no-spec fails on scenario 3 more often than EpiAware.** Run-level failure rate (run did not produce a valid `outputs/rt_estimates.csv` within 10 iterations) in (no-spec, scenario 3) is at least 20 percentage points higher than in (epiaware, scenario 3). *Confirmation:* the difference has a 95%-CI excluding zero in the predicted direction and lower bound ≥ 0.20.
 5. **Adversarial DGP performance correlates with automated detector flags.**
    - Submissions flagged `no_delay`: median Rt RMSE on `long_delay` is at least 0.05 higher than on `canonical`. 95%-CI excludes zero.
-   - Submissions flagged `flag_poisson_likelihood` (Poisson-only observation likelihood): median 90% coverage on `extreme_dispersion` (formerly `high_dispersion`) is at least 15 percentage points lower than on `low_dispersion`. 95%-CI excludes zero.
+   - Submissions flagged `flag_poisson_only` (Poisson-only observation likelihood): median 90% coverage on `extreme_dispersion` is at least 15 percentage points lower than on `low_dispersion`. 95%-CI excludes zero.
 6. **Hallucination rate is higher in `epiaware` than in `julia` or `no-spec`.** Median fraction of agent iterations failing with "function does not exist" / "no method matching" / undefined-symbol errors in `epiaware` is at least 10 percentage points higher than in either `julia` or `no-spec`. 95%-CIs exclude zero.
 
 Predictions 3–5 are the load-bearing composition claims. If they do not hold, the study reports that validated composable tooling does not provide a composition benefit over forced-composition baselines, which is itself informative. Prediction 6 is orthogonal: a finding about in-context docs use rather than composition per se.

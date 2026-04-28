@@ -63,13 +63,8 @@ class Detection:
     evidence: dict[str, Any] = field(default_factory=dict)
 
 
-def detect_likelihood(sources: dict[str, str]) -> Detection:
-    """Detect Poisson vs NegBin observation likelihood.
-
-    Plan: AST/regex on likelihood specification. Reports both indicators;
-    downstream scoring treats `poisson AND NOT negbin` as the `poisson`
-    flag.
-    """
+def detect_poisson_only(sources: dict[str, str]) -> Detection:
+    """Flag: Poisson observation likelihood with no NegBin alternative."""
     poisson_re = re.compile(r"\bPoisson\b")
     negbin_re = re.compile(
         r"\b(NegativeBinomial|NegBin|NegBinomial|negative_binomial|negbinomial|"
@@ -80,13 +75,12 @@ def detect_likelihood(sources: dict[str, str]) -> Detection:
     negbin_files = [n for n, s in sources.items() if negbin_re.search(s)]
     poisson_only = bool(poisson_files) and not negbin_files
     return Detection(
-        name="likelihood",
-        flagged=poisson_only,            # `poisson` flag = poisson_only
+        name="flag_poisson_only",
+        flagged=poisson_only,
         feasibility="clean",
         evidence={
             "poisson_files": poisson_files,
             "negbin_files": negbin_files,
-            "poisson_only": poisson_only,
         },
     )
 
@@ -112,7 +106,7 @@ def detect_no_smoothing(sources: dict[str, str]) -> Detection:
         if any(re.search(p, src, re.IGNORECASE) for p in patterns):
             matched_files.append(name)
     return Detection(
-        name="no_smoothing",
+        name="flag_no_smoothing_term",
         flagged=not matched_files,
         feasibility="clean",
         evidence={"matched_files": matched_files},
@@ -136,7 +130,7 @@ def detect_no_delay(sources: dict[str, str]) -> Detection:
         if any(re.search(p, src, re.IGNORECASE) for p in patterns):
             matched_files.append(name)
     return Detection(
-        name="no_delay",
+        name="flag_no_delay_handling",
         flagged=not matched_files,
         feasibility="mostly_clean",
         evidence={"matched_files": matched_files},
@@ -148,7 +142,7 @@ def detect_no_uncertainty(run_dir: Path) -> Detection:
     out = run_dir / "outputs" / "rt_estimates.csv"
     if not out.exists():
         return Detection(
-            name="no_uncertainty",
+            name="flag_no_uncertainty",
             flagged=None,
             feasibility="clean",
             evidence={"reason": "no outputs/rt_estimates.csv"},
@@ -161,7 +155,7 @@ def detect_no_uncertainty(run_dir: Path) -> Detection:
     has_upper = "rt_upper" in header or "upper" in header
     has_intervals = has_lower and has_upper
     return Detection(
-        name="no_uncertainty",
+        name="flag_no_uncertainty",
         flagged=not has_intervals,
         feasibility="clean",
         evidence={"header": header, "has_lower": has_lower, "has_upper": has_upper},
@@ -193,7 +187,7 @@ def detect_no_discretisation(sources: dict[str, str]) -> Detection:
     proper_files = [n for n, s in sources.items() if proper_re.search(s)]
     flagged = bool(naive_files) and not proper_files
     return Detection(
-        name="no_discretisation",
+        name="flag_naive_density_at_integers",
         flagged=flagged,
         feasibility="partial",
         evidence={"naive_files": naive_files, "proper_files": proper_files},
@@ -205,7 +199,7 @@ def detect_negative_rt(run_dir: Path) -> Detection:
     out = run_dir / "outputs" / "rt_estimates.csv"
     if not out.exists():
         return Detection(
-            name="negative_rt",
+            name="flag_negative_rt",
             flagged=None,
             feasibility="clean",
             evidence={"reason": "no outputs/rt_estimates.csv"},
@@ -225,9 +219,9 @@ def detect_negative_rt(run_dir: Path) -> Detection:
                         if v < 0:
                             bad.append((col, row[col]))
     except OSError:
-        return Detection(name="negative_rt", flagged=None, evidence={"reason": "unreadable"})
+        return Detection(name="flag_negative_rt", flagged=None, evidence={"reason": "unreadable"})
     return Detection(
-        name="negative_rt",
+        name="flag_negative_rt",
         flagged=bool(bad),
         feasibility="clean",
         evidence={"negative_entries": bad[:10]},  # cap to avoid bloating output
@@ -249,7 +243,7 @@ def detect_wrong_likelihood(sources: dict[str, str]) -> Detection:
         if any(re.search(p, src) for p in patterns):
             matched_files.append(name)
     return Detection(
-        name="wrong_likelihood",
+        name="flag_normal_observation",
         flagged=bool(matched_files),
         feasibility="partial",
         evidence={"matched_files": matched_files},
@@ -261,7 +255,7 @@ def detect_wrong_likelihood(sources: dict[str, str]) -> Detection:
 # ---------------------------------------------------------------------------
 
 DETECTOR_FUNCS_SOURCE = (
-    detect_likelihood,
+    detect_poisson_only,
     detect_no_smoothing,
     detect_no_delay,
     detect_no_discretisation,
