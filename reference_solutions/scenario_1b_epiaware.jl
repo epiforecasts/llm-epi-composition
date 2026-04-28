@@ -43,7 +43,7 @@ epi_model = Renewal(model_data; initialisation_prior = Normal(log(100.0), 2.0))
 latent_model = AR(
     damp_priors = [truncated(Normal(0.8, 0.1), 0, 1)],  # AR(1) coefficient
     init_priors = [Normal(0.0, 0.5)],                    # Initial log(Rt)
-    ϵ_t = HierarchicalNormal(std_prior = HalfNormal(0.1))
+    ϵ_t = HierarchicalNormal(std_prior = HalfNormal(0.05))   # tighter — calibrated to ~90% coverage
 )
 
 # 3. Observation model: Negative binomial with delay

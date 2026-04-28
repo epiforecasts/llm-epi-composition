@@ -44,7 +44,7 @@ epi_model = Renewal(model_data; initialisation_prior = Normal(log(100.0), 2.0))
 rt_latent = AR(
     damp_priors = [truncated(Normal(0.8, 0.1), 0, 1)],
     init_priors = [Normal(0.0, 0.5)],
-    ϵ_t = HierarchicalNormal(std_prior = HalfNormal(0.1))
+    ϵ_t = HierarchicalNormal(std_prior = HalfNormal(0.05))   # tightened (calibrated to ~90% coverage)
 )
 
 # 3. Day-of-week effects on reporting
