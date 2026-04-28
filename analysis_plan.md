@@ -25,7 +25,7 @@ Following methodological concerns raised by Omar et al. (*Nat Med* 2026) on the 
 2. **Ground-truth recovery on simulated data** as the primary outcome, addressing framing-dependent scoring.
 3. **Adversarial DGPs** that stress specific modelling decisions, separating recall of textbook machinery from correct implementation.
 4. **Automated correctness detectors** for mechanically detectable departures, with expert review reserved for irreducibly semantic judgments on a stratified subsample.
-5. **Prompt-paraphrase and temperature randomisation**, with results reported as distributions.
+5. **Prompt-paraphrase randomisation**, with results reported as distributions.
 6. **Internal role separation** and explicit blinding tests.
 7. **Pre-specified predictions** so non-confirmation is informative.
 
@@ -458,7 +458,7 @@ Predictions 3–5 are the load-bearing composition claims. If they do not hold, 
 
 ### Tables
 
-**Table 1: Recovery by condition × scenario.** Rows: condition (3) × scenario (4) = 12 rows. Columns: median Rt RMSE, IQR of RMSE, median coverage, IQR of coverage, across all paraphrases × temperatures × runs × canonical DGP.
+**Table 1: Recovery by condition × scenario.** Rows: condition (3) × scenario (4) = 12 rows. Columns: median Rt RMSE, IQR of RMSE, median coverage, IQR of coverage, across all paraphrases × replicates × runs on the canonical DGP.
 
 **Table 2: Recovery on adversarial DGPs.** Rows: condition × scenario × DGP variant. Columns as Table 1. Shows scenario-specific bias patterns.
 
@@ -472,7 +472,7 @@ Predictions 3–5 are the load-bearing composition claims. If they do not hold, 
 
 ### Figures
 
-**Figure 1: Primary result — recovery distributions.** Violin plots of Rt RMSE by condition, faceted by scenario. Shows full distribution over paraphrases × temperatures × runs on canonical DGP.
+**Figure 1: Primary result — recovery distributions.** Violin plots of Rt RMSE by condition, faceted by scenario. Shows full distribution over paraphrases × replicates × runs on canonical DGP.
 
 **Figure 2: Adversarial DGP fingerprint.** Heatmap: rows = DGP variant, columns = condition × scenario. Cell colour = median RMSE relative to canonical. Reveals which conditions fail on which stress tests.
 
@@ -482,17 +482,23 @@ Predictions 3–5 are the load-bearing composition claims. If they do not hold, 
 
 **Figure 5: Hallucination and iteration behaviour.** Per condition: hallucination rate (errors from non-existent functions / method matching), iterations to first successful run, error-type distribution. Tests whether bundled API docs equalise working knowledge across conditions.
 
-**Figure 6: Sensitivity to prompt paraphrase and temperature.** For a representative (scenario, condition) cell, full distribution of outcomes across wordings and temperatures. Demonstrates the within-cell variability Omar et al. highlight.
+**Figure 6: Sensitivity to prompt paraphrase.** For a representative (scenario, condition) cell, full distribution of outcomes across paraphrases and runs. Demonstrates the within-cell variability Omar et al. highlight.
 
 ## Limitations Acknowledged in Advance
 
-- **Author-designed prompts.** External prompt design remains the recommended fix but is out of scope. We partially mitigate via paraphrase randomisation (one wave manual, one wave LLM-generated, both blinded to hypothesis direction) and internal role separation.
+- **Author-designed prompts.** Even with the third-party paraphrase wave, the *base* prompts are designed by the project authors. The paraphrase randomisation mitigates wording-level effects but not framing-level effects of the base prompt. A fully external base-prompt-design exercise is out of scope here; we identify it as the strongest improvement for replication studies.
 - **Training-data contamination at DGP level.** The renewal equation is canonical in training data. Simulation with ground truth addresses *data* contamination but cannot address *structural* contamination. Adversarial DGPs that stress specific modelling decisions partially mitigate by separating "recalled machinery" from "correctly implemented machinery".
-- **Model coverage.** Two model families (Claude, Llama). Findings may not generalise.
-- **No independent replication.** We publish the full harness and invite replication with a pre-specified concordance criterion (e.g., primary recovery claim replicated if point estimates within 10pp and same qualitative ordering).
+- **Model coverage.** Two frontier model families (Anthropic, OpenAI) plus one small open-source model (Meta Llama 3.1 8B). Findings may not generalise to Gemini, Qwen, Mistral, DeepSeek, or other frontier families.
+- **No independent replication.** We publish the full harness and invite replication with a pre-specified concordance criterion (primary recovery claim replicated if point estimates within 10pp and same qualitative ordering of conditions).
 - **Simulation realism.** Real-data secondary check may reveal issues not captured in simulation.
+- **No temperature randomisation.** Claude Code CLI does not expose `temperature`. We do not include temperature as a randomisation axis in this study (see Randomisation → "Temperature is not a randomisation axis"). Within-cell variability across runs reflects only the model's intrinsic stochasticity at the API's default temperature.
+- **Detectors are heuristics, not graders.** Regex- and AST-based pattern detectors have known false negatives. For example, `flag_no_smoothing_term` does not match a custom multivariate-Normal prior with smoothing covariance even though that constitutes smoothing. Detectors are calibrated against expert review on the stratified subsample (Cohen's kappa) and reported as instruments for analysis, not ground truth.
+- **Composition test concentrates in scenario 3.** Scenarios 1a/1b/2 test whether a Bayesian PPL adds value over a default-package shortcut and whether estimator-side choices affect recovery. Composition under genuine no-shortcut conditions is most directly tested in scenario 3, where multi-stream estimation has no canonical package. Predictions 3 and 4 (scenarios 2–3) are the load-bearing composition claims.
 - **Rt-definition ambiguity.** Under any stochastic generator, "$R_t$" admits multiple legitimate definitions — the parameter, the realised ratio, and (in some models) a per-step random multiplier (Funk, Abbott & Bracher 2022). Recovery is scored against the parameter $R(d)$. Methods that target the realised ratio (e.g. Wallinga–Teunis) recover a noisier quantity that converges to the parameter at scale; observed disagreement with truth in their case partly reflects target choice rather than implementation error, and is flagged in the scenario 1a method-identification subsample.
 - **Single mechanism for overdispersion.** All overdispersion in the GT arises from infection-level offspring heterogeneity (Lloyd-Smith et al. 2005). Other plausible sources (random reporting effort, batched-report processing artefacts, day-of-day administrative noise) are not modelled. Estimators that absorb such effects via NegBin observation likelihoods may handle real data better than they handle our GT, where the same parameter is doing different mechanistic work.
+- **Ascertainment is purely temporal.** The GT models ascertainment as a deterministic time-varying multiplier; in real surveillance, *which* individuals get reported depends on severity, age, healthcare access, and other individual covariates. Estimators correctly modelling individual-level ascertainment heterogeneity would not be advantaged on this GT.
+- **Multi-stream observation noise is independent.** The three streams (cases, hospitalisations, deaths) share the same latent infection process but their observation noise is independent across streams. Real multi-stream surveillance has correlated observational error (a hospital-system disruption affects both hospitalisations and same-day reports). Multi-stream estimators that exploit cross-stream noise correlation would have nothing to gain on this GT.
+- **Scenarios 1a and 1b may be functionally equivalent.** 1a says "open method"; 1b says "use the renewal equation". Most submissions in 1a will use a method that internally implements the renewal equation (e.g. EpiNow2). The 1a/1b distinction is testing what the LLM verbalises about its method, not what it computes — relevant for method-identification analyses but possibly not for recovery.
 - **Reviewer blinding.** Package imports are strippable; structural features (multi-stream handling, Julia vs R syntax patterns) may leak condition information. Blinding failure rate is tested and reported.
 
 ## Pre-registration
