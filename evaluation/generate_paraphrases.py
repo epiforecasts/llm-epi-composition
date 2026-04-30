@@ -55,7 +55,7 @@ Paraphrased task description:"""
 # (provider, model) per slot
 SLOT_DEFAULTS: dict[int, tuple[str, str]] = {
     3: ("openai", "gpt-5"),
-    4: ("google", "gemini-2.5-pro"),
+    4: ("google", "gemini-2.5-flash"),     # 2.5 Pro has no free tier; Flash does
     5: ("anthropic", "claude-sonnet-4-5"),
 }
 
@@ -88,11 +88,13 @@ def call_openai(model: str, user_prompt: str) -> str:
     except ImportError:
         sys.exit("openai SDK not installed: pip install openai")
     client = openai.OpenAI()
+    # GPT-5 family uses `max_completion_tokens` and ignores arbitrary
+    # `temperature`; passing it triggers a 400. We pass neither and let the
+    # model use its defaults (which include reasoning).
     resp = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": user_prompt}],
-        temperature=PARAPHRASE_TEMPERATURE,
-        max_tokens=MAX_TOKENS,
+        max_completion_tokens=MAX_TOKENS,
     )
     return resp.choices[0].message.content.strip()
 
@@ -126,11 +128,27 @@ PROVIDERS = {
 # Driver
 # ---------------------------------------------------------------------------
 
-def paraphrase_one(provider: str, model: str, base_text: str) -> str:
+def paraphrase_one(provider: str, model: str, base_text: str,
+                   *, max_attempts: int = 5, base_delay: float = 5.0) -> str:
     if provider not in PROVIDERS:
         sys.exit(f"Unknown provider: {provider}. Choose from {sorted(PROVIDERS)}")
     user_prompt = PARAPHRASE_PROMPT.format(base_prompt=base_text)
-    return PROVIDERS[provider](model, user_prompt)
+    import time
+    last_err = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return PROVIDERS[provider](model, user_prompt)
+        except Exception as e:
+            last_err = e
+            msg = str(e)
+            transient = any(s in msg for s in ("503", "529", "UNAVAILABLE", "overloaded", "rate", "RATE_LIMIT"))
+            if not transient or attempt == max_attempts:
+                raise
+            delay = base_delay * (2 ** (attempt - 1))
+            print(f"  attempt {attempt}/{max_attempts} hit transient error ({type(e).__name__}); "
+                  f"retrying in {delay:.0f}s ...", flush=True)
+            time.sleep(delay)
+    raise last_err  # unreachable
 
 
 def main() -> None:

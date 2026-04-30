@@ -18,7 +18,7 @@ Phase 2 design committed; phase 1 artefacts removed. In place:
 
 Outstanding:
 
-- LLM-paraphrase wave: run `evaluation/generate_paraphrases.py` after `pip install anthropic openai google-genai` and setting `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`. Slot 03 → GPT-5, slot 04 → Gemini 2.5 Pro, slot 05 → Claude Sonnet 4.5. Slot 02 is the internal blinded human rewrite (separate task, edits files in place).
+- LLM-paraphrase wave: run `evaluation/generate_paraphrases.py` after `pip install anthropic openai google-genai` and setting `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`. Slot 03 → GPT-5, slot 04 → Gemini 2.5 Flash, slot 05 → Claude Sonnet 4.5. Slot 02 is the internal blinded human rewrite (separate task, edits files in place).
 - Temperature randomisation: Claude Code CLI does not expose `temperature`; the temperature axis of the randomisation requires invoking the Anthropic API directly. Currently absent from `evaluation/run_agentic.sh` and `evaluation/run_study.sh`; will need a separate API-mode runner before the temperature axis can be exercised.
 
 ## Project gotchas
