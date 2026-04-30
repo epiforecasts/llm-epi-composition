@@ -101,30 +101,13 @@ apply_method(epiproblem::EpiProblem, method::AbstractEpiMethod, data;
 - `samples`: The inference result (e.g. `MCMCChains.Chains`).
 - `generated`: Generated quantities — an iterable of `NamedTuple`s (indexed `[iteration, chain]` when from MCMC). Each element has fields `generated_y_t`, `I_t`, and `Z_t`.
 
-**Extracting results from `generated`:**
+**Layout of `generated`.** `generated` is an iterable of `NamedTuple` values, indexed `[iteration, chain]` when produced from MCMC. Each element has the fields:
 
-```julia
-result = apply_method(problem, method, (y_t = data,))
+- `generated_y_t`: the per-iteration observation vector predicted by the model.
+- `I_t`: the per-iteration latent infection trajectory (length = number of time steps).
+- `Z_t`: the per-iteration latent process driving the infection model.
 
-# Extract infection trajectories (Matrix: time_steps × n_samples)
-I_t_samples = mapreduce(hcat, result.generated) do gen
-    gen.I_t
-end
-
-# Extract latent process Z_t (Matrix: time_steps × n_samples)
-Z_t_samples = mapreduce(hcat, result.generated) do gen
-    gen.Z_t
-end
-
-# For Renewal models: Rt = transformation(Z_t), e.g. Rt = exp.(Z_t)
-Rt_samples = exp.(Z_t_samples)   # if transformation = exp
-
-# Compute posterior median and credible intervals
-using Statistics
-Rt_median = mapslices(median, Rt_samples, dims=2)
-Rt_lower = mapslices(x -> quantile(x, 0.025), Rt_samples, dims=2)
-Rt_upper = mapslices(x -> quantile(x, 0.975), Rt_samples, dims=2)
-```
+For `Renewal` infection models, `Z_t` is mapped to the per-time-step reproduction multiplier by the `transformation` argument passed to `EpiData` (see EpiInfModels). Posterior summaries (medians, credible intervals, etc.) are constructed by the user from these per-iteration arrays using standard tools in `Statistics` and `MCMCChains`.
 
 ### `generate_epiaware`
 
