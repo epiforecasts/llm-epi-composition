@@ -55,7 +55,7 @@ Paraphrased task description:"""
 # (provider, model) per slot
 SLOT_DEFAULTS: dict[int, tuple[str, str]] = {
     3: ("openai", "gpt-5"),
-    4: ("google", "gemini-2.5-flash"),     # 2.5 Pro has no free tier; Flash does
+    4: ("google", "gemini-2.5-flash"),      # 2.5 Pro has no free tier; Flash does
     5: ("anthropic", "claude-sonnet-4-5"),
 }
 
@@ -117,10 +117,30 @@ def call_google(model: str, user_prompt: str) -> str:
     return resp.text.strip()
 
 
+def call_xai(model: str, user_prompt: str) -> str:
+    """xAI's Grok models via OpenAI-compatible endpoint."""
+    try:
+        import openai
+    except ImportError:
+        sys.exit("openai SDK not installed (required for xAI compat): pip install openai")
+    api_key = os.environ.get("XAI_API_KEY")
+    if not api_key:
+        sys.exit("XAI_API_KEY not set")
+    client = openai.OpenAI(api_key=api_key, base_url="https://api.x.ai/v1")
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": user_prompt}],
+        temperature=PARAPHRASE_TEMPERATURE,
+        max_tokens=MAX_TOKENS,
+    )
+    return resp.choices[0].message.content.strip()
+
+
 PROVIDERS = {
     "anthropic": call_anthropic,
     "openai":    call_openai,
     "google":    call_google,
+    "xai":       call_xai,
 }
 
 
