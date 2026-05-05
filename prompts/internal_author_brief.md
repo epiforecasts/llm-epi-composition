@@ -1,8 +1,10 @@
-# Brief for the second internal author
+# Brief for the slot-02 paraphraser and MWK reviewer
 
 Two tasks before the project can be pre-registered. Allow ~90 minutes of focused work (12 paraphrases at 5–8 min each, plus ~15 min for the API-docs check).
 
-You have read the analysis plan and have access to the predictions document — you are not blinded to the hypotheses. That's fine; the tasks below do not require blinding. Where the plan claimed blinding (e.g. "internal blinded rewrite"), it has been edited to drop the claim and acknowledge the actual constraint.
+**Who you are.** You are a human reader who is *not* the original prompt-drafter and *not* an LLM. You may have full access to the analysis plan; hypothesis blinding is not required. Eligible: any second project member, any colleague, any PhD or MSc student under the authors' supervision, or any literate technical reader recruited for the task. The slot-02 paraphrase is the only piece of the study's prompt set that is human-written prose (slots 01, 03–05 are all LLM-generated), so the task's methodological function is to introduce non-LLM-register wording into the paraphrase set.
+
+You will be acknowledged in the paper.
 
 ---
 
