@@ -333,7 +333,7 @@ Classification is cross-referenced with recovery: a "C" classification with good
 For each (scenario, condition), k=5 paraphrases.
 
 - **Slot 01 — Original.** The base prompt as drafted by the project authors with LLM coding-assistant support (the assistant produced the initial draft of each prompt's prose; the project authors reviewed, edited, and accepted). The prose register is therefore LLM-coded.
-- **Slot 02 — Manual human rewrite by a project member.** Manual rewrite by a project member who is *not* the original prompt-drafter and who commented on but did not draft the analysis plan. Not hypothesis-blinded — the paraphraser has read the plan and predictions. Methodological role: introduce non-LLM-register prose into the paraphrase set, decorrelate wording from the original drafter's house style. Brief at `prompts/slot02_brief.md`. Acknowledged in the paper.
+- **Slot 02 — Manual human rewrite by a project member.** Manual rewrite by a project member who is *not* the original prompt-drafter and who commented on but did not draft the analysis plan. Not hypothesis-blinded — the paraphraser has read the plan and predictions. Methodological role: introduce non-LLM-register prose into the paraphrase set, decorrelate wording from the original drafter's house style. Brief at `prompts/slot02_brief.md`. The paraphraser is acknowledged in the paper.
 - **Slot 03 — OpenAI** (GPT-5).
 - **Slot 04 — Google** (Gemini 2.5 Flash).
 - **Slot 05 — Anthropic** (Claude Sonnet 4.5; same family as the primary evaluator, included as a within-family sanity check).

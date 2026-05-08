@@ -18,7 +18,8 @@ Phase 2 design committed; phase 1 artefacts removed. In place:
 
 Outstanding:
 
-- LLM-paraphrase wave: run `evaluation/generate_paraphrases.py` after `pip install anthropic openai google-genai` and setting `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`. Slot 03 → GPT-5, slot 04 → Gemini 2.5 Flash, slot 05 → Claude Sonnet 4.5. Slot 02 is the human-written paraphrase wave by a project member; brief at `prompts/slot02_brief.md`. Slots 03/04/05 currently stale (generated from the old "uncertainty optional" wording); regenerate after the uncertainty-wording rewrite landed.
+- LLM-paraphrase wave: run `evaluation/generate_paraphrases.py` after `pip install anthropic openai google-genai` and setting `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`. Slot 03 → GPT-5, slot 04 → Gemini 2.5 Flash, slot 05 → Claude Sonnet 4.5. Slot 02 is the human-written paraphrase wave by a project member; brief at `prompts/slot02_brief.md`.
+- **Paraphrase state**: only `scenario_1a/no-spec/{03,04,05}.md` have been regenerated against the current base prompts (the ones with explicit uncertainty-scoring language). The other 11 cells × 3 LLM slots = 33 files are stale and still match the older "optional but encouraged" wording. Re-run the paraphrase generator once API keys are restored to bring them back in sync.
 - Temperature randomisation: Claude Code CLI does not expose `temperature`; the temperature axis of the randomisation requires invoking the Anthropic API directly. Currently absent from `evaluation/run_agentic.sh` and `evaluation/run_study.sh`; will need a separate API-mode runner before the temperature axis can be exercised.
 
 ## Project gotchas

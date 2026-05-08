@@ -1,6 +1,6 @@
 # Brief for the slot-02 paraphraser
 
-Hi the paraphraser — short methodological task. ~90 minutes.
+Short methodological task. ~90 minutes of focused work.
 
 ## Why
 
