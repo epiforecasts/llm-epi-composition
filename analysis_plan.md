@@ -41,7 +41,7 @@ Three conditions on a composition gradient:
 | **julia** | "Use Julia" | Turing.jl API reference | Partially (no EpiEstim/EpiNow2 equivalent) |
 | **epiaware** | "Use EpiAware.jl" | EpiAware API reference (~900 lines) | Yes (DSL primitives) |
 
-**Rationale.** The original R/Python/Julia axis confounded language with ecosystem maturity because EpiEstim/EpiNow2/PyMC are well represented in training data while Julia has no equivalent. The revised axis tests composition directly: default path → composition-forced (no package shortcut) → composition-scaffolded (DSL primitives).
+The original R/Python/Julia axis confounded language with ecosystem maturity, because EpiEstim/EpiNow2/PyMC are well represented in training data while Julia has no equivalent. The revised axis tests composition directly: default path → composition-forced (no package shortcut) → composition-scaffolded (DSL primitives).
 
 #### Minimum working knowledge (MWK) principle
 
@@ -58,7 +58,7 @@ Applied per condition:
 - **julia**: Turing.jl is in training but thin enough to hallucinate; a Turing.jl API reference is bundled. Nothing Rt-specific.
 - **epiaware**: EpiAware is not well-represented in training; the EpiAware API reference is bundled. The current `prompts/epiaware_api_docs.md` is used after checking it complies with the operational rule above (strip any end-to-end Rt examples if present).
 
-**Hallucination rate is recorded as a secondary outcome** (see Evaluation). If hallucination persists in the epiaware condition despite the bundled reference, that is itself a finding about how LLMs use in-context API docs.
+Hallucination rate is recorded as a secondary outcome (see Evaluation). If hallucination persists in the epiaware condition despite the bundled reference, that is itself a finding about how LLMs use in-context API docs.
 
 ### Observation, not arm
 
@@ -110,9 +110,9 @@ $$C_t \sim \mathrm{Poisson}(\mathbb{E}[C_t])$$
 
 where $I_d$ is the realised count of branching-process infections born in day $d$ (the count is integer-valued by construction). The delay PMF $f_e$ is daily-discretised by double interval censoring of the continuous delay distribution. The recovery target is $R_t$ — the parameter $R(d)$ of the branching process, definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
 
-**Sources of overdispersion.** Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The DGP captures this through individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. The population-level marginal $I_t \mid I_{<t}$ under this branching process is a compound (non-NegBin) distribution — a sum of NegBins with shared shape parameter but cohort-dependent means. NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) fit a NegBinL approximation to this marginal; the approximation is good but not exact. Observations are Poisson — consistent with binomial-thinning of branching-process infections plus measurement noise — without an additional free observation-level dispersion knob.
+Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The DGP captures this through individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. The population-level marginal $I_t \mid I_{<t}$ under this branching process is a compound (non-NegBin) distribution — a sum of NegBins with shared shape parameter but cohort-dependent means. NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) fit a NegBinL approximation to this marginal; the approximation is good but not exact. Observations are Poisson — consistent with binomial-thinning of branching-process infections plus measurement noise — without an additional free observation-level dispersion knob.
 
-**GT-vs-estimator structural mismatch.** All standard population-level renewal estimators (Poisson or NegBin) fit a moment-closed marginal to the data, while the GT is the realised individual-level branching process. The mismatch is fundamental: the exact population marginal of a Lloyd-Smith BP is non-NegBin, so even a correctly-specified NegBin renewal estimator is mildly misspecified relative to truth. This mismatch is a fixed mathematical property that applies equally to all submissions, so it does not bias relative comparisons across conditions, scenarios, or LLMs. The pre-registered predictions are framed as relative comparisons.
+All standard population-level renewal estimators (Poisson or NegBin) fit a moment-closed marginal to the data, while the GT is the realised individual-level branching process. The mismatch is fundamental: the exact population marginal of a Lloyd-Smith BP is non-NegBin, so even a correctly-specified NegBin renewal estimator is mildly misspecified relative to truth. This mismatch is a fixed mathematical property that applies equally to all submissions, so it does not bias relative comparisons across conditions, scenarios, or LLMs. The pre-registered predictions are framed as relative comparisons.
 
 **Parameters (canonical):**
 - $T = 150$ days, nominal start date 2023-01-01
@@ -136,7 +136,7 @@ Shared $R_t$ and shared latent $I_t$; each stream has its own delay distribution
 
 Ascertainment trajectories are phase-shifted or use a different period across streams so that the three series carry partially independent ascertainment signals rather than a single sinusoidal structure scaled three ways. Values are plausible for a moderately severe respiratory pathogen; the DGP is not labelled as a specific disease. Per-stream observations share the same Poisson measurement model and inherit infection-level overdispersion through $k$.
 
-**Disease labelling.** The simulation is not labelled as COVID-19 or any other specific disease. Data files, prompts, and metadata describe "an infectious disease outbreak" with no country or pathogen named. This prevents the LLM from leaning on disease-specific priors or memorised parameter values from training data.
+The simulation is not labelled as COVID-19 or any other specific disease. Data files, prompts, and metadata describe "an infectious disease outbreak" with no country or pathogen named. This prevents the LLM from leaning on disease-specific priors or memorised parameter values from training data.
 
 #### Definition of $R_t$
 
@@ -146,7 +146,7 @@ In a stochastic data-generating process, "$R_t$" admits multiple legitimate defi
 (b) a per-step random multiplier (does not arise in the model used here, which has no random R per time step);
 (c) the parameter $R(d)$ — the deterministic function plugged into the renewal equation as the rate's multiplier.
 
-**The recovery target is (c) — the parameter $R(d)$.** This is the quantity targeted by EpiEstim, EpiNow2, and renewal-equation Bayesian methods (the dominant approaches in the literature and the predicted default for LLM submissions). Methods that target (a) — notably Wallinga–Teunis — recover a noisy version of $R(d)$ that converges to (c) at large counts but disagrees at finite counts; this disagreement does not reflect implementation error and is flagged in expert review on the scenario 1a method-identification subsample.
+The recovery target is (c) — the parameter $R(d)$. This is the quantity targeted by EpiEstim, EpiNow2, and renewal-equation Bayesian methods (the dominant approaches in the literature and the predicted default for LLM submissions). Methods that target (a), notably Wallinga–Teunis, recover a noisy version of $R(d)$ that converges to (c) at large counts but disagrees at finite counts. The disagreement reflects target choice rather than implementation error, and is flagged in expert review on the scenario 1a method-identification subsample.
 
 #### Generation procedure
 
@@ -172,7 +172,7 @@ For scenarios 1a/1b/2, only `cases.csv` is copied into the agent sandbox; scenar
 - Dates are synthetic; no calendar features beyond day-of-week.
 - Discretisation enters only at the observation step (delay PMF) via double interval censoring. The infection-process GI is continuous (per-individual draws).
 
-**Sanity check before running any LLM condition.** The reference EpiAware implementations are applied to the canonical DGP across all 20 replicates and must satisfy:
+Before running any LLM condition, the reference EpiAware implementations are applied to the canonical DGP across all 20 replicates and must satisfy:
 
 - Median Rt RMSE on the evaluation window (days 25–125) < 0.10.
 - Median 90% coverage on the same window ≥ 0.80 (i.e. not under-covering by more than 10pp).
@@ -201,15 +201,15 @@ Each variant differs from the canonical DGP in exactly one parameter:
 | Abrupt change | $R_t$ drops 1.5 → 0.5 over 3 days around day 75 | Smoothness prior | Over-smoothed estimators lag the drop |
 | Sinusoidal Rt | $R(t) = 1.0 + 0.4\sin(2\pi t / 60)$ — three full cycles across 150 days | Smoothness prior choice | Estimators with priors that prefer piecewise-linear (or that over-smooth) recover Rt only in a low-pass-filtered form |
 
-**Rationale for DGP selection.** Each variant stresses one of the components that appears in the canonical DGP and in the reference specification (GI, delay, observation model with DoW, ascertainment, dispersion / likelihood, smoothness prior). The adversarial DGPs are therefore not hand-picked to match failures we expect to find; they enumerate the modelling decisions that a correctly-specified renewal-equation model must handle. Any component *not* adversarially stressed would be a gap in the evaluation.
+Each variant stresses one component that appears in the canonical DGP and in the reference specification (GI, delay, observation model with DoW, ascertainment, dispersion / likelihood, smoothness prior). The variants enumerate the modelling decisions that a correctly-specified renewal-equation model must handle; they are not hand-picked to match failures we expect to find. Any component without adversarial stress would be a gap in the evaluation.
 
 The low-dispersion (Poisson-like) variant is included deliberately as a null condition: Poisson submissions should perform comparably to NegBin submissions here, but diverge specifically on `extreme_dispersion`. This controls for the possibility that "bad" submissions just fail everywhere (making the adversarial panel uninformative) versus failing in component-specific ways (making it diagnostic).
 
-**Short-GI caveat.** The short-GI perturbation changes both discretisation sensitivity (the intended stress) and epidemic dynamics (shorter GI → sharper rise and peak under the same $R_t$). The two effects cannot be fully separated within a single variant without departing from the "perturb one parameter" principle. Recovery on short_gi is therefore interpreted as a combined stress on discretisation handling and estimator robustness to faster dynamics; this is noted when reporting the adversarial-panel results.
+The short-GI perturbation changes both discretisation sensitivity (the intended stress) and epidemic dynamics (shorter GI gives a sharper rise and peak under the same $R_t$). The two effects cannot be cleanly separated within a single variant without departing from the "perturb one parameter" principle. Recovery on short_gi is therefore interpreted as a combined stress on discretisation handling and estimator robustness to faster dynamics. We note this when reporting the adversarial-panel results.
 
-**Mechanism of dispersion variants.** The `low_dispersion` and `extreme_dispersion` adversarial variants perturb the offspring dispersion $k$ (Lloyd-Smith parameter) at the infection level — varying the population-level NegBin mass-shape implied by individual-level offspring heterogeneity. Estimators that model NegBin observations (e.g. EpiNow2's `cluster_factor`) absorb this overdispersion through their observation likelihood; estimators that assume Poisson observations (e.g. EpiEstim) will show undercoverage on `extreme_dispersion`. The `extreme_dispersion` $k = 0.1$ value is *beyond* the range observed in nature; it is a deliberate stress test, not a realistic-pathogen scenario (Lloyd-Smith reported $k \approx 0.16$ for SARS).
+The `low_dispersion` and `extreme_dispersion` adversarial variants perturb the offspring dispersion $k$ (Lloyd-Smith parameter) at the infection level, varying the population-level NegBin mass-shape implied by individual-level offspring heterogeneity. Estimators that model NegBin observations (e.g. EpiNow2's `cluster_factor`) absorb this overdispersion through their observation likelihood. Estimators that assume Poisson observations (e.g. EpiEstim) will show undercoverage on `extreme_dispersion`. The `extreme_dispersion` $k = 0.1$ value is *beyond* the range observed in nature; it is a deliberate stress test rather than a realistic-pathogen scenario (Lloyd-Smith reported $k \approx 0.16$ for SARS).
 
-**Why simulation-based evaluation addresses contamination.** The DGP is canonical (LLMs have seen renewal-equation structure in training data) but the specific data does not match any training example. Grading on recovery against truth detects cases where the model recalls textbook machinery but implements it with missing components, because missing components cause bias in scenario-specific ways.
+Simulation-based evaluation addresses contamination because the DGP is canonical (LLMs have seen renewal-equation structure in training data) but the specific data does not match any training example. Grading on recovery against truth detects cases where the model recalls textbook machinery but implements it with missing components, because missing components cause bias in scenario-specific ways.
 
 #### Isolation of simulation parameters from agent runs
 
@@ -315,7 +315,7 @@ Expert review is reserved for:
 2. **Semantic departures** across all submissions: `si_not_gi`, `confused_rt_r`, `wrong_likelihood` (beyond Poisson/NegBin).
 3. **Scenario 1a method identification** — judgment call: renewal equation / Wallinga-Teunis / Bettencourt-Ribeiro / naive ratio / other.
 
-**No LLM assistance in expert review.** The framing sensitivity of LLMs (including when used as judges) undermines the objectivity the expert review is supposed to provide.
+Expert review uses no LLM assistance, since the framing sensitivity of LLMs (including when used as judges) undermines the objectivity expert review is supposed to provide.
 
 #### Departure classification (for the subsample and semantic departures)
 
@@ -344,7 +344,7 @@ Five paraphrases × 4 scenarios × 3 conditions = 60 prompt variants.
 
 The choice of three LLM frontier families (OpenAI, Google, Anthropic) is not exhaustive: Mistral, Qwen, DeepSeek, xAI, Cohere, and others are omitted on cost grounds. We document the choice as a limitation.
 
-**API docs MWK validation.** Before pre-registration is finalised, the bundled API docs (`prompts/turing_api_docs.md`, `prompts/epiaware_api_docs.md`) are checked for any content that constitutes a worked Rt example or otherwise violates the MWK operational rule. This is done by two LLM instances (different families, no study context) reading each section of both files against the rule and flagging any violating content. The LLM check is implemented in `evaluation/validate_api_docs.py` and the resulting report is committed at `prompts/mwk_validation_report.md`. Any flagged content is edited out and the validation re-run before pre-registration.
+Before pre-registration is finalised, the bundled API docs (`prompts/turing_api_docs.md`, `prompts/epiaware_api_docs.md`) are checked for any content that constitutes a worked Rt example or otherwise violates the MWK operational rule. This is done by two LLM instances (different families, no study context) reading each section of both files against the rule and flagging any violating content. The LLM check is implemented in `evaluation/validate_api_docs.py` and the resulting report is committed at `prompts/mwk_validation_report.md`. Any flagged content is edited out and the validation re-run before pre-registration.
 
 ### Runs
 
@@ -401,7 +401,7 @@ Standardised prompts per (scenario, condition) contain:
 - For `julia`: Turing.jl API reference in working directory
 - For `epiaware`: EpiAware API reference in working directory (conforming to the MWK operational rule — no end-to-end Rt examples)
 
-**Information provided vs estimated.** To isolate composition from parameter-guessing, prompts give the LLM values that would realistically come from external epidemiological studies, and require the LLM to estimate everything else.
+To isolate composition from parameter-guessing, prompts give the LLM values that would realistically come from external epidemiological studies, and require the LLM to estimate everything else.
 
 Provided in the prompt (as fixed, known distributions from an external study; LLMs are not expected to propagate uncertainty on these):
 - Generation interval: family, mean, SD (e.g. "Gamma, mean 5.5 days, SD 2 days, from external study")
@@ -416,7 +416,7 @@ Estimated by the LLM:
 
 Prompts do not provide true parameter values for quantities the LLM is expected to estimate, and do not disclose the simulation DGP.
 
-**Phase 1 prompts are obsolete.** The existing prompts in `prompts/scenario_*/` describe UK COVID-19 case counts with no parameters given; they will be rewritten for the simulation phase to match the specification above.
+Phase 1 prompts are obsolete: the existing prompts in `prompts/scenario_*/` describe UK COVID-19 case counts with no parameters given. They will be rewritten for the simulation phase to match the specification above.
 
 ### Execution: agentic approach
 
