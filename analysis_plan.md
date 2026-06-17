@@ -68,13 +68,14 @@ Within **no-spec**, record language and package selection. If (as predicted) mos
 
 | Model | Type | Rationale |
 |---|---|---|
-| Claude Sonnet 4.6 (Anthropic) | Commercial frontier | Current Anthropic frontier-class capability |
-| GPT-5 (OpenAI) | Commercial frontier | Frontier-class comparison from a different model family; supports the cross-family generalisation claim |
+| Claude Sonnet 4.6 (Anthropic) | Commercial frontier (mid-tier) | Default frontier-class deployment for most coding-agent applications |
+| Claude Opus 4.7 (Anthropic) | Commercial frontier (top-tier) | Higher-capability comparison within the same family; tests whether scale and reasoning depth change composition behaviour |
+| GPT-5 (OpenAI) | Commercial frontier | Cross-family comparison from a different model family; supports any cross-family generalisation claim |
 | Llama 3.1 8B (Meta) | Open-source, small | Tertiary; included to demonstrate local inference on consumer hardware (LMIC accessibility) and to bound expected performance at the low end of the model-scale range |
 
-Two frontier-class models from different families (Anthropic, OpenAI) form the primary basis for cross-family generalisation of any conclusion. Llama 3.1 8B is run with reduced sample size (see Sample size and crossing → Llama) and is reported as a tertiary comparison only; conclusions that hold only on Llama and not on the frontier pair are reported but not generalised.
+Three frontier-class models across two families (Anthropic Sonnet + Opus, OpenAI GPT-5) form the primary basis for cross-family generalisation and within-family capability comparison. Llama 3.1 8B is run with reduced sample size (see Sample size and crossing, Llama) and is reported as a tertiary comparison; conclusions that hold only on Llama and not on the frontier set are reported but not generalised.
 
-Findings may not generalise to other model families (Gemini, Qwen, Mistral, DeepSeek, ...). This is a documented limitation.
+Findings may not generalise to other model families (Gemini, Qwen, Mistral, DeepSeek). This is a documented limitation.
 
 ### Scenarios
 
@@ -374,7 +375,7 @@ These dimensions are crossed multiplicatively unless stated otherwise:
 - Total per (scenario, condition): 9 × 3 × 5 = 135 runs.
 - Total per model: 12 × 135 = 1620 runs.
 
-**Across two models (Sonnet 4.6 + a second frontier model):** ~6800 runs total.
+**Across three frontier models (Sonnet 4.6, Opus 4.7, GPT-5):** ~10,200 runs total. Cost estimate at current API rates: ~$1700 for Sonnet, ~$8500 for Opus, ~$5000 for GPT-5; total ≈ $15k for the frontier set.
 
 The primary and adversarial analyses are independent: the runs do not overlap. Running them sequentially, the harness cost is bounded.
 
