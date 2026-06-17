@@ -169,14 +169,58 @@ claude --print \
     "$(cat prompt.md)" \
     > conversation.jsonl 2> error.log || true
 
+# Retry loop: if the agent ended its response before writing outputs/rt_estimates.csv,
+# resume the same session and prompt it to complete the run. Caps at MAX_RETRIES.
+MAX_RETRIES=${MAX_RETRIES:-3}
+retry_count=0
+CONTINUATION_PROMPT="The file outputs/rt_estimates.csv does not exist or is empty. The run is not complete. Continue the analysis: if an inference script is still running, wait for it to finish (set a long Bash timeout, e.g. 600000ms, and keep polling if the call has been moved to the background); if it failed or was never launched to completion, fix and re-run it. Only end your response once outputs/rt_estimates.csv exists on disk and contains the required columns."
+
+while [ ! -s "outputs/rt_estimates.csv" ] && [ "$retry_count" -lt "$MAX_RETRIES" ]; do
+    retry_count=$((retry_count + 1))
+    SESSION_ID=$(python3 -c "
+import json, sys
+for fname in ['conversation.jsonl'] + [f'conversation_retry_{i}.jsonl' for i in range(1, $retry_count)]:
+    try:
+        with open(fname) as f:
+            for line in f:
+                m = json.loads(line)
+                if 'session_id' in m and m['session_id']:
+                    print(m['session_id'])
+                    sys.exit(0)
+    except FileNotFoundError:
+        pass
+" 2>/dev/null)
+    if [ -z "$SESSION_ID" ]; then
+        echo "Retry $retry_count: could not extract session_id; aborting retries"
+        break
+    fi
+    echo "Retry $retry_count: outputs/rt_estimates.csv missing; resuming session $SESSION_ID"
+    claude --print \
+        --dangerously-skip-permissions \
+        --resume "$SESSION_ID" \
+        --model "$MODEL" \
+        --max-turns 100 \
+        --verbose \
+        --output-format stream-json \
+        "$CONTINUATION_PROMPT" \
+        > "conversation_retry_${retry_count}.jsonl" 2>> error.log || true
+done
+
 END_TIME=$(date -Iseconds)
 echo "End time: $END_TIME"
+if [ -s "outputs/rt_estimates.csv" ]; then
+    echo "Output file present (retries used: $retry_count)"
+else
+    echo "WARNING: outputs/rt_estimates.csv still missing or empty after $retry_count retries"
+fi
 
 python3 -c "
 import json
 with open('metadata.json', 'r') as f:
     meta = json.load(f)
 meta['end_time'] = '$END_TIME'
+meta['retry_count'] = $retry_count
+meta['output_present'] = $([ -s outputs/rt_estimates.csv ] && echo True || echo False)
 with open('metadata.json', 'w') as f:
     json.dump(meta, f, indent=2)
 "
