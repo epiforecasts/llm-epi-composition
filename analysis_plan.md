@@ -2,7 +2,7 @@
 
 ## Research Question
 
-**When task-specific packages are available (EpiEstim, EpiNow2, PyMC), LLMs retrieve rather than compose. When they are not available, can LLMs still produce correct models — and does providing validated primitives via a composable DSL help?**
+**When task-specific packages are available (EpiEstim, EpiNow2, PyMC), LLMs retrieve rather than compose. When they are not available, can LLMs still produce correct models, and does providing validated primitives via a composable DSL help?**
 
 Secondary questions:
 - How do LLMs default to solving Rt estimation when unconstrained by language or framework?
@@ -12,7 +12,7 @@ Secondary questions:
 
 This study was designed and run in two phases:
 
-1. **Phase 1 (2024-12 to 2025):** Original design under the plan as committed on 2024-12-07 (see git history). Conditions were R / Python / Julia / EpiAware. Some scenario 1a runs were executed; scenario 1b, 2, and 3 runs were not completed. The phase was abandoned before the pre-specified analysis was carried out — no results from phase 1 are used in the confirmatory analysis below.
+1. **Phase 1 (2024-12 to 2025):** Original design under the plan as committed on 2024-12-07 (see git history). Conditions were R / Python / Julia / EpiAware. Some scenario 1a runs were executed; scenario 1b, 2, and 3 runs were not completed. The phase was abandoned before the pre-specified analysis was carried out, and no results from phase 1 are used in the confirmatory analysis below.
 2. **Phase 2 (2026-04 onwards):** Design revised in response to methodological concerns raised by Omar et al. (*Nat Med* 2026) and observations during phase 1 (notably that "from-scratch" code generation collapses to task-specific packages when they exist). Phase 2 uses simulation with ground truth (new data, not previously queried) as the primary evaluation, plus additional methodological controls. The revised plan is time-stamped by commit to the public repository before any model is queried under it.
 
 Phase 1 artefacts have been removed from the working tree. The original analysis plan, phase 1 prompts, and tracked expert-review scaffolding are preserved in git history and can be reconstructed from earlier commits. Phase 1 run outputs (agent conversation logs, generated code, in-progress expert-review drafts) were gitignored and have not been retained.
@@ -108,9 +108,9 @@ Marginally $Z_i \sim \mathrm{NegBin}(R(t_i), k)$. As $k \to \infty$, individual 
 $$\mathbb{E}[C_t] = \alpha_t \cdot w_{\mathrm{dow}(t)} \cdot \sum_{e=0}^{E} f_e \cdot I_{t-e}$$
 $$C_t \sim \mathrm{Poisson}(\mathbb{E}[C_t])$$
 
-where $I_d$ is the realised count of branching-process infections born in day $d$ (the count is integer-valued by construction). The delay PMF $f_e$ is daily-discretised by double interval censoring of the continuous delay distribution. The recovery target is $R_t$ — the parameter $R(d)$ of the branching process, definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
+where $I_d$ is the realised count of branching-process infections born in day $d$ (the count is integer-valued by construction). The delay PMF $f_e$ is daily-discretised by double interval censoring of the continuous delay distribution. The recovery target is $R_t$, the parameter $R(d)$ of the branching process: definition (c) in Funk, Abbott & Bracher (2022, *J R Stat Soc A*). See "Definition of $R_t$" below.
 
-Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The DGP captures this through individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. The population-level marginal $I_t \mid I_{<t}$ under this branching process is a compound (non-NegBin) distribution — a sum of NegBins with shared shape parameter but cohort-dependent means. NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) fit a NegBinL approximation to this marginal; the approximation is good but not exact. Observations are Poisson — consistent with binomial-thinning of branching-process infections plus measurement noise — without an additional free observation-level dispersion knob.
+Real epidemic case counts are overdispersed relative to a homogeneous Poisson model. The DGP captures this through individual-level offspring heterogeneity (Lloyd-Smith et al. 2005): different infectious individuals produce widely different numbers of secondary cases. The population-level marginal $I_t \mid I_{<t}$ under this branching process is a compound (non-NegBin) distribution: a sum of NegBins with shared shape parameter but cohort-dependent means. NegBin renewal estimators (e.g. EpiNow2 with `cluster_factor`) fit a NegBinL approximation to this marginal; the approximation is good but not exact. Observations are Poisson (consistent with binomial-thinning of branching-process infections plus measurement noise), without an additional free observation-level dispersion knob.
 
 All standard population-level renewal estimators (Poisson or NegBin) fit a moment-closed marginal to the data, while the GT is the realised individual-level branching process. The mismatch is fundamental: the exact population marginal of a Lloyd-Smith BP is non-NegBin, so even a correctly-specified NegBin renewal estimator is mildly misspecified relative to truth. This mismatch is a fixed mathematical property that applies equally to all submissions, so it does not bias relative comparisons across conditions, scenarios, or LLMs. The pre-registered predictions are framed as relative comparisons.
 
@@ -142,11 +142,11 @@ The simulation is not labelled as COVID-19 or any other specific disease. Data f
 
 In a stochastic data-generating process, "$R_t$" admits multiple legitimate definitions (Funk, Abbott & Bracher 2022). For a daily Poisson renewal model these include:
 
-(a) the realised ratio $I_t / \Lambda_t$ where $\Lambda_t = \sum_s g_s I_{t-s}$ — a noisy quantity that fluctuates around the rate due to Poisson sampling;
+(a) the realised ratio $I_t / \Lambda_t$ where $\Lambda_t = \sum_s g_s I_{t-s}$, a noisy quantity that fluctuates around the rate due to Poisson sampling;
 (b) a per-step random multiplier (does not arise in the model used here, which has no random R per time step);
-(c) the parameter $R(d)$ — the deterministic function plugged into the renewal equation as the rate's multiplier.
+(c) the parameter $R(d)$, the deterministic function plugged into the renewal equation as the rate's multiplier.
 
-The recovery target is (c) — the parameter $R(d)$. This is the quantity targeted by EpiEstim, EpiNow2, and renewal-equation Bayesian methods (the dominant approaches in the literature and the predicted default for LLM submissions). Methods that target (a), notably Wallinga–Teunis, recover a noisy version of $R(d)$ that converges to (c) at large counts but disagrees at finite counts. The disagreement reflects target choice rather than implementation error, and is flagged in expert review on the scenario 1a method-identification subsample.
+The recovery target is (c), the parameter $R(d)$. This is the quantity targeted by EpiEstim, EpiNow2, and renewal-equation Bayesian methods, the dominant approaches in the literature and the predicted default for LLM submissions. Methods that target (a), notably Wallinga–Teunis, recover a noisy version of $R(d)$ that converges to (c) at large counts but disagrees at finite counts. The disagreement reflects target choice rather than implementation error, and is flagged in expert review on the scenario 1a method-identification subsample.
 
 #### Generation procedure
 
@@ -254,7 +254,7 @@ Prompts do not specify an inference approach. Bayesian MCMC, variational inferen
 
 ### Reference Implementations
 
-Reference implementations serve as a sanity check on the adversarial DGPs (they should recover truth) and as a benchmark for visualisation. They are **not** used as a grading target — grading is on recovery against simulation truth.
+Reference implementations serve as a sanity check on the adversarial DGPs (they should recover truth) and as a benchmark for visualisation. They are not used as a grading target; grading is on recovery against simulation truth.
 
 | Scenario | Reference implementation |
 |---|---|
@@ -272,7 +272,7 @@ An EpiNow2 run is also provided on the same data for scenarios 1a, 1b, 2 (EpiNow
 - **90% coverage** of credible/confidence intervals over the same window.
 - **Calibration** of uncertainty (width of interval vs error magnitude) over the same window.
 
-The evaluation window excludes the first 24 days (where the lookback into the seed window dominates and any reasonable estimator has insufficient information) and the last 25 days (where the longest reporting delay — 20 days for deaths, plus the truncation buffer — means the latest observed cases reflect infections from outside the simulation horizon). $T = 150$ days; window = days 25–125 inclusive (101 day points).
+The evaluation window excludes the first 24 days (where the lookback into the seed window dominates and any reasonable estimator has insufficient information) and the last 25 days (where the longest reporting delay, 20 days for deaths plus the truncation buffer, means the latest observed cases reflect infections from outside the simulation horizon). $T = 150$ days; window = days 25–125 inclusive (101 day points).
 
 Each metric computed per submission per DGP variant. Primary result is the distribution of RMSE and coverage within each (scenario × condition) cell, across paraphrases × replicates × runs (canonical-DGP only for primary; full variant panel for adversarial fingerprint).
 
@@ -288,7 +288,7 @@ Reported per condition. If hallucination rate is materially higher in `epiaware`
 
 ### Diagnostic: Automated structural-pattern detectors
 
-Static-analysis detectors that **flag mechanically detectable structural patterns** in submitted code and outputs. Each flag identifies a pattern, not a "correctness departure" — the appropriate model for any given task is a judgment call that depends on the data-generating mechanism. Detectors are developed on a training subsample and calibrated against expert review (Cohen's kappa). They are diagnostic instruments for analysis, not graders. Implemented in `evaluation/detectors.py`.
+Static-analysis detectors flag mechanically detectable structural patterns in submitted code and outputs. Each flag identifies a pattern, not a "correctness departure"; the appropriate model for any given task is a judgment call that depends on the data-generating mechanism. Detectors are developed on a training subsample and calibrated against expert review (Cohen's kappa). They are diagnostic instruments for analysis, not graders. Implemented in `evaluation/detectors.py`.
 
 | Detector flag | Pattern detected | Approach | Feasibility |
 |---|---|---|---|
@@ -311,18 +311,18 @@ Dropped from the taxonomy given the revised design (GI and delay are provided as
 
 Expert review is reserved for:
 
-1. **Stratified subsample** (~20% of submissions, balanced across scenarios × conditions) — inter-rater reliability and calibration of automated detectors against human judgment.
+1. **Stratified subsample** (~20% of submissions, balanced across scenarios × conditions): used for inter-rater reliability and calibration of automated detectors against human judgment.
 2. **Semantic departures** across all submissions: `si_not_gi`, `confused_rt_r`, `wrong_likelihood` (beyond Poisson/NegBin).
-3. **Scenario 1a method identification** — judgment call: renewal equation / Wallinga-Teunis / Bettencourt-Ribeiro / naive ratio / other.
+3. **Scenario 1a method identification**: a judgment call between renewal equation, Wallinga-Teunis, Bettencourt-Ribeiro, naive ratio, or other.
 
 Expert review uses no LLM assistance, since the framing sensitivity of LLMs (including when used as judges) undermines the objectivity expert review is supposed to provide.
 
 #### Departure classification (for the subsample and semantic departures)
 
-- **A** Equivalent alternative — different but equally valid
-- **B** Minor error — unlikely to substantially affect results
-- **C** Major error — would bias results
-- **D** Fundamental misunderstanding — lack of grasp of underlying epi/stats
+- **A** Equivalent alternative: different but equally valid
+- **B** Minor error: unlikely to substantially affect results
+- **C** Major error: would bias results
+- **D** Fundamental misunderstanding: lack of grasp of underlying epi/stats
 
 Classification is cross-referenced with recovery: a "C" classification with good recovery (or vice versa) is a case worth discussion, not a contradiction.
 
@@ -333,12 +333,12 @@ Classification is cross-referenced with recovery: a "C" classification with good
 For each (scenario, condition), k=5 paraphrases.
 
 - **Slot 01 — Original.** The base prompt as drafted by the project authors with LLM coding-assistant support (the assistant produced the initial draft of each prompt's prose; the project authors reviewed, edited, and accepted). The prose register is therefore LLM-coded.
-- **Slot 02 — Manual human rewrite by a project member.** Manual rewrite by a project member who is *not* the original prompt-drafter and who commented on but did not draft the analysis plan. Not hypothesis-blinded — the paraphraser has read the plan and predictions. Methodological role: introduce non-LLM-register prose into the paraphrase set, decorrelate wording from the original drafter's house style. Brief at `prompts/slot02_brief.md`. The paraphraser is acknowledged in the paper.
+- **Slot 02 — Manual human rewrite by a project member.** Manual rewrite by a project member who is *not* the original prompt-drafter and who commented on but did not draft the analysis plan. Not hypothesis-blinded: the paraphraser has read the plan and predictions. Methodological role: introduce non-LLM-register prose into the paraphrase set, decorrelate wording from the original drafter's house style. Brief at `prompts/slot02_brief.md`. The paraphraser is acknowledged in the paper.
 - **Slot 03 — OpenAI** (GPT-5).
 - **Slot 04 — Google** (Gemini 2.5 Flash).
 - **Slot 05 — Anthropic** (Claude Sonnet 4.5; same family as the primary evaluator, included as a within-family sanity check).
 
-The three LLM-paraphrase slots are deliberately allocated across model families so that paraphraser-side wording bias does not coincide with the evaluator's family. LLM paraphrases are generated by `evaluation/generate_paraphrases.py`, which calls each provider's API directly with the paraphrasing instruction and `temperature = 0.7` (where the API supports an explicit temperature). The paraphrasing call is API-mode (not Claude Code), so it does set temperature where supported; this is independent of the evaluator runs (which still use Claude Code at its default temperature — see "Temperature is not a randomisation axis" above).
+The three LLM-paraphrase slots are deliberately allocated across model families so that paraphraser-side wording bias does not coincide with the evaluator's family. LLM paraphrases are generated by `evaluation/generate_paraphrases.py`, which calls each provider's API directly with the paraphrasing instruction and `temperature = 0.7` (where the API supports an explicit temperature). The paraphrasing call is API-mode (not Claude Code), so it does set temperature where supported; this is independent of the evaluator runs, which still use Claude Code at its default temperature (see "Temperature is not a randomisation axis" above).
 
 Five paraphrases × 4 scenarios × 3 conditions = 60 prompt variants.
 
@@ -376,7 +376,7 @@ These dimensions are crossed multiplicatively unless stated otherwise:
 
 **Across two models (Sonnet 4.6 + a second frontier model):** ~6800 runs total.
 
-The primary and adversarial analyses are independent — the runs do not overlap. Running them sequentially, the harness cost is bounded.
+The primary and adversarial analyses are independent: the runs do not overlap. Running them sequentially, the harness cost is bounded.
 
 For Llama 3.1 8B (if retained as a tertiary model), reduce within-cell replication to keep total wall-clock under one week of single-GPU compute; report the reduced sample size explicitly.
 
@@ -399,7 +399,7 @@ Standardised prompts per (scenario, condition) contain:
 - Language/framework specification per condition table
 - Epidemiological parameters that would plausibly come from external studies (see below)
 - For `julia`: Turing.jl API reference in working directory
-- For `epiaware`: EpiAware API reference in working directory (conforming to the MWK operational rule — no end-to-end Rt examples)
+- For `epiaware`: EpiAware API reference in working directory (conforming to the MWK operational rule: no end-to-end Rt examples)
 
 To isolate composition from parameter-guessing, prompts give the LLM values that would realistically come from external epidemiological studies, and require the LLM to estimate everything else.
 
@@ -427,7 +427,7 @@ Each LLM is given the prompt and asked to write code, execute it, and fix errors
 2. Maximum 10 iterations per run
 3. 10-minute timeout per execution attempt; 60-minute total session timeout
 4. All iterations, error messages, and fixes logged
-5. Isolated working directory — model cannot see reference solutions, other runs, or study design
+5. Isolated working directory: model cannot see reference solutions, other runs, or study design
 
 **Tools:**
 - Claude Code for Claude models
@@ -461,7 +461,7 @@ Stated here before any model is queried under this revised design. Each predicti
    - Submissions flagged `flag_poisson_only` (Poisson-only observation likelihood): median 90% coverage on `extreme_dispersion` is at least 15 percentage points lower than on `low_dispersion`. 95%-CI excludes zero.
 6. **Hallucination rate is higher in `epiaware` than in `julia` or `no-spec`.** Median fraction of agent iterations failing with "function does not exist" / "no method matching" / undefined-symbol errors in `epiaware` is at least 10 percentage points higher than in either `julia` or `no-spec`. 95%-CIs exclude zero.
 
-Predictions 3–5 are the composition claims the study turns on. If they don't hold, the study reports that validated composable tooling provides no composition benefit over forced-composition baselines, which is itself informative. Prediction 6 is orthogonal — a finding about in-context docs use, not about composition.
+Predictions 3–5 are the composition claims the study turns on. If they don't hold, the study reports that validated composable tooling provides no composition benefit over forced-composition baselines, which is itself informative. Prediction 6 is orthogonal: a finding about in-context docs use, not about composition.
 
 ## Pre-specified Tables and Figures
 
@@ -495,20 +495,33 @@ Predictions 3–5 are the composition claims the study turns on. If they don't h
 
 ## Limitations Acknowledged in Advance
 
-- **Author-designed prompts, drafted with LLM assistance.** The base prompts (slot 01) were drafted by the project authors with LLM coding-assistant support; the prose was generated by an LLM and reviewed/edited by the authors. Three paraphrases (slots 03–05) are LLM-generated, from three different frontier families (OpenAI, Google, Anthropic). Slot 02 is human-written prose by a project member who is not the original drafter but who has read the plan and predictions (not hypothesis-blinded). The paraphrase randomisation mitigates wording-level effects across LLM families and one human reader but not framing-level effects of the base prompts. A hypothesis-blinded human paraphraser, fully external base-prompt design, and base prompts written without LLM assistance are all out of scope here; we identify them as the strongest improvements for replication studies.
-- **Training-data contamination at DGP level.** The renewal equation is canonical in training data. Simulation with ground truth addresses *data* contamination but cannot address *structural* contamination. Adversarial DGPs that stress specific modelling decisions partially mitigate by separating "recalled machinery" from "correctly implemented machinery".
-- **Model coverage.** Two frontier model families (Anthropic, OpenAI) plus one small open-source model (Meta Llama 3.1 8B). Findings may not generalise to Gemini, Qwen, Mistral, DeepSeek, or other frontier families.
-- **No independent replication.** We publish the full harness and invite replication with a pre-specified concordance criterion (primary recovery claim replicated if point estimates within 10pp and same qualitative ordering of conditions).
-- **Simulation realism.** Real-data secondary check may reveal issues not captured in simulation.
-- **No temperature randomisation.** Claude Code CLI does not expose `temperature`. We do not include temperature as a randomisation axis in this study (see Randomisation → "Temperature is not a randomisation axis"). Within-cell variability across runs reflects only the model's intrinsic stochasticity at the API's default temperature.
-- **Detectors are heuristics, not graders.** Regex- and AST-based pattern detectors have known false negatives. For example, `flag_no_smoothing_term` does not match a custom multivariate-Normal prior with smoothing covariance even though that constitutes smoothing. Detectors are calibrated against expert review on the stratified subsample (Cohen's kappa) and reported as instruments for analysis, not ground truth.
-- **Composition test concentrates in scenario 3.** Scenarios 1a/1b/2 test whether a Bayesian PPL adds value over a default-package shortcut and whether estimator-side choices affect recovery. Composition without a shortcut path is tested most directly in scenario 3, where multi-stream estimation has no canonical package. Predictions 3 and 4 (scenarios 2–3) are the composition claims the study turns on.
-- **Rt-definition ambiguity.** Under any stochastic generator, "$R_t$" admits multiple legitimate definitions — the parameter, the realised ratio, and (in some models) a per-step random multiplier (Funk, Abbott & Bracher 2022). Recovery is scored against the parameter $R(d)$. Methods that target the realised ratio (e.g. Wallinga–Teunis) recover a noisier quantity that converges to the parameter at scale; observed disagreement with truth in their case partly reflects target choice rather than implementation error, and is flagged in the scenario 1a method-identification subsample.
-- **Single mechanism for overdispersion.** All overdispersion in the GT arises from infection-level offspring heterogeneity (Lloyd-Smith et al. 2005). Other plausible sources (random reporting effort, batched-report processing artefacts, day-of-day administrative noise) are not modelled. Estimators that absorb such effects via NegBin observation likelihoods may handle real data better than they handle our GT, where the same parameter is doing different mechanistic work.
-- **Ascertainment is purely temporal.** The GT models ascertainment as a deterministic time-varying multiplier; in real surveillance, *which* individuals get reported depends on severity, age, healthcare access, and other individual covariates. Estimators correctly modelling individual-level ascertainment heterogeneity would not be advantaged on this GT.
-- **Multi-stream observation noise is independent.** The three streams (cases, hospitalisations, deaths) share the same latent infection process but their observation noise is independent across streams. Real multi-stream surveillance has correlated observational error (a hospital-system disruption affects both hospitalisations and same-day reports). Multi-stream estimators that exploit cross-stream noise correlation would have nothing to gain on this GT.
-- **Scenarios 1a and 1b may be functionally equivalent.** 1a says "open method"; 1b says "use the renewal equation". Most submissions in 1a will use a method that internally implements the renewal equation (e.g. EpiNow2). The 1a/1b distinction is testing what the LLM verbalises about its method, not what it computes — relevant for method-identification analyses but possibly not for recovery.
-- **Reviewer blinding.** Package imports are strippable; structural features (multi-stream handling, Julia vs R syntax patterns) may leak condition information. Blinding failure rate is tested and reported.
+The base prompts (slot 01) were drafted by the project authors with LLM coding-assistant support: the prose was generated by an LLM and reviewed/edited by the authors. Three paraphrases (slots 03–05) are LLM-generated, from three different frontier families (OpenAI, Google, Anthropic). Slot 02 is human-written prose by a project member who is not the original drafter but who has read the plan and predictions, so is not hypothesis-blinded. The paraphrase randomisation mitigates wording-level effects across LLM families and one human reader but not framing-level effects of the base prompts. A hypothesis-blinded human paraphraser, fully external base-prompt design, and base prompts written without LLM assistance are all out of scope here. We identify them as the strongest improvements for replication studies.
+
+The renewal equation is canonical in training data, so the DGP is also canonical at the structural level. Simulation with ground truth addresses *data* contamination but cannot address *structural* contamination. Adversarial DGPs that stress specific modelling decisions partially mitigate by separating "recalled machinery" from "correctly implemented machinery".
+
+Model coverage is limited to two frontier families (Anthropic, OpenAI) plus one small open-source model (Meta Llama 3.1 8B). Findings may not generalise to Gemini, Qwen, Mistral, DeepSeek, or other frontier families.
+
+There is no independent replication. We publish the full harness and invite replication with a pre-specified concordance criterion (primary recovery claim replicated if point estimates within 10pp and same qualitative ordering of conditions).
+
+Real-data secondary checks may reveal issues not captured in simulation.
+
+No temperature randomisation: Claude Code CLI does not expose `temperature`, so it is not a randomisation axis in this study (see Randomisation, "Temperature is not a randomisation axis"). Within-cell variability across runs reflects only the model's intrinsic stochasticity at the API's default temperature.
+
+Detectors are heuristics, not graders. Regex- and AST-based pattern detectors have known false negatives: `flag_no_smoothing_term` does not match a custom multivariate-Normal prior with smoothing covariance even though that constitutes smoothing. Detectors are calibrated against expert review on the stratified subsample (Cohen's kappa) and reported as instruments for analysis, not ground truth.
+
+The composition test concentrates in scenario 3. Scenarios 1a/1b/2 test whether a Bayesian PPL adds value over a default-package shortcut and whether estimator-side choices affect recovery. Composition without a shortcut path is tested most directly in scenario 3, where multi-stream estimation has no canonical package. Predictions 3 and 4 (scenarios 2–3) are the composition claims the study turns on.
+
+Rt has multiple legitimate definitions under any stochastic generator: the parameter, the realised ratio, and in some models a per-step random multiplier (Funk, Abbott & Bracher 2022). Recovery is scored against the parameter $R(d)$. Methods that target the realised ratio (e.g. Wallinga–Teunis) recover a noisier quantity that converges to the parameter at scale. Observed disagreement with truth in their case partly reflects target choice rather than implementation error, and is flagged in the scenario 1a method-identification subsample.
+
+The GT has a single mechanism for overdispersion: all of it arises from infection-level offspring heterogeneity (Lloyd-Smith et al. 2005). Other plausible sources (random reporting effort, batched-report processing artefacts, day-of-day administrative noise) are not modelled. Estimators that absorb such effects via NegBin observation likelihoods may handle real data better than they handle our GT, where the same parameter is doing different mechanistic work.
+
+Ascertainment is purely temporal in the GT, modelled as a deterministic time-varying multiplier. In real surveillance, *which* individuals get reported depends on severity, age, healthcare access, and other individual covariates. Estimators correctly modelling individual-level ascertainment heterogeneity would have nothing extra to gain on this GT.
+
+Multi-stream observation noise is independent across streams. The three streams (cases, hospitalisations, deaths) share the same latent infection process but their observation noise is independent. Real multi-stream surveillance has correlated observational error: a hospital-system disruption affects both hospitalisations and same-day reports. Multi-stream estimators that exploit cross-stream noise correlation would have nothing extra to gain.
+
+Scenarios 1a and 1b may be functionally equivalent. 1a says "open method"; 1b says "use the renewal equation". Most submissions in 1a will use a method that internally implements the renewal equation (e.g. EpiNow2). The 1a/1b distinction tests what the LLM verbalises about its method, not what it computes. Useful for method-identification analyses but possibly not for recovery.
+
+Reviewer blinding is imperfect. Package imports are strippable; structural features (multi-stream handling, Julia vs R syntax patterns) may leak condition information. Blinding failure rate is tested and reported.
 
 ## Pre-registration
 
