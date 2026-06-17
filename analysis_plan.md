@@ -388,7 +388,36 @@ Every result reported as a distribution across paraphrases × replicates × runs
 ## Blinding
 
 - **Expert review blinding.** Submissions are preprocessed deterministically to strip imports and package-specific syntax before review. Where full stripping is infeasible (e.g. scenario 3 multi-stream structure), the effective blinding is tested: reviewers guess the condition on a calibration subset; the blinding-failure rate is reported as a study limitation.
-- **Internal role separation.** Prompt design, detector implementation, and review coordination are assigned to different team members. Documented explicitly in the paper.
+- **Internal role separation.** Prompt design, detector implementation, and review coordination are assigned to different team members (see Roles & Responsibilities below).
+
+## Roles & Responsibilities
+
+The table below lists project roles. Names are filled in before pre-registration is finalised and updated as people are recruited. Where one person fills multiple roles, this is recorded explicitly and the implication for the "internal role separation" claim is discussed in Limitations.
+
+| Role | Responsibility | Person |
+|---|---|---|
+| Original prompt drafter | Drafted slot 01 base prompts with LLM coding-assistant support | TBD |
+| Slot 02 paraphraser | Manual rewrite of 12 base prompts; non-LLM-register prose | TBD (project member, not the original drafter) |
+| Simulation owner | Maintains `simulations/generate.jl`, generated datasets, calibration check | TBD |
+| Harness owner | Maintains `evaluation/run_agentic.sh`, `run_study.sh`, runs the full study | TBD |
+| Detector implementer | Maintains `evaluation/detectors.py` | TBD (different from prompt drafter) |
+| Expert reviewer 1 | Reviews stratified subsample + semantic departures; blinded to LLM and condition | TBD (external preferred; project member acceptable) |
+| Expert reviewer 2 | Independent second review for inter-rater reliability (Cohen's κ) | TBD (external preferred) |
+| Tie-breaking reviewer | Adjudicates disagreements between reviewers 1 and 2 | TBD (consulted only if needed) |
+| Method-identification reviewer (scenario 1a) | Classifies submissions as renewal / Wallinga-Teunis / Bettencourt-Ribeiro / naive / other | TBD (could be reviewer 1 or 2) |
+| Review coordinator | Routes submissions to reviewers, collates classifications, runs inter-rater stats | TBD (different from reviewers) |
+| Pre-registration commit signer | Pins the commit hash in README and external registry before any LLM is queried | TBD |
+
+### Conflict of interest declarations
+
+The project authors declare relevant affiliations with packages evaluated under the `no-spec` and `epiaware` conditions:
+
+- One or more project authors contributed to EpiAware.jl, EpiNow2, and/or EpiEstim development. The full list of relevant affiliations is declared in the paper's COI statement and updated here when the team is finalised.
+
+This matters because:
+
+- A "EpiAware shows lower RMSE than Julia-bare on scenarios 2–3" result (prediction 3) could be read as the authors validating their own work. We mitigate by pre-registering the prediction and its quantitative threshold, by publishing the full harness for replication, and by reporting non-confirmation honestly. The composition framing of the study (the question is about *whether composable primitives help*, not *whether this specific package is good*) is also designed to be informative regardless of which way the result lands.
+- A "no-spec submissions default to EpiNow2/EpiEstim" finding (prediction 1) is similarly affected. We treat the "what package do LLMs default to" question as observational; the affiliations are noted but the finding stands on its own.
 
 ## Protocol
 
