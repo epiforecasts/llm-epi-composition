@@ -457,7 +457,7 @@ Stated here before any model is queried under this revised design. Each predicti
 3. **EpiAware shows lower Rt RMSE than Julia-bare on scenarios 2–3.** Median Rt RMSE in (epiaware, scenario 2) is at least 0.02 lower than in (julia, scenario 2); the gap on scenario 3 is at least 0.04 lower. *Confirmation:* both differences have 95% bootstrap CIs that exclude zero in the predicted direction.
 4. **no-spec fails on scenario 3 more often than EpiAware.** Run-level failure rate (run did not produce a valid `outputs/rt_estimates.csv` within 10 iterations) in (no-spec, scenario 3) is at least 20 percentage points higher than in (epiaware, scenario 3). *Confirmation:* the difference has a 95%-CI excluding zero in the predicted direction and lower bound ≥ 0.20.
 5. **Adversarial DGP performance correlates with automated detector flags.**
-   - Submissions flagged `no_delay`: median Rt RMSE on `long_delay` is at least 0.05 higher than on `canonical`. 95%-CI excludes zero.
+   - Submissions flagged `flag_no_delay_handling`: median Rt RMSE on `long_delay` is at least 0.05 higher than on `canonical`. 95%-CI excludes zero.
    - Submissions flagged `flag_poisson_only` (Poisson-only observation likelihood): median 90% coverage on `extreme_dispersion` is at least 15 percentage points lower than on `low_dispersion`. 95%-CI excludes zero.
 6. **Hallucination rate is higher in `epiaware` than in `julia` or `no-spec`.** Median fraction of agent iterations failing with "function does not exist" / "no method matching" / undefined-symbol errors in `epiaware` is at least 10 percentage points higher than in either `julia` or `no-spec`. 95%-CIs exclude zero.
 
@@ -537,5 +537,6 @@ Scenarios 1a/1b/2/3 form a gradient of composition-forcing. A DSL benefit that i
 ---
 
 *Document created: 2024-12-07*
-*Revised: 2026-04-23 (recovery-based evaluation, no-spec/Julia/EpiAware axis, adversarial DGPs, automated detectors, prompt/temperature randomisation, minimum working knowledge docs principle, hallucination rate as secondary outcome)*
+*Revised: 2026-04-23 (recovery-based evaluation, no-spec/Julia/EpiAware axis, adversarial DGPs, automated detectors, prompt randomisation, minimum working knowledge docs principle, hallucination rate as secondary outcome)*
+*Revised: 2026-06 (load-bearing reviewer points addressed: explicit sample-size and crossing, temperature axis dropped, quantitative effect sizes for all predictions, reference EpiAware AR prior calibrated to HalfNormal(0.05), evaluation window days 25–125, sinusoidal_rt variant added, extreme_dispersion rename, three-family LLM paraphrase scheme, structural-pattern detector framing, slot-01 base prompts acknowledged as LLM-drafted)*
 *Status: Revised draft, pending pre-registration*
