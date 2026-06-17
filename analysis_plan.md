@@ -392,32 +392,24 @@ Every result reported as a distribution across paraphrases × replicates × runs
 
 ## Roles & Responsibilities
 
-The table below lists project roles. Names are filled in before pre-registration is finalised and updated as people are recruited. Where one person fills multiple roles, this is recorded explicitly and the implication for the "internal role separation" claim is discussed in Limitations.
+This is a small project. Most operational work falls to one person (project lead). The expert review requires two independent modellers; the slot-02 paraphrase wave requires a second human who is not the original drafter.
 
 | Role | Responsibility | Person |
 |---|---|---|
-| Original prompt drafter | Drafted slot 01 base prompts with LLM coding-assistant support | TBD |
-| Slot 02 paraphraser | Manual rewrite of 12 base prompts; non-LLM-register prose | TBD (project member, not the original drafter) |
-| Simulation owner | Maintains `simulations/generate.jl`, generated datasets, calibration check | TBD |
-| Harness owner | Maintains `evaluation/run_agentic.sh`, `run_study.sh`, runs the full study | TBD |
-| Detector implementer | Maintains `evaluation/detectors.py` | TBD (different from prompt drafter) |
-| Expert reviewer 1 | Reviews stratified subsample + semantic departures; blinded to LLM and condition | TBD (external preferred; project member acceptable) |
-| Expert reviewer 2 | Independent second review for inter-rater reliability (Cohen's κ) | TBD (external preferred) |
-| Tie-breaking reviewer | Adjudicates disagreements between reviewers 1 and 2 | TBD (consulted only if needed) |
-| Method-identification reviewer (scenario 1a) | Classifies submissions as renewal / Wallinga-Teunis / Bettencourt-Ribeiro / naive / other | TBD (could be reviewer 1 or 2) |
-| Review coordinator | Routes submissions to reviewers, collates classifications, runs inter-rater stats | TBD (different from reviewers) |
-| Pre-registration commit signer | Pins the commit hash in README and external registry before any LLM is queried | TBD |
+| Project lead | Slot 01 prompts (drafted with LLM assistance), simulation generator, evaluation harness, detector implementation, review coordination, pre-registration commit | TBD |
+| Slot 02 paraphraser | Manual rewrite of 12 base prompts in non-LLM-register prose | TBD (not the project lead; acknowledged in the paper) |
+| Expert reviewer A | Reviews stratified subsample + semantic departures + scenario 1a method identification; blinded to LLM and condition | TBD (external preferred; project member acceptable) |
+| Expert reviewer B | Independent second review for inter-rater reliability (Cohen's κ) and disagreement resolution | TBD (external preferred) |
 
-### Conflict of interest declarations
+If Cohen's κ between reviewers A and B shows substantial disagreement, a third reviewer is consulted. If recruitment of two reviewers fails, expert review is reduced to a single reviewer (no inter-rater stats) and this is reported as a substantive limitation rather than as a minor methodological note.
 
-The project authors declare relevant affiliations with packages evaluated under the `no-spec` and `epiaware` conditions:
+The "internal role separation" claim in the Blinding section reduces to: the slot-02 paraphraser is not the project lead. Other roles are concentrated in the project lead, which is honest for a small project and is acknowledged in Limitations.
 
-- One or more project authors contributed to EpiAware.jl, EpiNow2, and/or EpiEstim development. The full list of relevant affiliations is declared in the paper's COI statement and updated here when the team is finalised.
+### Conflict of interest declaration
 
-This matters because:
+One or more project authors contributed to EpiAware.jl, EpiNow2, and/or EpiEstim development. The full COI statement is in the paper.
 
-- A "EpiAware shows lower RMSE than Julia-bare on scenarios 2–3" result (prediction 3) could be read as the authors validating their own work. We mitigate by pre-registering the prediction and its quantitative threshold, by publishing the full harness for replication, and by reporting non-confirmation honestly. The composition framing of the study (the question is about *whether composable primitives help*, not *whether this specific package is good*) is also designed to be informative regardless of which way the result lands.
-- A "no-spec submissions default to EpiNow2/EpiEstim" finding (prediction 1) is similarly affected. We treat the "what package do LLMs default to" question as observational; the affiliations are noted but the finding stands on its own.
+Prediction 3 ("EpiAware lower RMSE than Julia-bare on scenarios 2–3") could be read as the authors validating their own work. The mitigations: pre-registering the prediction with a quantitative threshold, publishing the full harness for replication, and committing to report non-confirmation honestly. The composition framing of the study (the question is whether composable primitives help, not whether this specific package is good) is also designed to be informative regardless of which way the result lands. Prediction 1 ("no-spec defaults to EpiNow2/EpiEstim") is similarly affected; we treat the "what package do LLMs default to" question as observational.
 
 ## Protocol
 
