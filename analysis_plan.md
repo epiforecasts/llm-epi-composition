@@ -23,7 +23,7 @@ Following methodological concerns raised by Omar et al. (*Nat Med* 2026) on the 
 
 1. **Re-pose the primary question** around composition vs retrieval (see above).
 2. **Ground-truth recovery on simulated data** as the primary outcome, addressing framing-dependent scoring.
-3. **Adversarial DGPs** that stress specific modelling decisions, separating recall of textbook machinery from correct implementation.
+3. **Adversarial DGPs** that stress specific modelling decisions. They distinguish recall of textbook machinery from correct implementation.
 4. **Automated correctness detectors** for mechanically detectable departures, with expert review reserved for irreducibly semantic judgments on a stratified subsample.
 5. **Prompt-paraphrase randomisation**, with results reported as distributions.
 6. **Internal role separation** and explicit blinding tests.
@@ -78,7 +78,7 @@ Findings may not generalise to other model families (Gemini, Qwen, Mistral, Deep
 
 ### Scenarios
 
-Structure unchanged from earlier draft; scenario 3 becomes the key test because all conditions are forced off well-memorised paths (EpiNow2 does not natively support multiple observation streams).
+Scenario 3 is the test that matters most: all conditions are forced off well-memorised paths because EpiNow2 doesn't natively support multiple observation streams.
 
 | Scenario | Description | Composition-forcing? |
 |---|---|---|
@@ -461,7 +461,7 @@ Stated here before any model is queried under this revised design. Each predicti
    - Submissions flagged `flag_poisson_only` (Poisson-only observation likelihood): median 90% coverage on `extreme_dispersion` is at least 15 percentage points lower than on `low_dispersion`. 95%-CI excludes zero.
 6. **Hallucination rate is higher in `epiaware` than in `julia` or `no-spec`.** Median fraction of agent iterations failing with "function does not exist" / "no method matching" / undefined-symbol errors in `epiaware` is at least 10 percentage points higher than in either `julia` or `no-spec`. 95%-CIs exclude zero.
 
-Predictions 3–5 are the load-bearing composition claims. If they do not hold, the study reports that validated composable tooling does not provide a composition benefit over forced-composition baselines, which is itself informative. Prediction 6 is orthogonal: a finding about in-context docs use rather than composition per se.
+Predictions 3–5 are the composition claims the study turns on. If they don't hold, the study reports that validated composable tooling provides no composition benefit over forced-composition baselines, which is itself informative. Prediction 6 is orthogonal — a finding about in-context docs use, not about composition.
 
 ## Pre-specified Tables and Figures
 
@@ -502,7 +502,7 @@ Predictions 3–5 are the load-bearing composition claims. If they do not hold, 
 - **Simulation realism.** Real-data secondary check may reveal issues not captured in simulation.
 - **No temperature randomisation.** Claude Code CLI does not expose `temperature`. We do not include temperature as a randomisation axis in this study (see Randomisation → "Temperature is not a randomisation axis"). Within-cell variability across runs reflects only the model's intrinsic stochasticity at the API's default temperature.
 - **Detectors are heuristics, not graders.** Regex- and AST-based pattern detectors have known false negatives. For example, `flag_no_smoothing_term` does not match a custom multivariate-Normal prior with smoothing covariance even though that constitutes smoothing. Detectors are calibrated against expert review on the stratified subsample (Cohen's kappa) and reported as instruments for analysis, not ground truth.
-- **Composition test concentrates in scenario 3.** Scenarios 1a/1b/2 test whether a Bayesian PPL adds value over a default-package shortcut and whether estimator-side choices affect recovery. Composition under genuine no-shortcut conditions is most directly tested in scenario 3, where multi-stream estimation has no canonical package. Predictions 3 and 4 (scenarios 2–3) are the load-bearing composition claims.
+- **Composition test concentrates in scenario 3.** Scenarios 1a/1b/2 test whether a Bayesian PPL adds value over a default-package shortcut and whether estimator-side choices affect recovery. Composition without a shortcut path is tested most directly in scenario 3, where multi-stream estimation has no canonical package. Predictions 3 and 4 (scenarios 2–3) are the composition claims the study turns on.
 - **Rt-definition ambiguity.** Under any stochastic generator, "$R_t$" admits multiple legitimate definitions — the parameter, the realised ratio, and (in some models) a per-step random multiplier (Funk, Abbott & Bracher 2022). Recovery is scored against the parameter $R(d)$. Methods that target the realised ratio (e.g. Wallinga–Teunis) recover a noisier quantity that converges to the parameter at scale; observed disagreement with truth in their case partly reflects target choice rather than implementation error, and is flagged in the scenario 1a method-identification subsample.
 - **Single mechanism for overdispersion.** All overdispersion in the GT arises from infection-level offspring heterogeneity (Lloyd-Smith et al. 2005). Other plausible sources (random reporting effort, batched-report processing artefacts, day-of-day administrative noise) are not modelled. Estimators that absorb such effects via NegBin observation likelihoods may handle real data better than they handle our GT, where the same parameter is doing different mechanistic work.
 - **Ascertainment is purely temporal.** The GT models ascertainment as a deterministic time-varying multiplier; in real surveillance, *which* individuals get reported depends on severity, age, healthcare access, and other individual covariates. Estimators correctly modelling individual-level ascertainment heterogeneity would not be advantaged on this GT.
@@ -538,5 +538,5 @@ Scenarios 1a/1b/2/3 form a gradient of composition-forcing. A DSL benefit that i
 
 *Document created: 2024-12-07*
 *Revised: 2026-04-23 (recovery-based evaluation, no-spec/Julia/EpiAware axis, adversarial DGPs, automated detectors, prompt randomisation, minimum working knowledge docs principle, hallucination rate as secondary outcome)*
-*Revised: 2026-06 (load-bearing reviewer points addressed: explicit sample-size and crossing, temperature axis dropped, quantitative effect sizes for all predictions, reference EpiAware AR prior calibrated to HalfNormal(0.05), evaluation window days 25–125, sinusoidal_rt variant added, extreme_dispersion rename, three-family LLM paraphrase scheme, structural-pattern detector framing, slot-01 base prompts acknowledged as LLM-drafted)*
+*Revised: 2026-06 (main reviewer concerns addressed: explicit sample-size and crossing, temperature axis dropped, quantitative effect sizes for all predictions, reference EpiAware AR prior calibrated to HalfNormal(0.05), evaluation window days 25–125, sinusoidal_rt variant added, extreme_dispersion rename, three-family LLM paraphrase scheme, structural-pattern detector framing, slot-01 base prompts acknowledged as LLM-drafted)*
 *Status: Revised draft, pending pre-registration*
