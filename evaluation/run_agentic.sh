@@ -77,7 +77,14 @@ mkdir -p "$RUN_DIR"
 
 # Isolated working directory — Claude never sees the broader repo
 WORK_DIR=$(mktemp -d)
-trap "rm -rf $WORK_DIR" EXIT
+cleanup() {
+    # Kill any process (including setsid-detached descendants) that still
+    # references this run's working directory. Catches Julia subprocesses
+    # the agent may have launched into a new session to outlive the harness.
+    pkill -9 -f "$WORK_DIR" 2>/dev/null || true
+    rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT
 echo "Isolated working directory: $WORK_DIR"
 
 # Copy the relevant streams only.
