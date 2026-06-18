@@ -146,6 +146,49 @@ case "$CONDITION" in
         ;;
 esac
 
+# Optional warm Julia daemon. Set USE_DAEMON=1 to pre-launch a DaemonMode server
+# in WORK_DIR with the env's heavy packages already loaded, plus a jrun wrapper
+# the agent can use instead of bare `julia` to avoid cold-start recompilation.
+DAEMON_PORT=""
+if [ "${USE_DAEMON:-0}" = "1" ] && [[ "$CONDITION" == "julia" || "$CONDITION" == "epiaware" ]]; then
+    DAEMON_PORT=$((30000 + RANDOM % 30000))
+    PRELOAD_PKGS="using EpiAware, Turing, Distributions, DataFrames, CSV, ReverseDiff, LogDensityProblemsAD, MCMCChains, Pathfinder"
+    nohup julia --startup-file=no --project="$WORK_DIR" -e \
+        "$PRELOAD_PKGS; using DaemonMode; serve($DAEMON_PORT)" \
+        > "$WORK_DIR/daemon.log" 2>&1 &
+    DAEMON_PID=$!
+    echo "Julia daemon launched (PID $DAEMON_PID, port $DAEMON_PORT); waiting for ready..."
+    for i in $(seq 1 90); do
+        if ss -tln 2>/dev/null | grep -q ":$DAEMON_PORT "; then
+            echo "  daemon ready after ${i}s"
+            break
+        fi
+        sleep 2
+    done
+    if ! ss -tln 2>/dev/null | grep -q ":$DAEMON_PORT "; then
+        echo "WARNING: daemon did not bind within 180s; continuing without it"
+        DAEMON_PORT=""
+    fi
+
+    if [ -n "$DAEMON_PORT" ]; then
+        cat > "$WORK_DIR/jrun" <<EOF
+#!/bin/bash
+# Run a Julia script via the warm DaemonMode daemon listening on $DAEMON_PORT.
+# Uses the local project so DaemonMode (the client side) is on the load path.
+exec julia --startup-file=no --project="$WORK_DIR" -e 'using DaemonMode; runargs($DAEMON_PORT)' "\$@"
+EOF
+        chmod +x "$WORK_DIR/jrun"
+        cat >> "$WORK_DIR/prompt.md" <<'EOF'
+
+---
+
+## Warm Julia daemon available
+
+A Julia daemon is running in this working directory with EpiAware, Turing, Distributions, DataFrames, CSV, ReverseDiff, LogDensityProblemsAD, MCMCChains, and Pathfinder already loaded. To execute a Julia script, run `./jrun script.jl` instead of `julia script.jl` — it forwards to the warm daemon and starts in milliseconds rather than paying the 30–60-second compile cost on every invocation. Use `./jrun` for every Julia run, including quick syntax/probe scripts; only fall back to bare `julia` if `./jrun` fails.
+EOF
+    fi
+fi
+
 # Metadata
 cat > "$WORK_DIR/metadata.json" << EOF
 {
@@ -156,6 +199,8 @@ cat > "$WORK_DIR/metadata.json" << EOF
     "replicate":    $REPLICATE,
     "model":        "$MODEL",
     "run_number":   $RUN_NUM,
+    "use_daemon":   ${USE_DAEMON:-0},
+    "daemon_port":  ${DAEMON_PORT:-null},
     "start_time":   "$(date -Iseconds)",
     "prompt_file":  "$PROMPT_FILE",
     "sim_data_dir": "$SIM_DATA_DIR"
