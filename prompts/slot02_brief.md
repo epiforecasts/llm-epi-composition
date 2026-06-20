@@ -1,46 +1,46 @@
 # Brief for the slot-02 paraphraser
 
-Short methodological task. ~90 minutes of focused work.
+This is a ~90-minute task. You are not the project lead.
 
-## Why
+## Background
 
-Slots 01, 03, 04, 05 of the prompt-paraphrase set are all LLM-generated (slot 01 was drafted by Claude Code and edited by Sebastian; slots 03/04/05 are produced by GPT-5, Gemini Flash, and Claude Sonnet). The wording-sensitivity test in this study therefore never escapes the LLM-prose register the evaluator (Claude) is itself trained on. A human-written paraphrase wave (you) is the only piece of the set that breaks that monoculture.
+The base prompts at slot 01 were drafted with LLM assistance and edited; slots 03, 04, and 05 are LLM-generated paraphrases by GPT-5, Gemini, and Claude. Without a human paraphrase wave the wording-sensitivity arm of the study never samples outside the LLM-prose register that the evaluator (Claude) is itself trained on. Slot 02 (yours) is that wave. You will be acknowledged as the slot-02 paraphraser in the paper.
 
-You have read the analysis plan and the predictions; this is not a hypothesis-blinded paraphrase. The methodological role is narrower: introduce non-LLM-register prose into the paraphrase set, decorrelate wording from Claude's house style. You will be acknowledged as the slot-02 paraphraser in the paper.
+Please do not read `analysis_plan.md` or any document describing the study's hypotheses or analyses. The base prompts and this brief are enough. We would like the paraphrase to come from someone who has not been primed on what the analysis is looking for.
 
-## What
+## What to do
 
-Twelve base prompts at:
+Twelve base prompts are at:
 
 ```
 prompts/scenario_{1a,1b,2,3}/paraphrases/{no-spec,julia,epiaware}/01.md
 ```
 
-Write a paraphrased version of each at the same path with filename `02.md`.
+For each, write a paraphrased version at the same path with filename `02.md`.
 
-The rule:
+Rules:
 
-- **Preserve every factual statement.** Data file paths and column names exactly as given. Numerical parameters exactly as given (e.g. "Gamma distribution, mean 5.5 days, standard deviation 2 days"). Distributional families exactly as given. Framework or language constraint exactly as given. Output file path and required columns exactly as given. Every structural feature about the data. Error-handling expectation.
-- **Vary the wording, ordering, headings, sentence structure, and tone.** Don't write a near-copy.
-- **Add nothing.** No examples, hints, advice, methodological suggestions, strategies, or definitions of terms not already in the original.
-- **Reinterpret nothing.** Don't paraphrase a fact in a way that changes meaning or scope.
+- Preserve every factual statement. File paths and column names verbatim. Numerical values verbatim (for instance, "Gamma distribution, mean 5.5 days, standard deviation 2 days"). Distributional families verbatim. Framework or language constraint verbatim. Output file path and required columns verbatim. Every stated structural feature of the data. The error-handling expectation.
+- Vary wording, sentence structure, ordering, headings, and tone. Don't write a near-copy.
+- Don't add anything that wasn't in the original. No examples, no hints, no methodological suggestions, no strategies, no definitions of terms not already in the original.
+- Don't reinterpret. A paraphrase should not change meaning or scope.
 
-Don't read slots 03/04/05 — write your version independently of theirs.
+Don't read slots 03, 04, or 05; write your version independently.
 
 ## Sanity check before committing
 
-A diff of all numbers in `01.md` vs your `02.md` should be empty:
+The set of numerical tokens in your `02.md` should match the set in `01.md`:
 
 ```bash
 diff <(grep -oE '[0-9]+(\.[0-9]+)?' prompts/scenario_1a/paraphrases/no-spec/01.md | sort) \
      <(grep -oE '[0-9]+(\.[0-9]+)?' prompts/scenario_1a/paraphrases/no-spec/02.md | sort)
 ```
 
-Any difference is a number you've changed; nothing should change.
+Any difference means a number has moved or been altered; nothing should.
 
 ## Worked example
 
-Original `prompts/scenario_1a/paraphrases/no-spec/01.md` (excerpt):
+Original (excerpt from `prompts/scenario_1a/paraphrases/no-spec/01.md`):
 
 > # Estimate the time-varying reproduction number
 >
@@ -54,10 +54,10 @@ A plausible paraphrase:
 
 > Reconstruct $R_t$ from outbreak case data
 >
-> Daily case counts from an unfolding outbreak are given for 150 days (2023-01-01 through 2023-05-30) in `data/cases.csv` (columns `date` in YYYY-MM-DD form and `cases` as integers). From these, estimate the time-varying effective reproduction number — the mean number of secondary infections from somebody infected at time $t$.
+> Daily case counts from an unfolding outbreak are given for 150 days (2023-01-01 through 2023-05-30) in `data/cases.csv` (columns `date` in YYYY-MM-DD form and `cases` as integers). From these, estimate the time-varying effective reproduction number, that is, the mean number of secondary infections from somebody infected at time $t$.
 
-(Note: dates, column names, file path, definition of Rt all preserved; structure and prose changed.)
+Dates, column names, file path, and definition of $R_t$ are preserved; structure and prose change.
 
 ## Questions
 
-If anything is unclear, ask Sebastian. If you flag something in a base prompt that looks wrong (a typo, an inconsistency), don't fix it in your paraphrase — message Sebastian and we'll fix it in 01.md and you'll re-do that one.
+If anything is unclear, please ask Sebastian. If a base prompt contains an apparent typo, inconsistency, or ambiguity, please don't fix it in your paraphrase. Message Sebastian, we'll correct `01.md`, and you'll redo that file.
