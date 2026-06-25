@@ -7,7 +7,7 @@
 #
 #   SCENARIOS    default: scenario_1a scenario_1b scenario_2 scenario_3
 #   CONDITIONS   default: no-spec julia epiaware
-#   PARAPHRASES  default: 1 2 3 4 5
+#   PARAPHRASES  default: 1 2 3 4
 #   VARIANTS     default: canonical
 #   REPLICATES   default: 1 2 3 4 5 6 7 8 9 10
 #   MODELS       default: claude-sonnet-4-6
@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SCENARIOS=${SCENARIOS:-"scenario_1a scenario_1b scenario_2 scenario_3"}
 CONDITIONS=${CONDITIONS:-"no-spec julia epiaware"}
-PARAPHRASES=${PARAPHRASES:-"1 2 3 4 5"}
+PARAPHRASES=${PARAPHRASES:-"1 2 3 4"}
 VARIANTS=${VARIANTS:-"canonical"}
 REPLICATES=${REPLICATES:-"1 2 3 4 5 6 7 8 9 10"}
 MODELS=${MODELS:-"claude-sonnet-4-6"}

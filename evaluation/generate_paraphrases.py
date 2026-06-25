@@ -8,15 +8,14 @@ family.
 
 Default slot-to-provider mapping (matches the plan):
     01 = original (project authors; never overwritten)
-    02 = internal blinded human rewrite (filled manually; skipped by this script)
-    03 = OpenAI (GPT-5)
-    04 = Google (Gemini 2.5 Pro)
-    05 = Anthropic (Claude Sonnet 4.5)
+    02 = OpenAI (GPT-5)
+    03 = Google (Gemini 2.5 Pro)
+    04 = Anthropic (Claude Sonnet 4.5)
 
 Usage:
     python generate_paraphrases.py
-    python generate_paraphrases.py --slots 3 4 5
-    python generate_paraphrases.py --scenarios scenario_1a --slots 3
+    python generate_paraphrases.py --slots 2 3 4
+    python generate_paraphrases.py --scenarios scenario_1a --slots 2
     python generate_paraphrases.py --skip-existing
 
 Each provider's SDK is imported lazily only when that provider is needed.
@@ -54,9 +53,9 @@ Paraphrased task description:"""
 
 # (provider, model) per slot
 SLOT_DEFAULTS: dict[int, tuple[str, str]] = {
-    3: ("openai", "gpt-5"),
-    4: ("google", "gemini-2.5-flash"),      # 2.5 Pro has no free tier; Flash does
-    5: ("anthropic", "claude-sonnet-4-5"),
+    2: ("openai", "gpt-5"),
+    3: ("google", "gemini-2.5-flash"),      # 2.5 Pro has no free tier; Flash does
+    4: ("anthropic", "claude-sonnet-4-5"),
 }
 
 PARAPHRASE_TEMPERATURE = 0.7
@@ -176,8 +175,8 @@ def main() -> None:
     p.add_argument("--prompts-dir", type=Path, default=Path("prompts"))
     p.add_argument("--scenarios", nargs="+", default=["scenario_1a", "scenario_1b", "scenario_2", "scenario_3"])
     p.add_argument("--conditions", nargs="+", default=["no-spec", "julia", "epiaware"])
-    p.add_argument("--slots", nargs="+", type=int, default=[3, 4, 5],
-                   help="paraphrase slots to fill (defaults: 3=OpenAI, 4=Google, 5=Anthropic)")
+    p.add_argument("--slots", nargs="+", type=int, default=[2, 3, 4],
+                   help="paraphrase slots to fill (defaults: 2=OpenAI, 3=Google, 4=Anthropic)")
     p.add_argument("--skip-existing", action="store_true",
                    help="skip slots whose file already exists (default: overwrite)")
     p.add_argument("--dry-run", action="store_true")
@@ -185,8 +184,6 @@ def main() -> None:
 
     if 1 in args.slots:
         sys.exit("Refusing to overwrite slot 01 (the base prompt).")
-    if 2 in args.slots:
-        sys.exit("Slot 02 is reserved for the internal blinded human rewrite; the script does not generate it.")
     bad_slots = [s for s in args.slots if s not in SLOT_DEFAULTS]
     if bad_slots:
         sys.exit(f"No default provider for slots {bad_slots}; recognised slots: {sorted(SLOT_DEFAULTS)}")
