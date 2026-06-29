@@ -77,10 +77,24 @@ mkdir -p "$RUN_DIR"
 
 # Isolated working directory — Claude never sees the broader repo
 WORK_DIR=$(mktemp -d)
+# List PIDs whose cwd is WORK_DIR. Catches descendants that didn't include
+# the path in their argv (e.g. `julia --project=. script.jl` invoked from
+# inside the work dir).
+pids_in_workdir() {
+    for d in /proc/[0-9]*/cwd; do
+        if [ "$(readlink "$d" 2>/dev/null)" = "$WORK_DIR" ]; then
+            basename "$(dirname "$d")"
+        fi
+    done
+}
 cleanup() {
-    # Kill any process (including setsid-detached descendants) that still
-    # references this run's working directory. Catches Julia subprocesses
-    # the agent may have launched into a new session to outlive the harness.
+    local pids
+    pids=$(pids_in_workdir)
+    if [ -n "$pids" ]; then
+        kill -9 $pids 2>/dev/null || true
+    fi
+    # Also catch anything that referenced WORK_DIR by name in argv (covers
+    # the case where the cwd has already been swapped out).
     pkill -9 -f "$WORK_DIR" 2>/dev/null || true
     rm -rf "$WORK_DIR"
 }
@@ -236,13 +250,13 @@ CONTINUATION_PROMPT="The file outputs/rt_estimates.csv does not exist or is empt
 while [ ! -s "outputs/rt_estimates.csv" ] && [ "$retry_count" -lt "$MAX_RETRIES" ]; do
     # If the agent has backgrounded inference and exited, give that process
     # up to POST_AGENT_WAIT_MIN minutes to finish before consuming a retry.
-    if pgrep -f "$WORK_DIR" > /dev/null 2>&1; then
+    if [ -n "$(pids_in_workdir)" ]; then
         echo "Output missing but processes active in WORK_DIR; waiting up to ${POST_AGENT_WAIT_MIN}m for inference to finish"
         post_agent_waits=$((post_agent_waits + 1))
         for _ in $(seq 1 $((POST_AGENT_WAIT_MIN * 2))); do
             sleep 30
             [ -s "outputs/rt_estimates.csv" ] && break
-            pgrep -f "$WORK_DIR" > /dev/null 2>&1 || break
+            [ -z "$(pids_in_workdir)" ] && break
         done
         [ -s "outputs/rt_estimates.csv" ] && break
     fi
