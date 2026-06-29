@@ -223,11 +223,29 @@ claude --print \
 
 # Retry loop: if the agent ended its response before writing outputs/rt_estimates.csv,
 # resume the same session and prompt it to complete the run. Caps at MAX_RETRIES.
-MAX_RETRIES=${MAX_RETRIES:-3}
+# Before triggering a retry, give any backgrounded inference still running in
+# WORK_DIR up to POST_AGENT_WAIT_MIN minutes to complete on its own — the agent
+# may have launched a slow sampler and exited before it finished. This avoids
+# killing inference that would otherwise succeed.
+MAX_RETRIES=${MAX_RETRIES:-5}
+POST_AGENT_WAIT_MIN=${POST_AGENT_WAIT_MIN:-60}
 retry_count=0
+post_agent_waits=0
 CONTINUATION_PROMPT="The file outputs/rt_estimates.csv does not exist or is empty. The run is not complete. Continue the analysis: if an inference script is still running, wait for it to finish (set a long Bash timeout, e.g. 600000ms, and keep polling if the call has been moved to the background); if it failed or was never launched to completion, fix and re-run it. Only end your response once outputs/rt_estimates.csv exists on disk and contains the required columns."
 
 while [ ! -s "outputs/rt_estimates.csv" ] && [ "$retry_count" -lt "$MAX_RETRIES" ]; do
+    # If the agent has backgrounded inference and exited, give that process
+    # up to POST_AGENT_WAIT_MIN minutes to finish before consuming a retry.
+    if pgrep -f "$WORK_DIR" > /dev/null 2>&1; then
+        echo "Output missing but processes active in WORK_DIR; waiting up to ${POST_AGENT_WAIT_MIN}m for inference to finish"
+        post_agent_waits=$((post_agent_waits + 1))
+        for _ in $(seq 1 $((POST_AGENT_WAIT_MIN * 2))); do
+            sleep 30
+            [ -s "outputs/rt_estimates.csv" ] && break
+            pgrep -f "$WORK_DIR" > /dev/null 2>&1 || break
+        done
+        [ -s "outputs/rt_estimates.csv" ] && break
+    fi
     retry_count=$((retry_count + 1))
     SESSION_ID=$(python3 -c "
 import json, sys
@@ -272,6 +290,7 @@ with open('metadata.json', 'r') as f:
     meta = json.load(f)
 meta['end_time'] = '$END_TIME'
 meta['retry_count'] = $retry_count
+meta['post_agent_waits'] = $post_agent_waits
 meta['output_present'] = $([ -s outputs/rt_estimates.csv ] && echo True || echo False)
 with open('metadata.json', 'w') as f:
     json.dump(meta, f, indent=2)
