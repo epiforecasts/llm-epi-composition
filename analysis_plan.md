@@ -68,14 +68,14 @@ Within **no-spec**, record language and package selection. If (as predicted) mos
 
 | Model | Type | Rationale |
 |---|---|---|
+| Claude Haiku 4.5 (Anthropic) | Commercial frontier (small-tier) | Low end of the Claude size spectrum; tests whether the composition benefit depends on model scale |
 | Claude Sonnet 4.6 (Anthropic) | Commercial frontier (mid-tier) | Default frontier-class deployment for most coding-agent applications |
-| Claude Opus 4.7 (Anthropic) | Commercial frontier (top-tier) | Higher-capability comparison within the same family; tests whether scale and reasoning depth change composition behaviour |
-| GPT-5 (OpenAI) | Commercial frontier | Cross-family comparison from a different model family; supports any cross-family generalisation claim |
-| Llama 3.1 8B (Meta) | Open-source, small | Tertiary; included to demonstrate local inference on consumer hardware (LMIC accessibility) and to bound expected performance at the low end of the model-scale range |
+| Claude Opus 4.7 (Anthropic) | Commercial frontier (top-tier) | High end of the Claude size spectrum; tests whether reasoning depth changes composition behaviour |
+| Qwen3-Coder-30B-A3B-Instruct (Alibaba) | Open-source, coding-tuned | Tertiary; open-weight comparison. Run on the LSHTM HPC via the local vLLM + Qwen Code CLI stack (`~/code/dotfiles/lshtm-local-llm-stack.md`). Included to bound expected open-source performance and demonstrate that the study protocol is reproducible without a commercial API. |
 
-Three frontier-class models across two families (Anthropic Sonnet + Opus, OpenAI GPT-5) form the primary basis for cross-family generalisation and within-family capability comparison. Llama 3.1 8B is run with reduced sample size (see Sample size and crossing, Llama) and is reported as a tertiary comparison; conclusions that hold only on Llama and not on the frontier set are reported but not generalised.
+The primary panel is three Claude models at three scales (Haiku → Sonnet → Opus), enabling a within-family scaling test. Cross-family generalisation is not claimed on the basis of this study; a single-family design is chosen because the primary Anthropic research credits fund only Claude runs. Qwen3-Coder-30B is a tertiary open-weight comparison run with reduced sample size (see Sample size and crossing).
 
-Findings may not generalise to other model families (Gemini, Qwen, Mistral, DeepSeek). This is a documented limitation.
+Findings may not generalise to other model families (Gemini, GPT, Mistral, DeepSeek). This is a documented limitation.
 
 ### Scenarios
 
@@ -257,13 +257,13 @@ Prompts do not specify an inference approach. Bayesian MCMC, variational inferen
 
 Reference implementations serve as a sanity check on the adversarial DGPs (they should recover truth) and as a benchmark for visualisation. They are not used as a grading target; grading is on recovery against simulation truth.
 
-| Scenario | Reference implementation |
+| Scenario | Reference implementation file |
 |---|---|
-| 1a/1b | EpiAware: Renewal + AR(1) latent + NegBin obs with delay |
-| 2 | As above + DoW + time-varying ascertainment |
-| 3 | As above + `StackObservationModels` for multi-stream |
+| 1a, 1b | `reference_solutions/scenario_1b_epiaware.jl` (Renewal + AR(1) latent + NegBinomialError observation with reporting-delay convolution; used for both 1a and 1b since 1a's "open method" reduces to the renewal implementation) |
+| 2 | `reference_solutions/scenario_2_epiaware.jl` (as above plus DoW effect and time-varying Ascertainment) |
+| 3 | `reference_solutions/scenario_3_epiaware.jl` (as above plus `StackObservationModels` for the three streams sharing a single latent) |
 
-An EpiNow2 run is also provided on the same data for scenarios 1a, 1b, 2 (EpiNow2 does not support multi-stream, by design of this study).
+An EpiNow2 reference (`reference_solutions/epinow2_baseline.R`) is applied to scenarios 1a, 1b, and 2 for comparison. EpiNow2 does not support multi-stream shared-latent estimation and is not applied to scenario 3.
 
 ## Evaluation
 
@@ -289,7 +289,9 @@ Reported per condition. If hallucination rate is materially higher in `epiaware`
 
 ### Diagnostic: Automated structural-pattern detectors
 
-Static-analysis detectors flag mechanically detectable structural patterns in submitted code and outputs. Each flag identifies a pattern, not a "correctness departure"; the appropriate model for any given task is a judgment call that depends on the data-generating mechanism. Detectors are developed on a training subsample and calibrated against expert review (Cohen's kappa). They are diagnostic instruments for analysis, not graders. Implemented in `evaluation/detectors.py`.
+Static-analysis detectors flag mechanically detectable structural patterns in submitted code and outputs. Each flag identifies a pattern, not a "correctness departure"; the appropriate model for any given task is a judgment call that depends on the data-generating mechanism. Detectors are diagnostic instruments for analysis, not graders. Implemented in `evaluation/detectors.py`.
+
+**Calibration protocol.** After all runs complete, the detector validator (see Roles & Responsibilities) reads a stratified sample of 60 submissions (5 per (scenario, condition) cell), applies each detector heuristically as an independent human read, and produces a per-detector confusion matrix against `evaluation/detectors.py` output. Cohen's kappa is computed per detector. Detectors with kappa < 0.6 are flagged as unreliable and their downstream analyses are marked "diagnostic only" in Tables 5 and 6. The confusion matrices and kappa values are included in the paper.
 
 | Detector flag | Pattern detected | Approach | Feasibility |
 |---|---|---|---|
@@ -346,11 +348,11 @@ Four paraphrases × 4 scenarios × 3 conditions = 48 prompt variants.
 
 The choice of three LLM frontier families (OpenAI, Google, Anthropic) is not exhaustive: Mistral, Qwen, DeepSeek, xAI, Cohere, and others are omitted on cost grounds. We document the choice as a limitation.
 
-Before pre-registration is finalised, the bundled API docs (`prompts/turing_api_docs.md`, `prompts/epiaware_api_docs.md`) are checked for any content that constitutes a worked Rt example or otherwise violates the MWK operational rule. This is done by two LLM instances (different families, no study context) reading each section of both files against the rule and flagging any violating content. The LLM check is implemented in `evaluation/validate_api_docs.py` and the resulting report is committed at `prompts/mwk_validation_report.md`. Any flagged content is edited out and the validation re-run before pre-registration.
+The bundled API docs (`prompts/turing_api_docs.md`, `prompts/epiaware_api_docs.md`) are checked for content that constitutes a worked Rt example or otherwise violates the MWK operational rule. Two LLM instances (different families, no study context) read each section of both files against the rule and flag any violating content. The check is implemented in `evaluation/validate_api_docs.py` and the report is committed at `prompts/mwk_validation_report.md`. Any flagged content is removed before the pre-registration commit and the check is re-run.
 
 ### Runs
 
-n=10 runs per (scenario, condition, paraphrase) for the primary recovery analysis on the canonical variant. n=5 runs per (scenario, condition, paraphrase, variant) for the adversarial-DGP fingerprint analysis. See "Sample size and crossing" below.
+n=5 runs per (scenario, condition, paraphrase) for the primary recovery analysis on the canonical variant. n=3 runs per (scenario, condition, variant) for the adversarial-DGP fingerprint analysis (paraphrase 01 only). See "Sample size and crossing" below.
 
 ### Temperature is not a randomisation axis in this study
 
@@ -358,29 +360,29 @@ The Anthropic Claude Code CLI used to drive agent runs does not expose a `temper
 
 ### Sample size and crossing
 
-These dimensions are crossed multiplicatively unless stated otherwise:
+These dimensions are crossed multiplicatively unless stated otherwise. The design is deliberately compact: the multiplicative crossing of paraphrase × replicate × run in earlier drafts overspecified the sampling and made the study prohibitively expensive. The reduced design below retains statistical power for every pre-specified prediction while keeping wall-clock and cost tractable.
 
 **Primary recovery analysis** (Tables 1, 5, 6; Figures 1, 5, 6):
 - Variant: canonical only.
-- Replicate: 3 of the 20 generated replicates per cell, seeds {101, 102, 103}.
+- Replicate: 1 (seed 101) of the 20 generated replicates per cell.
 - Paraphrase: 4 (slots 01, 02, 03, 04).
-- Runs: 10 per (scenario, condition, paraphrase, replicate) cell.
-- Total per (scenario, condition): 4 × 3 × 10 = 120 runs.
-- Total per model across all (scenario, condition) cells: 12 × 120 = 1440 runs.
+- Runs: 5 per (scenario, condition, paraphrase) cell.
+- Total per (scenario, condition): 4 × 1 × 5 = 20 runs.
+- Total per model across all (scenario, condition) cells: 12 × 20 = 240 runs.
 
 **Adversarial-DGP fingerprint analysis** (Table 2, Figure 2):
-- Variant: 9 (all of the panel — canonical, short_gi, long_delay, strong_dow, high_asc_var, low_dispersion, extreme_dispersion, abrupt_change, sinusoidal_rt).
-- Replicate: 3 per variant, seeds {101, 102, 103}.
+- Variant: 5 (canonical + short_gi + long_delay + extreme_dispersion + abrupt_change), a subset of the nine defined variants below. Chosen to stress the four modelling dimensions most likely to differentiate submissions: discretisation (short_gi), delay handling (long_delay), likelihood / overdispersion (extreme_dispersion), and smoothing prior responsiveness (abrupt_change). The other four variants (strong_dow, high_asc_var, low_dispersion, sinusoidal_rt) remain defined for possible follow-up but are not part of the confirmatory analysis.
+- Replicate: 1 (seed 101) per variant.
 - Paraphrase: paraphrase 01 only.
-- Runs: 5 per (scenario, condition, variant, replicate).
-- Total per (scenario, condition): 9 × 3 × 5 = 135 runs.
-- Total per model: 12 × 135 = 1620 runs.
+- Runs: 3 per (scenario, condition, variant).
+- Total per (scenario, condition): 5 × 1 × 3 = 15 runs.
+- Total per model: 12 × 15 = 180 runs.
 
-**Across three frontier models (Sonnet 4.6, Opus 4.7, GPT-5):** ~9,180 runs total (3 × (1440 + 1620)). Cost estimate at current API rates: ~$1360 for Sonnet, ~$6800 for Opus, ~$4000 for GPT-5; total ≈ $12k for the frontier set.
+**Across three Claude models (Haiku 4.5, Sonnet 4.6, Opus 4.7):** 3 × (240 + 180) = **1260 runs** for the primary panel. Cost estimate at current API rates: ~$150 for Haiku, ~$650 for Sonnet, ~$1900 for Opus; total ≈ **$2700** for the primary panel, well inside the Anthropic research-credit budget.
 
-The primary and adversarial analyses are independent: the runs do not overlap. Running them sequentially, the harness cost is bounded.
+The primary and adversarial analyses are independent: the runs do not overlap.
 
-For Llama 3.1 8B (if retained as a tertiary model), reduce within-cell replication to keep total wall-clock under one week of single-GPU compute; report the reduced sample size explicitly.
+For Qwen3-Coder-30B (tertiary open-weight model), the primary panel is replicated with the same 240 runs; the adversarial panel is reduced to 3 variants (canonical, long_delay, extreme_dispersion) to keep total wall-clock under one week of shared single-GPU compute. Reduced sample size is reported explicitly with the tertiary results.
 
 ### Reporting
 
@@ -388,7 +390,7 @@ Every result reported as a distribution across paraphrases × replicates × runs
 
 ## Blinding
 
-- **Expert review blinding.** Submissions are preprocessed deterministically to strip imports and package-specific syntax before review. Where full stripping is infeasible (e.g. scenario 3 multi-stream structure), the effective blinding is tested: reviewers guess the condition on a calibration subset; the blinding-failure rate is reported as a study limitation.
+- **Expert review blinding.** Before review, submissions pass through a deterministic preprocessor (`evaluation/blind_submission.py`) that (a) strips `using`/`import`/`library()`/`from ... import` statements, (b) rewrites known package-namespaced calls (`EpiNow2::`, `EpiAware.`, `PyMC.`, `EpiEstim::` etc.) to a neutral placeholder, and (c) removes filename headers or comments naming a package or condition. Where full stripping is infeasible (e.g. scenario 3 multi-stream structure that only certain packages naturally express), the residual blinding is tested: reviewers guess the condition on a calibration subset of 24 submissions balanced across scenarios × conditions; the blinding-failure rate is reported.
 - **Internal role separation.** Detector validation is performed by someone other than the detector implementer (see Roles & Responsibilities below). Other operational roles are concentrated in the project lead; this concentration is acknowledged in Limitations.
 
 ## Roles & Responsibilities
@@ -397,10 +399,10 @@ This is a small project. Most operational work falls to one person (project lead
 
 | Role | Responsibility | Person |
 |---|---|---|
-| Project lead | Slot 01 prompts (drafted with LLM assistance), simulation generator, evaluation harness, detector implementation, review coordination, pre-registration commit | TBD |
+| Project lead | Slot 01 prompts (drafted with LLM assistance), simulation generator, evaluation harness, detector implementation, review coordination, pre-registration commit | Sebastian Funk |
 | Expert reviewer A | Reviews stratified subsample + semantic departures + scenario 1a method identification; blinded to LLM and condition | TBD (external preferred; project member acceptable) |
 | Expert reviewer B | Independent second review for inter-rater reliability (Cohen's κ) and disagreement resolution | TBD (external preferred) |
-| Detector validator | Reads a random sample of 50–100 submissions across cells and confirms that each detector flag (`flag_poisson_only`, `flag_no_smoothing_term`, `flag_no_delay_handling`, etc.) matches an independent human read of the submitted code. Output: per-detector confusion matrix and a list of misfires. | TBD (modeller or statistician who can read Julia/Python) |
+| Detector validator | Reads a random sample of 50–100 submissions across cells and confirms that each detector flag (`flag_poisson_only`, `flag_no_smoothing_term`, `flag_no_delay_handling`, etc.) matches an independent human read of the submitted code. Output: per-detector confusion matrix and a list of misfires. | TBD (modeller or statistician who can read Julia/Python; not the project lead) |
 
 If Cohen's κ between reviewers A and B shows substantial disagreement, a third reviewer is consulted. If recruitment of two reviewers fails, expert review is reduced to a single reviewer (no inter-rater stats) and this is reported as a substantive limitation rather than as a minor methodological note.
 
@@ -439,28 +441,30 @@ Estimated by the LLM:
 
 Prompts do not provide true parameter values for quantities the LLM is expected to estimate, and do not disclose the simulation DGP.
 
-Phase 1 prompts are obsolete: the existing prompts in `prompts/scenario_*/` describe UK COVID-19 case counts with no parameters given. They will be rewritten for the simulation phase to match the specification above.
+Base prompts (slot 01) live at `prompts/{scenario}/paraphrases/{condition}/01.md`. Each is a self-contained markdown file. LLM-paraphrased slots 02–04 (see Randomisation → Prompt paraphrases) live alongside as `02.md`, `03.md`, `04.md` in the same directory. The base prompts and paraphrases are pinned in the pre-registration commit and are not modified during the confirmatory analysis.
 
 ### Execution: agentic approach
 
-Each LLM is given the prompt and asked to write code, execute it, and fix errors iteratively. This reflects realistic use of coding assistants (Claude Code, Cursor, etc.).
+Each LLM is given the prompt and asked to write code, execute it, and fix errors iteratively. This reflects realistic use of coding assistants.
 
 **Protocol:**
-1. LLM writes code, executes, and fixes errors
-2. Maximum 10 iterations per run
-3. 10-minute timeout per execution attempt; 60-minute total session timeout
-4. All iterations, error messages, and fixes logged
-5. Isolated working directory: model cannot see reference solutions, other runs, or study design
+1. The LLM writes code, executes it, and fixes errors iteratively.
+2. Maximum 200 assistant turns per session (`--max-turns 200` for Claude Code; equivalent limit for the Qwen Code CLI).
+3. Bash subprocess timeout is capped by the CLI at 10 minutes per call; longer-running inference is expected to be backgrounded by the agent and polled.
+4. If the session ends without producing `outputs/rt_estimates.csv`, the harness checks whether any process is still running inside the sandbox and waits up to `POST_AGENT_WAIT_MIN=60` minutes for it to finish before consuming a retry. Up to `MAX_RETRIES=5` retries are made by resuming the same session with a continuation prompt. All retry sessions and their post-agent waits are logged in `metadata.json`.
+5. All conversation logs, generated code, and outputs are preserved. The isolated `mktemp` working directory is deleted at session end; results are copied to `runs/{scenario}/{condition}/par_{p}/{variant}/rep_{r}/{model}/run_{n}/`.
+6. Model cannot see reference solutions, other runs, truth files, or study design.
 
 **Tools:**
-- Claude Code for Claude models
-- Aider with Ollama for open-source models
+- Claude Code (`claude --print`) for Claude models (Haiku 4.5, Sonnet 4.6, Opus 4.7). Implemented in `evaluation/run_agentic.sh`.
+- Qwen Code CLI + vLLM on the LSHTM HPC (per the shared stack at `~/code/dotfiles/lshtm-local-llm-stack.md`) for Qwen3-Coder-30B. A parallel harness `evaluation/run_agentic_qwen.sh` wraps the same protocol.
 
-**Recorded per run:**
-- Final code and outputs
-- Number of iterations required
-- Error types encountered
-- Whether the run succeeded within iteration limit
+**Recorded per run** (in `metadata.json` and the conversation logs):
+- Final code and outputs (`outputs/rt_estimates.csv` if produced).
+- Number of retries used and the number of post-agent waits.
+- Duration (start/end timestamps).
+- Whether the run succeeded (`output_present`).
+- Iteration-level bash and error events are recoverable from the conversation JSONL.
 
 ### Expert review protocol
 
@@ -473,12 +477,12 @@ Each LLM is given the prompt and asked to write code, execute it, and fix errors
 
 ## Pre-specified Predictions
 
-Stated here before any model is queried under this revised design. Each prediction names a quantitative effect size we will treat as confirming the prediction. "95% bootstrap CI" refers to a non-parametric bootstrap over the unit-of-replication implied by the comparison (e.g. paraphrase × replicate × run cells), with 1000 resamples.
+Stated here before any model is queried under this revised design. Each prediction names a quantitative effect size we will treat as confirming the prediction. "95% bootstrap CI" refers to a non-parametric bootstrap over the unit-of-replication implied by the comparison (e.g. paraphrase × run cells for the primary analysis, variant × run cells for the adversarial fingerprint), with 1000 resamples. Implemented in R with `boot::boot` (percentile method). The exact analysis code is committed at `evaluation/analyse.R` and run once, after all agent runs are complete.
 
 1. **no-spec defaults to packages.** In ≥70% of (no-spec, scenario 1a) and (no-spec, scenario 1b) submissions, the produced code uses R + EpiEstim or R + EpiNow2 or Python + PyMC, regardless of model. *Confirmation:* the lower 95%-CI bound of the proportion is ≥ 0.70.
 2. **Recovery is comparable across conditions on scenarios 1a/1b.** The median Rt RMSE difference between any pair of conditions on (scenario 1a) and (scenario 1b) is ≤ 0.02. *Confirmation:* all three pairwise condition contrasts on each scenario have a 95%-CI that includes 0 and an absolute-median-difference ≤ 0.02.
 3. **EpiAware shows lower Rt RMSE than Julia-bare on scenarios 2–3.** Median Rt RMSE in (epiaware, scenario 2) is at least 0.02 lower than in (julia, scenario 2); the gap on scenario 3 is at least 0.04 lower. *Confirmation:* both differences have 95% bootstrap CIs that exclude zero in the predicted direction.
-4. **no-spec fails on scenario 3 more often than EpiAware.** Run-level failure rate (run did not produce a valid `outputs/rt_estimates.csv` within 10 iterations) in (no-spec, scenario 3) is at least 20 percentage points higher than in (epiaware, scenario 3). *Confirmation:* the difference has a 95%-CI excluding zero in the predicted direction and lower bound ≥ 0.20.
+4. **no-spec fails on scenario 3 more often than EpiAware.** Run-level failure rate (run did not produce a valid `outputs/rt_estimates.csv` at session end, after the harness's retry and post-agent-wait budget is exhausted) in (no-spec, scenario 3) is at least 20 percentage points higher than in (epiaware, scenario 3). *Confirmation:* the difference has a 95%-CI excluding zero in the predicted direction and lower bound ≥ 0.20.
 5. **Adversarial DGP performance correlates with automated detector flags.**
    - Submissions flagged `flag_no_delay_handling`: median Rt RMSE on `long_delay` is at least 0.05 higher than on `canonical`. 95%-CI excludes zero.
    - Submissions flagged `flag_poisson_only` (Poisson-only observation likelihood): median 90% coverage on `extreme_dispersion` is at least 15 percentage points lower than on `low_dispersion`. 95%-CI excludes zero.
@@ -522,7 +526,9 @@ The base prompts (slot 01) were drafted by the project authors with LLM coding-a
 
 The renewal equation is canonical in training data, so the DGP is also canonical at the structural level. Simulation with ground truth addresses *data* contamination but cannot address *structural* contamination. Adversarial DGPs that stress specific modelling decisions partially mitigate by separating "recalled machinery" from "correctly implemented machinery".
 
-Model coverage is limited to two frontier families (Anthropic, OpenAI) plus one small open-source model (Meta Llama 3.1 8B). Findings may not generalise to Gemini, Qwen, Mistral, DeepSeek, or other frontier families.
+Model coverage is limited to one commercial family (Anthropic: Haiku 4.5, Sonnet 4.6, Opus 4.7) plus one open-weight coding-tuned model (Qwen3-Coder-30B) as a tertiary comparison. The commercial-frontier arm is single-family because the Anthropic research credits fund only Claude runs. Findings may not generalise to GPT-5, Gemini, Mistral, DeepSeek, or other frontier families; any effect specific to Claude's training or post-training would be indistinguishable from an effect of frontier LLMs in general.
+
+The design uses 1 replicate per (scenario, condition) cell rather than crossing agent runs with data replicates. Run-level and data-level stochasticity are therefore pooled in the reported distributions rather than separated. This trades a lower total run count against a weaker claim about across-dataset generalisation. Replicates 102–120 are generated and available for follow-up analysis if the confirmatory result is ambiguous.
 
 There is no independent replication. We publish the full harness and invite replication with a pre-specified concordance criterion (primary recovery claim replicated if point estimates within 10pp and same qualitative ordering of conditions).
 
@@ -575,4 +581,5 @@ Scenarios 1a/1b/2/3 form a gradient of composition-forcing. A DSL benefit that i
 *Document created: 2024-12-07*
 *Revised: 2026-04-23 (recovery-based evaluation, no-spec/Julia/EpiAware axis, adversarial DGPs, automated detectors, prompt randomisation, minimum working knowledge docs principle, hallucination rate as secondary outcome)*
 *Revised: 2026-06 (main reviewer concerns addressed: explicit sample-size and crossing, temperature axis dropped, quantitative effect sizes for all predictions, reference EpiAware AR prior calibrated to HalfNormal(0.05), evaluation window days 25–125, sinusoidal_rt variant added, extreme_dispersion rename, three-family LLM paraphrase scheme, structural-pattern detector framing, slot-01 base prompts acknowledged as LLM-drafted)*
+*Revised: 2026-07 (compact design: 5 runs × 4 paraphrases × 1 replicate on canonical + 3 runs on 4 non-canonical variants, ~420 runs per model; model panel switched to Anthropic-only Haiku 4.5 + Sonnet 4.6 + Opus 4.7 with Qwen3-Coder-30B as tertiary open-weight; execution protocol updated to match implemented harness (retries with `--resume`, wait-for-inference, cwd-based process detection); blinding preprocessor, detector calibration protocol, and reference-solution file paths pinned; bootstrap analysis tool specified as R `boot`)*
 *Status: Revised draft, pending pre-registration*
