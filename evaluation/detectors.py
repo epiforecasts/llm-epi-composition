@@ -228,6 +228,201 @@ def detect_negative_rt(run_dir: Path) -> Detection:
     )
 
 
+def detect_no_censoring(sources: dict[str, str]) -> Detection:
+    """Flag when reporting-delay handling omits interval censoring.
+
+    Aligned with the DGP's double interval censoring. Distinguishes proper
+    censoring (censored_pmf, CDF-difference discretisation, double interval
+    censoring) from delays handled without censoring (raw pdf lookup at integers,
+    exponential-decay convolution kernels, or no delay at all).
+    """
+    proper_patterns = [
+        r"\bcensored_pmf\b",
+        r"\bdouble[_ ]censored[_ ]pmf\b",
+        r"\bdouble[_ ]interval[_ ]censoring\b",
+        r"\binterval[_ ]censor\w*",
+        r"\bcdf\s*\(.+?\)\s*-\s*cdf\s*\(",
+    ]
+    proper_files = [
+        n for n, s in sources.items()
+        if any(re.search(p, s, re.IGNORECASE) for p in proper_patterns)
+    ]
+    # Only meaningful if the submission actually has delay handling at all.
+    # If no delay is present at all, the censoring detector abstains (None).
+    delay_present = detect_no_delay(sources).flagged is False
+    return Detection(
+        name="flag_no_censoring",
+        flagged=(delay_present and not proper_files) if delay_present else None,
+        feasibility="partial",
+        evidence={
+            "proper_files": proper_files,
+            "delay_present": delay_present,
+        },
+    )
+
+
+def detect_no_truncation(sources: dict[str, str]) -> Detection:
+    """Flag when the delay or generation-interval distribution is not truncated.
+
+    Estimator-side approaches to truncation include: renormalising a
+    discretised PMF over a finite window, using `Truncated(dist, lo, hi)`,
+    a `truncation` kwarg, or an explicit maximum-lag constant (D_max, S_max,
+    tau_max, gen_max, delay_max, S, D). Distributions used as continuous
+    convolution kernels without any of these are flagged.
+    """
+    patterns = [
+        r"\bTruncated\s*\(",
+        r"\btruncated\s*\(",
+        r"\btruncation\b",
+        r"\btruncate\w*",
+        r"\bD_?max\b",
+        r"\bS_?max\b",
+        r"\btau_?max\b",
+        r"\bgen_?max\b",
+        r"\bdelay_?max\b",
+        r"\bmax_?lag\b",
+        r"\brenormali[sz]\w*",
+        r"\bsum\s*\(pmf\)",
+        r"\bpmf\s*/=?\s*sum\s*\(pmf\)",
+    ]
+    matched = [
+        n for n, s in sources.items()
+        if any(re.search(p, s, re.IGNORECASE) for p in patterns)
+    ]
+    return Detection(
+        name="flag_no_truncation",
+        flagged=not matched,
+        feasibility="partial",
+        evidence={"matched_files": matched},
+    )
+
+
+def detect_no_dow(sources: dict[str, str]) -> Detection:
+    """Flag absence of any day-of-week or weekend effect in the model.
+
+    Relevant for scenarios 2 and 3, where the DGP includes a Mon–Sun
+    multiplier. The detector is condition- and scenario-agnostic; downstream
+    analysis conditions on the scenario.
+    """
+    patterns = [
+        r"\bdow\b",
+        r"\bday[_ ]of[_ ]week\b",
+        r"\bdayofweek\b",
+        r"\bweekend\b",
+        r"\bweekly[_ ](cycle|effect|multiplier)\b",
+        r"\bascertainment_dayofweek\b",
+        r"\bbroadcast_weekly\b",
+        r"\bdow_\w+",
+        r"\bw_dow\b",
+        r"\bday_effect\b",
+        r"Dates?\.dayofweek",
+    ]
+    matched = [
+        n for n, s in sources.items()
+        if any(re.search(p, s, re.IGNORECASE) for p in patterns)
+    ]
+    return Detection(
+        name="flag_no_dow",
+        flagged=not matched,
+        feasibility="partial",
+        evidence={"matched_files": matched},
+    )
+
+
+def detect_no_ascertainment(sources: dict[str, str]) -> Detection:
+    """Flag absence of a time-varying ascertainment structure.
+
+    Relevant for scenarios 2 and 3, where the DGP has a time-varying
+    reporting fraction. Constant ascertainment counts as absent for the
+    purposes of this flag: any scalar `alpha` or `p_report` without a time
+    index is not enough. We require some indication of temporal variation
+    (a vector, a random walk / AR on the ascertainment, or an EpiAware
+    `Ascertainment` block).
+    """
+    patterns = [
+        r"\bAscertainment\b",
+        r"\bascertainment\w*\[",           # indexed ascertainment (time-varying)
+        r"\balpha_t\b",
+        r"\balpha\[",
+        r"\breporting[_ ]fraction\b.*(RandomWalk|RW|AR|GP|spline|walk)",
+        r"\bp_report\b.*(RandomWalk|RW|AR|GP|spline|walk)",
+        r"\btime[_ ]varying[_ ]ascertain\w*",
+        r"\btime[_ ]varying[_ ]report\w*",
+    ]
+    matched = [
+        n for n, s in sources.items()
+        if any(re.search(p, s, re.IGNORECASE) for p in patterns)
+    ]
+    return Detection(
+        name="flag_no_ascertainment",
+        flagged=not matched,
+        feasibility="partial",
+        evidence={"matched_files": matched},
+    )
+
+
+def detect_no_multistream_latent(sources: dict[str, str], run_dir: Path) -> Detection:
+    """Scenario-3-only: flag when the model does not share latent Rt across streams.
+
+    A scenario-3 submission is expected to model a single latent Rt (or a
+    single latent infection process) that generates cases, hospitalisations,
+    and deaths through separate observation models. Submissions that fit
+    three independent single-stream models, or that only use one of the
+    three data files, are flagged.
+
+    Only meaningful for scenario_3. Returns `None` (abstain) for other
+    scenarios.
+    """
+    scenario = _infer_scenario(run_dir)
+    if scenario != "scenario_3":
+        return Detection(
+            name="flag_no_multistream_latent",
+            flagged=None,
+            feasibility="partial",
+            evidence={"reason": f"scenario is {scenario}, not scenario_3"},
+        )
+    all_three_present = all(
+        any(kw in s for s in sources.values())
+        for kw in ("cases.csv", "hospitalisations.csv", "deaths.csv")
+    )
+    sharing_patterns = [
+        r"\bStackObservationModels\b",
+        r"\bstack_observation_models\b",
+        r"\bshared[_ ]latent\b",
+        r"\bshared[_ ]Rt\b",
+        r"\bshared[_ ]infection\w*",
+        r"\bshared[_ ]I_t\b",
+        r"\bjoint[_ ]latent\b",
+        r"\bjoint[_ ]infection\w*",
+    ]
+    sharing_files = [
+        n for n, s in sources.items()
+        if any(re.search(p, s, re.IGNORECASE) for p in sharing_patterns)
+    ]
+    flagged = not (all_three_present and sharing_files)
+    return Detection(
+        name="flag_no_multistream_latent",
+        flagged=flagged,
+        feasibility="partial",
+        evidence={
+            "all_three_streams_referenced": all_three_present,
+            "sharing_files": sharing_files,
+        },
+    )
+
+
+def _infer_scenario(run_dir: Path) -> str | None:
+    """Extract scenario name from run_dir path.
+
+    Expected layout: runs/{scenario}/{condition}/par_{p}/{variant}/rep_{r}/{model}/run_{n}
+    """
+    parts = run_dir.parts
+    for part in parts:
+        if part.startswith("scenario_"):
+            return part
+    return None
+
+
 def detect_wrong_likelihood(sources: dict[str, str]) -> Detection:
     """Heuristic: observation modelled with Normal/Gaussian rather than count distribution."""
     patterns = [
@@ -258,12 +453,19 @@ DETECTOR_FUNCS_SOURCE = (
     detect_poisson_only,
     detect_no_smoothing,
     detect_no_delay,
+    detect_no_censoring,
+    detect_no_truncation,
+    detect_no_dow,
+    detect_no_ascertainment,
     detect_no_discretisation,
     detect_wrong_likelihood,
 )
 DETECTOR_FUNCS_OUTPUT = (
     detect_no_uncertainty,
     detect_negative_rt,
+)
+DETECTOR_FUNCS_SOURCE_AND_DIR = (
+    detect_no_multistream_latent,
 )
 
 
@@ -274,6 +476,8 @@ def run_detectors(run_dir: Path) -> dict[str, Any]:
         detections.append(fn(sources))
     for fn in DETECTOR_FUNCS_OUTPUT:
         detections.append(fn(run_dir))
+    for fn in DETECTOR_FUNCS_SOURCE_AND_DIR:
+        detections.append(fn(sources, run_dir))
     return {
         "run_dir": str(run_dir),
         "n_source_files": len(sources),
