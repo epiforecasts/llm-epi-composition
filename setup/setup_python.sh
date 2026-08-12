@@ -15,8 +15,10 @@ if command -v mamba &> /dev/null; then
         echo "Environment '$ENV_NAME' already exists"
     else
         echo "Creating conda environment..."
-        mamba create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn seaborn -y
+        mamba create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn seaborn numpyro jax -y
     fi
+    # Provider SDKs for evaluation/generate_paraphrases.py — not on conda; use pip inside the env.
+    mamba run -n "$ENV_NAME" pip install anthropic openai google-genai
     echo ""
     echo "Python environment setup complete!"
     echo "To activate: conda activate $ENV_NAME"
@@ -29,8 +31,9 @@ if command -v conda &> /dev/null; then
         echo "Environment '$ENV_NAME' already exists"
     else
         echo "Creating conda environment..."
-        conda create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn seaborn -y
+        conda create -n "$ENV_NAME" python=3.11 pymc arviz pandas numpy matplotlib scipy scikit-learn seaborn numpyro jax -y
     fi
+    conda run -n "$ENV_NAME" pip install anthropic openai google-genai
     echo ""
     echo "Python environment setup complete!"
     echo "To activate: conda activate $ENV_NAME"
@@ -55,7 +58,7 @@ source "$VENV_DIR/bin/activate"
 
 echo "Installing Python packages..."
 pip install --upgrade pip
-pip install pymc arviz numpy pandas matplotlib seaborn scipy scikit-learn
+pip install pymc arviz numpy pandas matplotlib seaborn scipy scikit-learn numpyro jax anthropic openai google-genai
 
 echo ""
 echo "Python environment setup complete!"
