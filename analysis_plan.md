@@ -372,26 +372,52 @@ rates.
 
 - **LOC**: non-comment, non-blank lines of the final scripts that produce
   `outputs/rt_estimates.csv`, per submission. Automated; reported as distribution per
-  condition.
-- **Readability rating**: expert reviewers rate each stratified-subsample submission
-  on a 1–5 readability scale (1 = incomprehensible, 5 = crisp) as part of the
-  standard review pass. Inter-rater Cohen's kappa is reported.
+  condition. This is the confirmatory interpretability metric.
+
+Subjective readability ratings from reviewers are not part of the confirmatory
+outcome for this axis because knowing the condition biases them. They may be
+recorded as optional descriptive fields on the review sheet.
 
 ### Reviewability (confirmatory axis 4)
 
-Blinded expert reviewers, on the stratified subsample, record:
+Measured via **injected-defect detection**. The review coordinator constructs a
+pool of samples that mixes (a) defect-free reference solutions and curated clean
+LLM submissions with (b) reference solutions into which one defect from
+`evaluation/mutation_catalogue.md` has been injected. Reviewers do not know which
+samples are mutated or which mutation was applied to any given sample; they know
+the condition (this is unavoidable, see Blinding).
 
-- **Time to verify**: minutes from starting the review to reaching a confident
-  assessment of what the model does.
-- **Reviewer confidence**: 1–5 scale of how confident the reviewer is in their
-  reconstruction of the model.
-- **Correct component identification**: for each modelling component (as listed
-  under Component correctness), did the reviewer correctly identify whether the
-  submission includes it?
+For each (reviewer, sample) pair:
 
-Reviewability differs from interpretability: interpretability asks whether the code
-reads as legible; reviewability asks whether an expert can efficiently verify that
-the code does what it claims.
+- **True positive** — reviewer identifies the injected defect.
+- **False negative** — reviewer misses the injected defect.
+- **False positive** — reviewer flags a defect that was not injected.
+- **True negative** — reviewer correctly identifies a clean sample as
+  defect-free.
+
+Per condition, the plan reports:
+
+- **Sensitivity** = TP / (TP + FN). Headline reviewability metric — does the
+  code from this condition allow a reviewer to detect defects?
+- **Specificity** = TN / (TN + FP).
+- **Time to complete review** — minutes per sample, reported as a distribution.
+- **Correct component identification** — factual identification of which
+  modelling components are present on the checklist (from the same review pass).
+
+Injected defects double as ground truth for detector calibration: for each
+mutation type, the corresponding automated detector should fire on the mutated
+sample. The confusion matrix between injected defects and detector flags is
+reported per detector.
+
+Reviewability differs from interpretability: interpretability (axis 3) asks
+whether the code reads as legible without any ground-truth defect; reviewability
+(this axis) asks whether an expert can detect actual defects planted in the
+code.
+
+Subjective ratings (readability, reviewer confidence) that were part of an
+earlier draft are not confirmatory outcomes because knowing the condition
+biases them. They may be recorded as optional descriptive fields on the review
+sheet but are not reported as confirmatory results.
 
 ### Descriptive axes
 
@@ -521,7 +547,8 @@ Every result reported as a distribution across paraphrases × replicates × runs
 
 ## Blinding
 
-- **Expert review blinding.** Before review, submissions pass through a deterministic preprocessor (`evaluation/blind_submission.py`) that (a) strips `using`/`import`/`library()`/`from ... import` statements, (b) rewrites known package-namespaced calls (`EpiNow2::`, `EpiAware.`, `PyMC.`, `EpiEstim::` etc.) to a neutral placeholder, and (c) removes filename headers or comments naming a package or condition. Where full stripping is infeasible (e.g. scenario 3 multi-stream structure that only certain packages naturally express), the residual blinding is tested: reviewers guess the condition on a calibration subset of 24 submissions balanced across scenarios × conditions; the blinding-failure rate is reported.
+- **Blinding to condition is not attempted.** Language and package structure identify the condition on inspection: R/Python code is `no-spec`, Julia with raw Turing is `julia`, Julia with primitives named `Renewal`/`LatentDelay`/`Ascertainment` is `epiaware`. Stripping imports would not hide these signatures. The plan does not claim blinded review and does not run a blinding-preprocessor step.
+- **Blinding to injected defects is achievable.** The reviewability outcome uses a mutation-based ground truth: the coordinator injects known defects from `evaluation/mutation_catalogue.md` into a subset of samples, and reviewers try to detect them. The reviewer knows the condition but does not know which samples are mutated or which mutation was applied. Sensitivity at defect detection per condition is a confirmatory outcome.
 - **Internal role separation.** Detector validation is performed by someone other than the detector implementer (see Roles & Responsibilities below). Other operational roles are concentrated in the project lead; this concentration is acknowledged in Limitations.
 
 ## Roles & Responsibilities
@@ -599,12 +626,20 @@ Each LLM is given the prompt and asked to write code, execute it, and fix errors
 
 ### Expert review protocol
 
-- Two independent infectious-disease modellers review the stratified subsample and semantic departures
-- Reviewers blinded to LLM and condition (via stripping preprocessor)
-- Each reviewer independently assesses each code sample
-- Inter-rater reliability assessed (Cohen's kappa)
-- Disagreements resolved by discussion; third reviewer consulted if needed
-- **No LLM assistance permitted**
+Full protocol at `evaluation/review_protocol.md`. Summary:
+
+- Two independent infectious-disease modellers review the sample pool.
+- Reviewers are not blinded to condition (language and package structure make
+  condition obvious). They are blinded to which samples contain injected defects
+  and to which mutation was applied.
+- The pool mixes defect-free samples (reference solutions and curated clean
+  submissions) with mutated reference solutions (`evaluation/mutation_catalogue.md`).
+- Reviewers produce, per sample: a list of identified defects, a component
+  checklist, a departure classification (for real submissions), and
+  semantic-departure flags.
+- Inter-rater Cohen's kappa is computed per outcome.
+- Disagreements resolved by discussion; third reviewer tie-breaks if needed.
+- **No LLM assistance permitted.**
 
 ## Pre-specified Predictions
 
@@ -671,9 +706,12 @@ reported as such.
 
 ### Reviewability (confirmatory axis 4)
 
-8. **Review time.** Blinded expert reviewers verify `epiaware` submissions at least
-   25% faster than `julia` submissions on scenarios 2 and 3 (median minutes to
-   confident assessment). *Confirmation:* 95%-CI on the ratio of medians excludes 1.
+8. **Injected-defect detection sensitivity.** In the expert-review pass on
+   samples with injected defects (`evaluation/mutation_catalogue.md`), detection
+   sensitivity is higher in `epiaware` than in `julia` by at least 15 percentage
+   points, and higher than in `no-spec` by at least 10 percentage points, on
+   scenarios 2 and 3. *Confirmation:* 95%-CIs on both differences exclude zero
+   in the predicted direction.
 
 ### Capability-conditional gap
 
@@ -705,7 +743,7 @@ Organised by outcome axis. Confirmatory axes lead; descriptive axes follow.
 
 **Table 4: Interpretability metrics.** Rows: condition × scenario. Columns: median LOC, IQR of LOC, mean readability rating (1–5), inter-rater kappa on readability.
 
-**Table 5: Reviewability metrics.** Rows: condition × scenario. Columns: median minutes to confident assessment, mean reviewer confidence (1–5), rate of correct component identification.
+**Table 5: Reviewability metrics.** Rows: condition × scenario. Columns: injected-defect detection sensitivity, specificity, precision; median minutes per sample; rate of correct component identification on the checklist.
 
 **Table 6: Instruction adherence and tool distribution in no-spec.** For julia and epiaware: adherence rate. For no-spec, per model × scenario: distribution of chosen language (R / Python / Julia / other) and package.
 

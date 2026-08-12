@@ -1,197 +1,213 @@
 # Expert review protocol
 
-This document defines the review pass that produces the reviewability,
-interpretability, and component-correctness data used in the paper. Every
-submission in the stratified subsample plus every submission flagged as a
-semantic departure is reviewed under this protocol.
+This protocol produces the reviewability, component-correctness, and
+scenario-1a method-identification data used in the paper. Reviewers see
+raw code — blinding to condition is not attempted, because language and
+package structure identify the condition on inspection. Instead the review
+pass uses **injected defects** to give reviewability a ground-truth signal
+that doesn't depend on blinding.
 
 Reviewers work independently. A shared discussion happens only after each
-reviewer has finished the subsample.
+reviewer has finished the review pool.
+
+## What the review measures
+
+The review pool contains a mix of:
+
+- **Defect-free samples** — reference solutions and a curated set of real
+  LLM submissions that pass every automated detector.
+- **Mutated samples** — reference solutions with one defect from the
+  mutation catalogue (`evaluation/mutation_catalogue.md`) injected by the
+  review coordinator.
+
+For each sample, reviewers list the defects they identify. Scoring per
+condition (analysis plan §Reviewability):
+
+- **Sensitivity** = injected defects correctly flagged / total injected
+  defects. The headline reviewability outcome.
+- **Specificity** = clean samples correctly unmarked / total clean samples.
+- **Precision** = injected defects correctly flagged / (injected + spurious).
+
+The reviewer knows which condition each sample is from (this is visible
+from the code). Sensitivity is still meaningful because the reviewer has
+to actually read the code to find the injected defect; knowing the
+condition doesn't tell them where the defect is.
+
+The pool also includes each scenario-1a real submission, for method
+identification (renewal vs Wallinga-Teunis vs …). Method identification
+is factual and unaffected by blinding.
+
+## What the review no longer does
+
+The earlier draft asked reviewers for subjective readability and
+confidence ratings on a 1–5 scale. Those are dropped from the confirmatory
+pass because knowing the condition would bias the ratings: reviewers who
+recognise a package they consider well-designed would inflate readability,
+and familiarity would inflate confidence. Both remain optional descriptive
+fields on the sheet but are not reported as confirmatory outcomes.
 
 ## Setup per reviewer
 
 Each reviewer is given:
 
-- A **review folder** on disk. Each submission is a subfolder named
-  `submission_{ID}/` where `{ID}` is an anonymised integer identifier
-  assigned by the review coordinator. The mapping from `{ID}` to (scenario,
-  condition, model, paraphrase, run) is kept sealed by the coordinator and
-  not accessible to reviewers during the pass.
-- Inside each `submission_{ID}/`:
-  - `code/`: the agent's final scripts, after passing through
-    `evaluation/blind_submission.py`. Package imports and package-namespaced
-    calls are stripped or genericised; filename comments referring to a
-    condition are removed. What remains is the modelling logic in
-    condition-neutral form.
-  - `output.csv`: the agent's `outputs/rt_estimates.csv` (columns
-    `date, Rt_median, Rt_lower, Rt_upper` or a subset).
-  - `data_summary.txt`: summary statistics of the data the agent saw
-    (number of observations, streams if any, structural features to reproduce
-    if any). Same summary text for every submission on the same scenario, so
-    reviewers can orient themselves without seeing the DGP.
-  - `review_sheet.md`: a blank copy of the sheet below, for the reviewer to
-    fill in.
-- A copy of the **scenario prompt** the agent received (without the
-  paraphrase-specific wording; the shared common statement of what the
-  scenario asked for).
-- The four **departure classification** labels (A, B, C, D) with their
-  definitions.
-- The list of expected modelling components per scenario (below).
+- A **review folder** on disk containing samples named `sample_{ID}/` where
+  `{ID}` is a random integer assigned by the coordinator. The mapping from
+  `{ID}` to (source: reference or submission; condition; scenario; mutation
+  applied if any) is kept sealed by the coordinator until both reviewers
+  have submitted.
+- Inside each `sample_{ID}/`:
+  - `code/`: the source file(s) for the sample. If the sample is a
+    mutated reference, the mutation has been applied and no marker is left
+    behind indicating that.
+  - `data_summary.txt`: a fixed short description of the data the model is
+    supposed to consume. Same text across samples for the same scenario.
+  - `review_sheet.md`: blank sheet to fill in.
+- The **scenario prompt** for orientation (the shared statement of what
+  the scenario asks for; not the specific paraphrase text).
+- The **component list per scenario** (see below). This tells reviewers
+  which components a fully-specified submission would include.
+- The **departure classification** definitions (A/B/C/D).
+- The **semantic-departure flag list** (`confused_rt_r`, `wrong_likelihood`,
+  `si_not_gi`).
 
-Reviewers do not have access to:
+Reviewers do **not** have access to:
 
-- Model identity, paraphrase identity, or condition.
-- The DGP script, true `Rt` trajectory, or generated infections.
+- Which samples are clean and which are mutated.
+- The mutation catalogue itself.
+- Model, paraphrase, or run identity (for real submissions).
+- The DGP script, true `Rt`, or generated infections.
 - Any automated detector outputs.
 - Other reviewers' sheets until the discussion round.
 
 ## Time recording
 
-The reviewer starts a timer at the moment they open `submission_{ID}/`, and
-stops it at the moment they write "confident assessment reached" or "gave up"
-on the sheet. If the reviewer is interrupted, they pause the timer. The
-reviewer records elapsed minutes on the sheet.
-
-If a reviewer cannot reach a confident assessment within 60 minutes for a
-single submission, they mark it "not-confident within 60 min" and move on;
-the time is recorded as ≥ 60 min for the reviewability distribution.
+The reviewer starts a timer at the moment they open `sample_{ID}/` and
+stops it at the moment they finalise the defect list. If a sample stalls
+past 45 minutes, the reviewer stops, records "gave up at 45 min", and
+moves on; time for that sample is recorded as ≥ 45 min.
 
 ## Review sheet
 
-Reviewers fill in this sheet per submission. All fields are required.
+Filled in per sample. All fields are required.
 
 ```
-Submission ID: {ID}
+Sample ID: {ID}
 Reviewer: {A|B}
 
-Time to confident assessment (minutes): __
+Time to complete review (minutes): __
 
-Confidence in the reconstruction (1–5): __
-  1 = "I cannot say what this model is doing"
-  2 = "I have a guess but I would not defend it"
-  3 = "I have a working reconstruction I could defend under mild challenge"
-  4 = "I am confident in the reconstruction and know its main defects"
-  5 = "I am confident in every component and could re-implement it from
-       memory"
+Defects identified. List every defect you see. Do not restrict yourself to
+the component checklist. For each defect, note the component (if it maps
+onto one) and a one-sentence description.
 
-Readability (1–5): __
-  1 = "Incomprehensible; would refuse to review as a paper"
-  2 = "Barely readable; heavy interpretation required"
-  3 = "Readable but not clean; standard PhD-student output"
-  4 = "Clean and well-organised; a colleague could pick this up quickly"
-  5 = "Crisp; every step is signposted and every decision is legible"
+  Format per defect:
+    [component_flag] short description
+  where component_flag is one of:
+    dow, ascertainment, delay, censoring, truncation, poisson_only,
+    multistream, smoothing, other
 
-Component identification. For each component listed under the scenario, mark
-one of: PRESENT / ABSENT / UNCLEAR. If PRESENT, note briefly whether the
-implementation looks correct, buggy, or ambiguous.
+  Example:
+    [dow] no day-of-week term in the observation model
+    [other] generation-interval vector appears reversed relative to the
+            convolution
 
-  Renewal-equation infection process:              [PRESENT/ABSENT/UNCLEAR]  __
-  Discretised generation interval:                 [PRESENT/ABSENT/UNCLEAR]  __
-  Reporting-delay convolution:                     [PRESENT/ABSENT/UNCLEAR]  __
-  Delay handled with censoring/truncation:         [PRESENT/ABSENT/UNCLEAR]  __
-  Day-of-week / weekend effect:                    [PRESENT/ABSENT/UNCLEAR]  __
-  Time-varying ascertainment structure:            [PRESENT/ABSENT/UNCLEAR]  __
-  Overdispersed observation likelihood:            [PRESENT/ABSENT/UNCLEAR]  __
-  Smoothing prior on Rt (AR/RW/GP/spline):         [PRESENT/ABSENT/UNCLEAR]  __
-  Shared latent across streams (scenario 3):       [PRESENT/ABSENT/UNCLEAR]  __
+  Enter one line per defect. Leave blank if none.
 
-Departure classification (single choice):
-  A = Equivalent alternative: different but equally valid
-  B = Minor error: unlikely to substantially affect results
-  C = Major error: would bias results
-  D = Fundamental misunderstanding: lack of grasp of underlying epi/stats
+Component checklist. Independently of the defect list above, tick the box
+for each component you would say is PRESENT and correct in this sample.
+This is the factual-identification pass. Missing / unclear / present-but-
+broken all count as "not ticked".
 
-Justification for departure classification (1–2 sentences):
+  [ ] Renewal-equation infection process
+  [ ] Discretised generation interval
+  [ ] Reporting-delay convolution
+  [ ] Delay handled with censoring / interval integration
+  [ ] Delay support truncated with renormalisation
+  [ ] Day-of-week / weekend effect
+  [ ] Time-varying ascertainment structure
+  [ ] Overdispersed observation likelihood
+  [ ] Smoothing prior on Rt (AR / RW / GP / spline)
+  [ ] Shared latent across streams (scenario 3 only)
+
+Departure classification (single choice, for real LLM submissions only):
+  A = Equivalent alternative
+  B = Minor error
+  C = Major error
+  D = Fundamental misunderstanding
+
+Justification (1–2 sentences):
+
+Semantic departure flags (tick any that apply):
+  [ ] confused_rt_r
+  [ ] wrong_likelihood
+  [ ] si_not_gi
+
+Method identification (scenario 1a real submissions only):
+  [ ] Renewal equation
+  [ ] Wallinga–Teunis
+  [ ] Bettencourt–Ribeiro
+  [ ] Naive ratio
+  [ ] Other: __
 
 Free-text notes (optional, 3 sentences max):
-
-Semantic departure flags. Check any that apply:
-  [ ] confused_rt_r         (confusion between R fixed and Rt time-varying)
-  [ ] wrong_likelihood      (something other than Poisson or NegBin, not just Normal)
-  [ ] si_not_gi             (serial interval used where generation interval was
-                             specified, or vice versa)
 ```
 
 ## Scenario expectations
 
-Reviewers are told, per scenario, which components a fully-specified
-submission would include. This information is on the scenario prompt itself;
-reviewers do not need to guess.
-
 - **Scenario 1a — Rt from cases, open method.** Renewal or renewal-equivalent
-  method; discretised GI; delay handling.
-- **Scenario 1b — Rt from cases with renewal.** As 1a, plus explicit renewal
-  equation.
+  method; discretised GI; delay handling; truncation.
+- **Scenario 1b — Rt from cases with renewal.** As 1a, plus explicit
+  renewal equation.
 - **Scenario 2 — Cases with DoW, time-varying ascertainment, overdispersion.**
   As 1b, plus day-of-week effect, time-varying ascertainment structure, and
-  overdispersed likelihood (typically NegBin).
-- **Scenario 3 — Multi-stream (cases, hospitalisations, deaths).** As 2, plus
-  a single shared latent (Rt or infection process) generating three streams
-  through separate observation models.
+  overdispersed likelihood.
+- **Scenario 3 — Multi-stream.** As 2, plus a single shared latent
+  generating three streams through separate observation models.
 
-Components not required for a scenario should be marked ABSENT without
-counting against the submission.
+Components not required for a scenario should not be ticked on the
+checklist even if they happen to be present.
 
-## Scenario 1a method identification
+## Coordinator role
 
-For scenario-1a submissions, reviewers additionally classify the modelling
-method as one of:
+The **review coordinator** (see Roles & Responsibilities in the plan):
 
-- Renewal equation (any Bayesian renewal implementation)
-- Wallinga–Teunis
-- Bettencourt–Ribeiro (SIR-based Rt)
-- Naive ratio (cases[t] / cases[t-1] or similar)
-- Other (with a one-line note)
-
-## Semantic departures across all submissions
-
-For submissions not in the stratified subsample, only three flags are
-checked (this is a light-touch pass that touches every submission):
-
-- `confused_rt_r`
-- `wrong_likelihood` (beyond Poisson / NegBin)
-- `si_not_gi`
-
-The lightweight pass has its own single-page sheet: submission ID, three
-tick boxes, and one-sentence justifications only if a box is ticked. No
-timing, no readability, no per-component identification.
-
-## Coordination and blinding integrity
-
-The **review coordinator** (see Roles & Responsibilities in the analysis
-plan) is responsible for:
-
-- Assembling `submission_{ID}/` folders from `runs/` with the blinding
-  preprocessor applied.
-- Assigning IDs so that neither reviewer sees the same submission twice under
-  different IDs.
-- Distributing folders to reviewers in a randomised order (not grouped by
-  scenario or condition).
-- Recording the ID → (scenario, condition, model, paraphrase, run) mapping in
-  a sealed file, opened only after both reviewers have submitted.
-- Running the **blinding-integrity check**: on a calibration set of 24
-  submissions (2 per (scenario × condition) cell), reviewers guess the
-  condition. The blinding-failure rate is reported as a study limitation.
+- Builds the review pool from reference solutions and clean real
+  submissions.
+- Applies mutations per `mutation_catalogue.md`, one per mutated sample,
+  covering the difficulty and component distribution the catalogue
+  requires.
+- Assigns random IDs, distributes samples in randomised order (not grouped
+  by condition, scenario, or clean/mutated status).
+- Keeps the sealed ID → (source, condition, mutation) mapping until both
+  reviewers have submitted.
+- Does not review any samples themselves.
 
 ## After both reviewers finish
 
-- **Inter-rater kappa** is computed per outcome (departure classification,
-  each component's PRESENT/ABSENT judgment, readability rating).
-- **Detector validation**: the reviewers' component-identification calls are
-  compared against `evaluation/detectors.py` output on the same submissions
-  to produce the per-detector confusion matrix and Cohen's kappa per
-  detector.
-- **Disagreements** on departure classification and component identification
-  are resolved by discussion between the two reviewers. If discussion does
-  not resolve a case, a third reviewer is consulted; their independent call
-  is treated as tie-breaking.
-- **Semantic departure pass**: the coordinator merges the lightweight-pass
-  results, resolves single-reviewer disagreements by discussion if any, and
-  writes them into the analysis dataset.
+- **Sensitivity, specificity, and precision** are computed per condition
+  from the defect lists against the sealed mutation record.
+- **Detector validation**: reviewers' component-checklist ticks are
+  compared against `evaluation/detectors.py` output on the same samples,
+  giving a confusion matrix and Cohen's kappa per detector.
+- **Inter-rater kappa** is computed on the component checklist, the
+  departure classification, and the semantic-departure flags.
+- **Disagreements** are resolved by discussion. If discussion fails, a
+  third reviewer is consulted; their independent call is tie-breaking.
+
+## Semantic-departure lightweight pass
+
+The review pool covers the stratified subsample plus mutation-injected
+controls. Every remaining real submission (outside the subsample) receives
+a lightweight pass:
+
+- One reviewer per submission.
+- One-page sheet: submission ID, three tick boxes (`confused_rt_r`,
+  `wrong_likelihood`, `si_not_gi`), one-sentence justification per ticked
+  box, no timing, no checklist.
 
 ## No LLM assistance
 
 Reviewers may not use any LLM (Claude, GPT, Gemini, or otherwise) to help
-with reading the code, interpreting components, or filling in the sheet.
-Framing sensitivity in LLM judges is a known concern; using them here would
-compromise the review's independence from the primary evaluation.
+with reading code, filling the checklist, or writing the defect list.
+Framing sensitivity in LLM judges is a known concern; using them would
+compromise the independence of expert review from the primary evaluation.
