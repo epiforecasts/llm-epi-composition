@@ -1,12 +1,38 @@
-# Analysis Plan: AI-Assisted Epidemic Model Composition
+# Analysis Plan: AI-Assisted Epidemic Model Code Generation
+
+## Framing
+
+This study varies *observable software interventions* — task instruction, required
+language or framework, and provided API documentation — and measures *observable
+outcomes* of the code the agent produces. It makes no claim about whether the agent
+retrieved a memorised solution or composed one from primitives; those are latent
+modes that cannot be identified from LLM outputs. Package use is not evidence of
+retrieval, and package-free code is not evidence of composition. Differences between
+conditions are reported as effects of the intervention on the produced code, not as
+inferences about internal generation strategy.
+
+An earlier framing of this study (2026-04 through 2026-07) described the three
+conditions as a retrieval-versus-composition gradient. That framing was retired in
+August 2026 for the identifiability reason above. The simulation DGP, harness, pilot
+data, and measurements developed under that framing remain valid because they are all
+observable; only the causal narrative around them has been rewritten.
 
 ## Research Question
 
-**When task-specific packages are available (EpiEstim, EpiNow2, PyMC), LLMs retrieve rather than compose. When they are not available, can LLMs still produce correct models, and does providing validated primitives via a composable DSL help?**
+How do software instructions and available scaffolding — from unconstrained free
+choice, through Julia with a general-purpose probabilistic programming framework, to
+Julia with a domain-specific composable framework — affect the correctness,
+component fidelity, reliability, interpretability, reviewability, and cost of
+LLM-generated epidemiological model code?
 
 Secondary questions:
-- How do LLMs default to solving Rt estimation when unconstrained by language or framework?
-- Does composition ability degrade with task complexity (scenarios 1 → 3)?
+- What tools do LLMs choose when unconstrained? Which packages are actually reached
+  for on which scenarios?
+- Which modelling components (delay convolution, censoring, truncation, day-of-week
+  effect, ascertainment structure, dispersion) are correctly identified as needed and
+  correctly implemented under each intervention?
+- Does the magnitude of the scaffolding effect vary with model capability
+  (Haiku → Sonnet → Opus)?
 
 ## Study History
 
@@ -19,33 +45,47 @@ Phase 1 artefacts have been removed from the working tree. The original analysis
 
 ## Motivation for Current Design
 
-Following methodological concerns raised by Omar et al. (*Nat Med* 2026) on the evaluation of LLMs, the design was revised to:
+Following methodological concerns raised by Omar et al. (*Nat Med* 2026) on the
+evaluation of LLMs, the design uses:
 
-1. **Re-pose the primary question** around composition vs retrieval (see above).
-2. **Ground-truth recovery on simulated data** as the primary outcome, addressing framing-dependent scoring.
-3. **Adversarial DGPs** that stress specific modelling decisions. They distinguish recall of textbook machinery from correct implementation.
-4. **Automated correctness detectors** for mechanically detectable departures, with expert review reserved for irreducibly semantic judgments on a stratified subsample.
+1. **Ground-truth recovery on simulated data** as the primary correctness signal,
+   removing framing dependence from the scoring.
+2. **Adversarial DGPs** that stress specific modelling decisions, so that submissions
+   missing a component (delay, censoring, day-of-week, overdispersion) are
+   distinguishable from those that include it.
+3. **Automated structural-pattern detectors** for mechanically detectable code
+   properties, calibrated against expert review on a stratified subsample.
+4. **Multiple observable outcome axes** (correctness, component fidelity,
+   interpretability, reviewability, reliability, robustness, maintainability,
+   epistemic quality) rather than a single primary outcome.
 5. **Prompt-paraphrase randomisation**, with results reported as distributions.
-6. **Internal role separation** and explicit blinding tests.
-7. **Pre-specified predictions** so non-confirmation is informative.
+6. **Blinded expert review** on a stratified subsample plus semantic-departure cases.
+7. **Pre-specified confirmatory outcomes** with quantitative thresholds; the rest are
+   reported descriptively without pre-registered claims.
 
 ## Study Design
 
 ### Conditions
 
-Three conditions on a composition gradient:
+Three conditions, each described as an *intervention* on the agent's task
+environment:
 
-| Condition | Specification | Docs provided | Composition forced? |
+| Condition | Intervention | Docs provided | Available shortcuts |
 |---|---|---|---|
-| **no-spec** | None — model chooses language, library, approach | None (implicit in training weights) | No (default path available) |
-| **julia** | "Use Julia" | Turing.jl API reference | Partially (no EpiEstim/EpiNow2 equivalent) |
-| **epiaware** | "Use EpiAware.jl" | EpiAware API reference (~900 lines) | Yes (DSL primitives) |
+| **no-spec** | Unconstrained: agent chooses language, package, and approach | None (implicit in training weights) | High-level packages such as EpiEstim, EpiNow2, PyMC are freely available |
+| **julia** | Julia required | Turing.jl API reference | General-purpose PPL only; no domain-specific Rt package |
+| **epiaware** | EpiAware.jl required | EpiAware API reference (~900 lines) | Domain-specific composable primitives |
 
-The original R/Python/Julia axis confounded language with ecosystem maturity, because EpiEstim/EpiNow2/PyMC are well represented in training data while Julia has no equivalent. The revised axis tests composition directly: default path → composition-forced (no package shortcut) → composition-scaffolded (DSL primitives).
+The intervention varies along two dimensions in parallel: the language/framework
+constraint tightens from left to right, and the available domain-specific vocabulary
+shifts from "whatever the agent knows from training" to "explicit primitives supplied
+in-context". Differences between conditions therefore reflect a bundle of changes,
+not a single manipulation. This is reported plainly rather than attributed to any
+one factor.
 
 #### Minimum working knowledge (MWK) principle
 
-Documentation is provided to each condition to ensure API-level knowledge is roughly symmetric across conditions, not as a treatment. The test is of composition ability *given* working API knowledge, not of recall of specific APIs. Without this levelling, EpiAware submissions would fail predominantly due to hallucinating non-existent functions, which is uninformative about composition.
+Documentation is provided to each condition to ensure API-level knowledge is roughly symmetric across conditions, not as a treatment. The intervention is about which vocabulary and constraints are placed on the code, given roughly-equalised API knowledge — not about recall of specific APIs. Without this levelling, EpiAware submissions would fail predominantly due to hallucinating non-existent functions, which is a docs-availability finding rather than a scaffolding one.
 
 **Operational rule** for what may be included in a docs bundle:
 
@@ -62,15 +102,18 @@ Hallucination rate is recorded as a secondary outcome (see Evaluation). If hallu
 
 ### Observation, not arm
 
-Within **no-spec**, record language and package selection. If (as predicted) most submissions default to R + EpiEstim/EpiNow2 for scenarios 1–2, report this distribution as a primary finding. The observation "when not constrained, LLMs overwhelmingly reach for task-specific packages" is itself a result about composition vs retrieval.
+Within **no-spec**, the language and package the agent selects is recorded per
+submission. The distribution of choices — R+EpiEstim, R+EpiNow2, Python+PyMC,
+Python+numpyro, Julia+Turing, or something else — is reported per (scenario, model)
+as descriptive evidence of what unconstrained LLM agents actually reach for.
 
 ### Models Under Evaluation
 
 | Model | Type | Rationale |
 |---|---|---|
-| Claude Haiku 4.5 (Anthropic) | Commercial frontier (small-tier) | Low end of the Claude size spectrum; tests whether the composition benefit depends on model scale |
+| Claude Haiku 4.5 (Anthropic) | Commercial frontier (small-tier) | Low end of the Claude size spectrum; tests whether scaffolding effects depend on model capability |
 | Claude Sonnet 4.6 (Anthropic) | Commercial frontier (mid-tier) | Default frontier-class deployment for most coding-agent applications |
-| Claude Opus 4.7 (Anthropic) | Commercial frontier (top-tier) | High end of the Claude size spectrum; tests whether reasoning depth changes composition behaviour |
+| Claude Opus 4.7 (Anthropic) | Commercial frontier (top-tier) | High end of the Claude size spectrum; tests whether reasoning depth changes scaffolding effects |
 | Qwen3-Coder-30B-A3B-Instruct (Alibaba) | Open-source, coding-tuned | Tertiary; open-weight comparison. Run on the LSHTM HPC via the local vLLM + Qwen Code CLI stack (`~/code/dotfiles/lshtm-local-llm-stack.md`). Included to bound expected open-source performance and demonstrate that the study protocol is reproducible without a commercial API. |
 
 The primary panel is three Claude models at three scales (Haiku → Sonnet → Opus), enabling a within-family scaling test. Cross-family generalisation is not claimed on the basis of this study; a single-family design is chosen because the primary Anthropic research credits fund only Claude runs. Qwen3-Coder-30B is a tertiary open-weight comparison run with reduced sample size (see Sample size and crossing).
@@ -79,16 +122,17 @@ Findings may not generalise to other model families (Gemini, GPT, Mistral, DeepS
 
 ### Scenarios
 
-Scenario 3 is the test that matters most: all conditions are forced off well-memorised paths because EpiNow2 doesn't natively support multiple observation streams.
-
-| Scenario | Description | Composition-forcing? |
+| Scenario | Description | Package-shortcut availability |
 |---|---|---|
-| **1a** | Rt from cases, open method | Weak — package shortcut suffices |
-| **1b** | Rt with renewal equation | Weak — package shortcut suffices |
-| **2** | + DoW, time-varying ascertainment, NegBin | Moderate — requires observation model extensions |
-| **3** | Multi-stream (cases, hospitalisations, deaths) | Strong — no package shortcut in any condition |
+| **1a** | Rt from cases, open method | Multiple canonical packages (EpiEstim, EpiNow2, PyMC) cover this task |
+| **1b** | Rt with renewal equation | Same packages cover this task |
+| **2** | + DoW, time-varying ascertainment, NegBin | EpiNow2 covers most components; some extension required |
+| **3** | Multi-stream (cases, hospitalisations, deaths) | No canonical R/Python package supports shared-latent multi-stream Rt estimation |
 
-The comparison of 1a vs 1b also documents which methods LLMs choose when unconstrained.
+Scenario 3 is the most methodologically informative: no dominant package covers the
+task, so the agent's tool choice and code structure become directly observable
+regardless of condition. The 1a versus 1b comparison also records which method the
+agent chooses when unconstrained.
 
 ### Data: Simulation with Ground Truth
 
@@ -123,7 +167,7 @@ All standard population-level renewal estimators (Poisson or NegBin) fit a momen
 - Ascertainment $\alpha_t$: $0.4 + 0.2\sin(2\pi t / T)$ (incomplete observation rate)
 - Day-of-week multiplier $w_{\mathrm{dow}(t)}$: $\{1, 1, 1, 1, 1, 0.5, 0.5\}$ for Mon–Sun
 - Offspring dispersion $k = 1.0$ (within Lloyd-Smith respiratory-pathogen range)
-- Initialisation: seed individuals placed in the pre-observation window $t \in [-\tau_{\max}, 0]$ with continuous timestamps. The seed-count *expected rate* per day follows the Euler–Lotka equilibrium profile $\lambda(d) = c \cdot 100 \cdot \exp(r_0 \cdot d)$ (with $r_0$ the equilibrium growth rate matching $R_t(1) = 0.8$ under the daily-discretised GI; $c = 0.3$ chosen so that the BP's realised rate at $t = 1$ matches the moment-closed expectation). The realised seed *counts* per day are Poisson draws around that expected rate, and the seed individuals' sub-day timestamps are uniform within their day. Each seed individual then produces offspring per the Lloyd-Smith mechanism, and those offspring produce their own offspring recursively through the pre-observation window before the observation window begins. Seed individuals themselves do not count as new obs-window infections; their realised descendants do. The BP is thus stochastic from seed onwards, but the expected seed rate is a deterministic anchor (replacing it with a longer pure-BP burn-in starting from a single ancestor far in the past is feasible but adds inter-replicate variance not relevant to the LLM-composition test).
+- Initialisation: seed individuals placed in the pre-observation window $t \in [-\tau_{\max}, 0]$ with continuous timestamps. The seed-count *expected rate* per day follows the Euler–Lotka equilibrium profile $\lambda(d) = c \cdot 100 \cdot \exp(r_0 \cdot d)$ (with $r_0$ the equilibrium growth rate matching $R_t(1) = 0.8$ under the daily-discretised GI; $c = 0.3$ chosen so that the BP's realised rate at $t = 1$ matches the moment-closed expectation). The realised seed *counts* per day are Poisson draws around that expected rate, and the seed individuals' sub-day timestamps are uniform within their day. Each seed individual then produces offspring per the Lloyd-Smith mechanism, and those offspring produce their own offspring recursively through the pre-observation window before the observation window begins. Seed individuals themselves do not count as new obs-window infections; their realised descendants do. The BP is thus stochastic from seed onwards, but the expected seed rate is a deterministic anchor (replacing it with a longer pure-BP burn-in starting from a single ancestor far in the past is feasible but adds inter-replicate variance not relevant to the intervention-effect analysis).
 
 **Multi-stream parameters (scenario 3):**
 
@@ -179,7 +223,7 @@ Before running any LLM condition, the reference EpiAware implementations are app
 - Median 90% coverage on the same window ≥ 0.80 (i.e. not under-covering by more than 10pp).
 - Median calibration |median(coverage) − 0.90| ≤ 0.10.
 
-The criterion is **asymmetric**: under-coverage invalidates the reference (intervals too tight to contain the truth); over-coverage means the reference is conservatively calibrated (intervals wider than nominal). Conservative coverage is acceptable because LLM-composition analyses compare *relative* coverage across conditions, not absolute coverage against the 90% nominal.
+The criterion is **asymmetric**: under-coverage invalidates the reference (intervals too tight to contain the truth); over-coverage means the reference is conservatively calibrated (intervals wider than nominal). Conservative coverage is acceptable because the study's condition-level comparisons are *relative* coverage across conditions, not absolute coverage against the 90% nominal.
 
 The reference solutions use `HalfNormal(0.05)` for the AR(1) innovation std prior. Calibration on canonical (20 reps): median RMSE = 0.086, median coverage = 1.00, calibration error = 0.10. The reference passes the asymmetric criterion. Reps 1, 10, 17 cover at [0.82, 0.95] (rep 1 with `HalfNormal(0.025)`); reps 11, 13, 19, 20 just above 0.95; the remaining 13 reps over-cover at 1.00. Walking down to `HalfNormal(0.025)` does not substantially relax the over-coverage on the smooth-trajectory replicates (their R(t) is well-matched to an AR(1) prior over a wide range of std priors); the over-coverage is structural, not a tuning issue.
 
@@ -267,7 +311,36 @@ An EpiNow2 reference (`reference_solutions/epinow2_baseline.R`) is applied to sc
 
 ## Evaluation
 
-### Primary: Recovery against simulation truth
+Outcomes are grouped into eight axes. Four are **confirmatory** — pre-registered
+estimands with quantitative thresholds. Four are **descriptive** — reported per
+condition without pre-registered thresholds, to give the reader the fuller picture
+needed to evaluate scaffolding choices for their own use.
+
+**Confirmatory axes:**
+
+1. **Statistical correctness** — Rt RMSE against truth, credible-interval coverage,
+   uncertainty calibration.
+2. **Component correctness** — per-submission presence and correctness of specific
+   modelling components (delay convolution, censoring, truncation, day-of-week,
+   ascertainment, overdispersion).
+3. **Interpretability** — non-comment, non-blank lines of code (automated) and expert
+   readability rating on a stratified subsample.
+4. **Reviewability** — time for a blinded expert to reconstruct and verify the model,
+   plus reviewer confidence in the verification, on a stratified subsample.
+
+**Descriptive axes:**
+
+5. **Execution and engineering reliability** — retries, waits, wall time, token
+   cost, convergence rate.
+6. **Robustness** — variability across paraphrases and reruns, sensitivity to
+   adversarial DGP variants.
+7. **Maintainability** — static-analysis metrics: cyclomatic complexity, code
+   duplication, hard-coded assumptions.
+8. **Epistemic quality** — presence of diagnostic reporting (posterior predictive
+   checks, R-hat, ESS), acknowledgement of assumptions, distinction between
+   assumptions and estimands.
+
+### Statistical correctness (confirmatory axis 1)
 
 - **Rt RMSE** against true trajectory, averaged over the **evaluation window days 25–125**.
 - **90% coverage** of credible/confidence intervals over the same window.
@@ -275,7 +348,65 @@ An EpiNow2 reference (`reference_solutions/epinow2_baseline.R`) is applied to sc
 
 The evaluation window excludes the first 24 days (where the lookback into the seed window dominates and any reasonable estimator has insufficient information) and the last 25 days (where the longest reporting delay, 20 days for deaths plus the truncation buffer, means the latest observed cases reflect infections from outside the simulation horizon). $T = 150$ days; window = days 25–125 inclusive (101 day points).
 
-Each metric computed per submission per DGP variant. Primary result is the distribution of RMSE and coverage within each (scenario × condition) cell, across paraphrases × replicates × runs (canonical-DGP only for primary; full variant panel for adversarial fingerprint).
+Each metric computed per submission per DGP variant. Reported as the distribution of RMSE and coverage within each (scenario × condition) cell, across paraphrases × replicates × runs (canonical-DGP only for the primary distribution; full variant panel for adversarial fingerprint).
+
+### Component correctness (confirmatory axis 2)
+
+Per-submission binary flags for the presence/absence of the components each scenario
+requires:
+
+- Delay convolution present (all scenarios).
+- Reporting-delay distribution handled with proper censoring / truncation (all
+  scenarios).
+- Day-of-week reporting effect modelled (scenarios 2 and 3).
+- Time-varying ascertainment structure (scenarios 2 and 3).
+- Overdispersed observation likelihood, not Poisson-only (scenarios 2 and 3).
+- Multi-stream shared latent (scenario 3).
+
+Automated detectors implement each flag (see Diagnostic: Automated structural-pattern
+detectors below). Detectors are calibrated against blinded expert review on a
+stratified subsample; per-detector Cohen's kappa is reported alongside the flag
+rates.
+
+### Interpretability (confirmatory axis 3)
+
+- **LOC**: non-comment, non-blank lines of the final scripts that produce
+  `outputs/rt_estimates.csv`, per submission. Automated; reported as distribution per
+  condition.
+- **Readability rating**: expert reviewers rate each stratified-subsample submission
+  on a 1–5 readability scale (1 = incomprehensible, 5 = crisp) as part of the
+  standard review pass. Inter-rater Cohen's kappa is reported.
+
+### Reviewability (confirmatory axis 4)
+
+Blinded expert reviewers, on the stratified subsample, record:
+
+- **Time to verify**: minutes from starting the review to reaching a confident
+  assessment of what the model does.
+- **Reviewer confidence**: 1–5 scale of how confident the reviewer is in their
+  reconstruction of the model.
+- **Correct component identification**: for each modelling component (as listed
+  under Component correctness), did the reviewer correctly identify whether the
+  submission includes it?
+
+Reviewability differs from interpretability: interpretability asks whether the code
+reads as legible; reviewability asks whether an expert can efficiently verify that
+the code does what it claims.
+
+### Descriptive axes
+
+Recorded per run and reported per condition without pre-registered thresholds:
+
+- **Reliability**: `retry_count`, `post_agent_waits`, wall-clock duration, token
+  cost, whether inference converged (from log inspection).
+- **Robustness**: variance of the correctness metrics across the four paraphrases
+  and five runs per cell; sensitivity of RMSE and coverage to adversarial variants.
+- **Maintainability**: cyclomatic complexity, duplicated lines, count of magic
+  numbers, count of hard-coded assumptions. Computed via a static-analysis pass on
+  the final submitted scripts.
+- **Epistemic quality**: automated flags for presence of posterior-predictive
+  checks, R-hat / ESS diagnostics, sensitivity analyses; plus reviewer notes on
+  whether the submission distinguishes assumptions from estimated quantities.
 
 ### Secondary: Hallucination and iteration behaviour
 
@@ -285,7 +416,7 @@ Recorded per run:
 - **Iterations to success**: number of iterations required to reach runnable code (or NA if not reached).
 - **Error type distribution**: syntax, runtime, fitting failure, convergence failure.
 
-Reported per condition. If hallucination rate is materially higher in `epiaware` despite the bundled API reference, or in `julia` despite the Turing.jl reference, that is a finding about in-context docs use independent of the composition result.
+Reported per condition. If hallucination rate is materially higher in `epiaware` despite the bundled API reference, or in `julia` despite the Turing.jl reference, that is a finding about in-context docs use, reported alongside but not conflated with the scaffolding effects on correctness.
 
 ### Diagnostic: Automated structural-pattern detectors
 
@@ -412,7 +543,7 @@ The "internal role separation" claim in the Blinding section reduces to: detecto
 
 One or more project authors contributed to EpiAware.jl, EpiNow2, and/or EpiEstim development. The full COI statement is in the paper.
 
-Prediction 3 ("EpiAware lower RMSE than Julia-bare on scenarios 2–3") could be read as the authors validating their own work. The mitigations: pre-registering the prediction with a quantitative threshold, publishing the full harness for replication, and committing to report non-confirmation honestly. The composition framing of the study (the question is whether composable primitives help, not whether this specific package is good) is also designed to be informative regardless of which way the result lands. Prediction 1 ("no-spec defaults to EpiNow2/EpiEstim") is similarly affected; we treat the "what package do LLMs default to" question as observational.
+Predictions 3, 5, 7, and 8 (missing-component rates, adversarial RMSE, LOC, and review time favouring `epiaware`) could be read as the authors validating their own work. The mitigations: pre-registering each prediction with a quantitative threshold, publishing the full harness for replication, committing to report non-confirmation honestly, and framing the study around observable scaffolding effects rather than package advocacy. Prediction 2 ("no-spec tool distribution") is affected too; we treat "what package do LLMs default to" as observational.
 
 ## Protocol
 
@@ -426,7 +557,7 @@ Standardised prompts per (scenario, condition) contain:
 - For `julia`: Turing.jl API reference in working directory
 - For `epiaware`: EpiAware API reference in working directory (conforming to the MWK operational rule: no end-to-end Rt examples)
 
-To isolate composition from parameter-guessing, prompts give the LLM values that would realistically come from external epidemiological studies, and require the LLM to estimate everything else.
+To isolate the modelling task from parameter-guessing, prompts give the LLM values that would realistically come from external epidemiological studies, and require the LLM to estimate everything else.
 
 Provided in the prompt (as fixed, known distributions from an external study; LLMs are not expected to propagate uncertainty on these):
 - Generation interval: family, mean, SD (e.g. "Gamma, mean 5.5 days, SD 2 days, from external study")
@@ -477,48 +608,130 @@ Each LLM is given the prompt and asked to write code, execute it, and fix errors
 
 ## Pre-specified Predictions
 
-Stated here before any model is queried under this revised design. Each prediction names a quantitative effect size we will treat as confirming the prediction. "95% bootstrap CI" refers to a non-parametric bootstrap over the unit-of-replication implied by the comparison (e.g. paraphrase × run cells for the primary analysis, variant × run cells for the adversarial fingerprint), with 1000 resamples. Implemented in R with `boot::boot` (percentile method). The exact analysis code is committed at `evaluation/analyse.R` and run once, after all agent runs are complete.
+Stated here before any model is queried under this revised design. Each prediction
+names a quantitative effect size we will treat as confirming it. "95% bootstrap CI"
+refers to a non-parametric bootstrap over the unit-of-replication implied by the
+comparison (paraphrase × run cells for the primary analysis, variant × run cells for
+the adversarial fingerprint), with 1000 resamples. Implemented in R with `boot::boot`
+(percentile method). The exact analysis code is committed at `evaluation/analyse.R`
+and run once, after all agent runs are complete.
 
-1. **no-spec defaults to packages.** In ≥70% of (no-spec, scenario 1a) and (no-spec, scenario 1b) submissions, the produced code uses R + EpiEstim or R + EpiNow2 or Python + PyMC, regardless of model. *Confirmation:* the lower 95%-CI bound of the proportion is ≥ 0.70.
-2. **Recovery is comparable across conditions on scenarios 1a/1b.** The median Rt RMSE difference between any pair of conditions on (scenario 1a) and (scenario 1b) is ≤ 0.02. *Confirmation:* all three pairwise condition contrasts on each scenario have a 95%-CI that includes 0 and an absolute-median-difference ≤ 0.02.
-3. **EpiAware shows lower Rt RMSE than Julia-bare on scenarios 2–3.** Median Rt RMSE in (epiaware, scenario 2) is at least 0.02 lower than in (julia, scenario 2); the gap on scenario 3 is at least 0.04 lower. *Confirmation:* both differences have 95% bootstrap CIs that exclude zero in the predicted direction.
-4. **no-spec fails on scenario 3 more often than EpiAware.** Run-level failure rate (run did not produce a valid `outputs/rt_estimates.csv` at session end, after the harness's retry and post-agent-wait budget is exhausted) in (no-spec, scenario 3) is at least 20 percentage points higher than in (epiaware, scenario 3). *Confirmation:* the difference has a 95%-CI excluding zero in the predicted direction and lower bound ≥ 0.20.
-5. **Adversarial DGP performance correlates with automated detector flags.**
-   - Submissions flagged `flag_no_delay_handling`: median Rt RMSE on `long_delay` is at least 0.05 higher than on `canonical`. 95%-CI excludes zero.
-   - Submissions flagged `flag_poisson_only` (Poisson-only observation likelihood): median 90% coverage on `extreme_dispersion` is at least 15 percentage points lower than on `low_dispersion`. 95%-CI excludes zero.
-6. **Hallucination rate is higher in `epiaware` than in `julia` or `no-spec`.** Median fraction of agent iterations failing with "function does not exist" / "no method matching" / undefined-symbol errors in `epiaware` is at least 10 percentage points higher than in either `julia` or `no-spec`. 95%-CIs exclude zero.
+Predictions are grouped by confirmatory axis. Non-confirmation is informative and
+reported as such.
 
-Predictions 3–5 are the composition claims the study turns on. If they don't hold, the study reports that validated composable tooling provides no composition benefit over forced-composition baselines, which is itself informative. Prediction 6 is orthogonal: a finding about in-context docs use, not about composition.
+### Instruction adherence and tool choice
+
+1. **Instruction adherence.** In ≥95% of `julia` and `epiaware` submissions, the
+   required language/framework is used. *Confirmation:* lower 95%-CI bounds ≥ 0.95.
+
+2. **no-spec tool distribution.** In ≥70% of `no-spec` submissions on scenarios 1a
+   and 1b, the produced code uses R + EpiEstim, R + EpiNow2, Python + PyMC, or
+   Python + numpyro. The rate is not preregistered for scenarios 2 and 3 (where
+   canonical multi-component packages don't fully cover the task) but the
+   distribution of chosen tools is reported. *Confirmation for 1a/1b:* lower 95%-CI
+   bound of the proportion ≥ 0.70.
+
+### Component correctness (confirmatory axis 2)
+
+3. **Missing-component rates differ across conditions.** For each scenario × required
+   component pairing (day-of-week in scenarios 2/3; ascertainment in scenarios 2/3;
+   overdispersion in scenarios 2/3; multi-stream latent in scenario 3), the rate of
+   missing components is higher in `julia` than in `epiaware` by at least 15
+   percentage points. *Confirmation:* 95%-CI on each difference excludes zero in the
+   predicted direction. Reported jointly across the required components as a summary
+   plus per-component.
+
+### Statistical correctness (confirmatory axis 1)
+
+4. **Recovery on canonical DGP.** For each scenario, the median Rt RMSE is reported
+   per condition. No pre-registered threshold on the pairwise gap: pilots show that
+   on canonical data the correctness metric does not discriminate cleanly among
+   conditions at the Sonnet capability level, so the confirmatory claim is the
+   *description* of the distributions rather than a specific inequality.
+
+5. **Recovery on adversarial variants.** Median Rt RMSE on the four adversarial
+   variants (short_gi, long_delay, extreme_dispersion, abrupt_change) is at least
+   0.03 lower in `epiaware` than in `julia`, averaged across scenarios 2 and 3.
+   *Confirmation:* 95%-CI on the difference excludes zero in the predicted
+   direction.
+
+6. **Detector flags predict adversarial degradation.**
+   - Submissions flagged `flag_no_delay_handling`: median Rt RMSE on `long_delay` is
+     at least 0.05 higher than on `canonical`. 95%-CI excludes zero.
+   - Submissions flagged `flag_poisson_only`: median 90% coverage on
+     `extreme_dispersion` is at least 15 percentage points lower than on `canonical`.
+     95%-CI excludes zero.
+
+### Interpretability (confirmatory axis 3)
+
+7. **LOC.** Median LOC in `epiaware` submissions is at least 50 lower than in
+   `julia` submissions, and at least 100 lower than in `no-spec` submissions, per
+   scenario averaged. *Confirmation:* both 95%-CIs exclude zero in the predicted
+   direction.
+
+### Reviewability (confirmatory axis 4)
+
+8. **Review time.** Blinded expert reviewers verify `epiaware` submissions at least
+   25% faster than `julia` submissions on scenarios 2 and 3 (median minutes to
+   confident assessment). *Confirmation:* 95%-CI on the ratio of medians excludes 1.
+
+### Capability-conditional gap
+
+9. **Scaffolding effect scales with model capability.** The `julia`-vs-`epiaware`
+   RMSE gap on scenarios 2 and 3 is larger for smaller models: |Haiku 4.5| > |Sonnet
+   4.6| ≥ |Opus 4.7|. Reported as a difference-in-differences with 95%-CI. Pilots
+   show a strong signal in this direction on Haiku; the confirmatory test is
+   whether Sonnet and Opus follow the pattern.
+
+### Hallucination behaviour (orthogonal)
+
+10. **Hallucination rate under bundled docs.** Median fraction of agent iterations
+    failing with "function does not exist" / "no method matching" /
+    undefined-symbol errors in `epiaware` is at least 10 percentage points higher
+    than in either `julia` or `no-spec`. 95%-CIs exclude zero. This is a finding
+    about in-context docs use, independent of the scaffolding effect on correctness.
 
 ## Pre-specified Tables and Figures
 
+Organised by outcome axis. Confirmatory axes lead; descriptive axes follow.
+
 ### Tables
 
-**Table 1: Recovery by condition × scenario.** Rows: condition (3) × scenario (4) = 12 rows. Columns: median Rt RMSE, IQR of RMSE, median coverage, IQR of coverage, across all paraphrases × replicates × runs on the canonical DGP.
+**Table 1: Statistical correctness by condition × scenario.** Rows: condition (3) × scenario (4) = 12 rows. Columns: median Rt RMSE, IQR of RMSE, median coverage, IQR of coverage, across all paraphrases × runs on the canonical DGP.
 
-**Table 2: Recovery on adversarial DGPs.** Rows: condition × scenario × DGP variant. Columns as Table 1. Shows scenario-specific bias patterns.
+**Table 2: Statistical correctness on adversarial variants.** Rows: condition × scenario × DGP variant. Columns as Table 1. Shows condition-specific degradation under component stress.
 
-**Table 3: Language and package selection in no-spec.** Rows: LLM × scenario. Columns: distribution of language choice (R / Python / Julia / other), distribution of package choice.
+**Table 3: Component correctness rates.** Rows: modelling component (delay, censoring, truncation, DoW, ascertainment, overdispersion, multi-stream). Columns: rate of correct presence by condition × scenario, from automated detectors calibrated against expert review.
 
-**Table 4: Method selection in scenario 1a.** Rows: condition × LLM. Columns: renewal / Wallinga-Teunis / Bettencourt-Ribeiro / naive / other. From expert review of this subsample.
+**Table 4: Interpretability metrics.** Rows: condition × scenario. Columns: median LOC, IQR of LOC, mean readability rating (1–5), inter-rater kappa on readability.
 
-**Table 5: Automated detector rates.** Rows: departure category. Columns: rate by condition × scenario.
+**Table 5: Reviewability metrics.** Rows: condition × scenario. Columns: median minutes to confident assessment, mean reviewer confidence (1–5), rate of correct component identification.
 
-**Table 6: Inter-rater reliability and detector validation.** Cohen's kappa between reviewers; agreement between detectors and reviewer classification on the stratified subsample.
+**Table 6: Instruction adherence and tool distribution in no-spec.** For julia and epiaware: adherence rate. For no-spec, per model × scenario: distribution of chosen language (R / Python / Julia / other) and package.
+
+**Table 7: Scenario 1a method identification.** Rows: condition × LLM. Columns: renewal / Wallinga-Teunis / Bettencourt-Ribeiro / naive / other. From expert review of this subsample.
+
+**Table 8: Inter-rater reliability and detector validation.** Cohen's kappa between expert reviewers on each rating axis; agreement between detectors and reviewer classification on the stratified subsample.
+
+**Table 9: Descriptive outcomes — reliability, robustness, maintainability, epistemic quality.** Rows: condition × scenario. Columns: median retries, median waits, median wall time, median token cost, RMSE variance across paraphrases, mean cyclomatic complexity, PPC-present rate, R-hat-report rate. Descriptive; no pre-registered thresholds.
 
 ### Figures
 
-**Figure 1: Primary result — recovery distributions.** Violin plots of Rt RMSE by condition, faceted by scenario. Shows full distribution over paraphrases × replicates × runs on canonical DGP.
+**Figure 1: Statistical correctness — recovery distributions.** Violin plots of Rt RMSE by condition, faceted by scenario. Full distribution over paraphrases × runs on canonical DGP.
 
-**Figure 2: Adversarial DGP fingerprint.** Heatmap: rows = DGP variant, columns = condition × scenario. Cell colour = median RMSE relative to canonical. Reveals which conditions fail on which stress tests.
+**Figure 2: Adversarial DGP fingerprint.** Heatmap: rows = DGP variant, columns = condition × scenario. Cell colour = median RMSE relative to canonical.
 
 **Figure 3: Rt trajectories.** Representative trajectories per condition × scenario, overlaid on true Rt. Ribbon for uncertainty.
 
-**Figure 4: Correctness ↔ recovery linkage.** Scatter: each point a submission. X = number of automated detector flags; Y = Rt RMSE. Annotated with predicted failure modes for each flag.
+**Figure 4: Component correctness heatmap.** Rows = component, columns = condition × scenario. Cell colour = correctness rate. Shows which components are missed in which conditions.
 
-**Figure 5: Hallucination and iteration behaviour.** Per condition: hallucination rate (errors from non-existent functions / method matching), iterations to first successful run, error-type distribution. Tests whether bundled API docs equalise working knowledge across conditions.
+**Figure 5: LOC distribution.** Violin plots of LOC by condition, faceted by scenario.
 
-**Figure 6: Sensitivity to prompt paraphrase.** For a representative (scenario, condition) cell, full distribution of outcomes across paraphrases and runs. Demonstrates the within-cell variability Omar et al. highlight.
+**Figure 6: Capability-conditional gap.** For each model (Haiku, Sonnet, Opus), the julia-vs-epiaware median RMSE gap on scenarios 2 and 3. Tests whether scaffolding effects shrink with model capability.
+
+**Figure 7: Hallucination and iteration behaviour.** Per condition: hallucination rate, iterations to first successful run, error-type distribution.
+
+**Figure 8: Sensitivity to prompt paraphrase.** For a representative (scenario, condition) cell, full distribution of outcomes across paraphrases and runs.
 
 ## Limitations Acknowledged in Advance
 
@@ -538,7 +751,9 @@ No temperature randomisation: Claude Code CLI does not expose `temperature`, so 
 
 Detectors are heuristics, not graders. Regex- and AST-based pattern detectors have known false negatives: `flag_no_smoothing_term` does not match a custom multivariate-Normal prior with smoothing covariance even though that constitutes smoothing. Detectors are calibrated against expert review on the stratified subsample (Cohen's kappa) and reported as instruments for analysis, not ground truth.
 
-The composition test concentrates in scenario 3. Scenarios 1a/1b/2 test whether a Bayesian PPL adds value over a default-package shortcut and whether estimator-side choices affect recovery. Composition without a shortcut path is tested most directly in scenario 3, where multi-stream estimation has no canonical package. Predictions 3 and 4 (scenarios 2–3) are the composition claims the study turns on.
+Scaffolding effects concentrate in scenarios 2 and 3. Scenarios 1a/1b are covered by canonical packages regardless of condition, so per-condition differences in produced code are expected to be smaller there. The confirmatory correctness and interpretability claims accordingly weight scenarios 2 and 3 more heavily.
+
+Attribution of differences between conditions to a single mechanism is not possible. The intervention bundles language constraint, docs bundle, and available vocabulary; disentangling them would require a fully-crossed design that is out of scope here. This is stated plainly in the paper's methods.
 
 Rt has multiple legitimate definitions under any stochastic generator: the parameter, the realised ratio, and in some models a per-step random multiplier (Funk, Abbott & Bracher 2022). Recovery is scored against the parameter $R(d)$. Methods that target the realised ratio (e.g. Wallinga–Teunis) recover a noisier quantity that converges to the parameter at scale. Observed disagreement with truth in their case partly reflects target choice rather than implementation error, and is flagged in the scenario 1a method-identification subsample.
 
@@ -558,17 +773,45 @@ This protocol is time-stamped by commit to the public git repository before any 
 
 ## Discussion Points
 
-### Composition vs retrieval
+### Why not framed as retrieval vs composition
 
-The primary framing is that LLMs retrieve solutions where task-specific packages exist and must compose where they do not. This study is designed to separate these modes. The no-spec condition measures default behaviour; the Julia condition forces composition (no package shortcut available); the EpiAware condition scaffolds composition with validated primitives.
+An earlier version of this study framed the three conditions as a
+retrieval-versus-composition gradient. That framing was retired because neither
+mode is identifiable from LLM outputs: package use is not evidence of retrieval
+(the agent may have configured and extended the package heavily), and
+package-free code is not evidence of composition (it may reproduce a memorised
+implementation). The current study restricts its claims to observable
+interventions and observable outcomes.
 
 ### Minimum working knowledge and the docs question
 
-Docs are provided to level API-level knowledge across conditions, not as a treatment (see MWK principle under Conditions). A cleaner decomposition of "DSL primitives" vs "worked examples" would require an epiaware condition with Rt-specific tutorials, which leaks solutions and defeats the composition test. The compromise is that we cannot fully separate "primitives help" from "API knowledge helps". We partially address this through the hallucination-rate measurement: if hallucination is the dominant failure mode in `epiaware`, the composition result is confounded with in-context docs use; if hallucination is low, the comparison with `julia` isolates the composition benefit.
+Docs are provided to level API-level knowledge across conditions, not as a
+treatment (see MWK principle under Conditions). A cleaner decomposition of "DSL
+primitives" versus "worked examples" would require an epiaware condition with
+Rt-specific tutorials, which leaks solutions and would make the API-familiarity
+side of the intervention indistinguishable from the primitives side. The
+compromise is that primitives-availability and API-knowledge move together
+across the condition ladder. The hallucination-rate measurement partly addresses
+this: if hallucination dominates the failure profile in `epiaware`, the
+scaffolding results are confounded with in-context docs use; if hallucination is
+low, the comparison with `julia` isolates the primitives contribution.
 
-### Complexity gradient
+### Task-complexity gradient
 
-Scenarios 1a/1b/2/3 form a gradient of composition-forcing. A DSL benefit that is flat across scenarios suggests a general effect (docs help); a benefit that grows with complexity suggests the composition advantage the DSL is designed to provide.
+Scenarios 1a/1b/2/3 form a gradient of task complexity. A scaffolding effect that
+is flat across scenarios suggests a general docs / API-vocabulary effect; an
+effect that grows with complexity suggests the composable primitives are earning
+their keep on tasks that assemble more components.
+
+### Capability-conditional effects
+
+Pilots show that Sonnet 4.6 composes multi-stream renewal models from raw
+Turing / numpyro when no scaffold is provided, while Haiku 4.5 does not. The
+paper reports scaffolding effects both averaged across models and conditioned on
+model capability. If scaffolding matters most for smaller models, the practical
+implication is that packages like EpiAware raise the floor of LLM-assisted
+modelling for less capable models more than they raise the ceiling for the most
+capable ones.
 
 ## Ethical Considerations
 
@@ -582,4 +825,5 @@ Scenarios 1a/1b/2/3 form a gradient of composition-forcing. A DSL benefit that i
 *Revised: 2026-04-23 (recovery-based evaluation, no-spec/Julia/EpiAware axis, adversarial DGPs, automated detectors, prompt randomisation, minimum working knowledge docs principle, hallucination rate as secondary outcome)*
 *Revised: 2026-06 (main reviewer concerns addressed: explicit sample-size and crossing, temperature axis dropped, quantitative effect sizes for all predictions, reference EpiAware AR prior calibrated to HalfNormal(0.05), evaluation window days 25–125, sinusoidal_rt variant added, extreme_dispersion rename, three-family LLM paraphrase scheme, structural-pattern detector framing, slot-01 base prompts acknowledged as LLM-drafted)*
 *Revised: 2026-07 (compact design: 5 runs × 4 paraphrases × 1 replicate on canonical + 3 runs on 4 non-canonical variants, ~420 runs per model; model panel switched to Anthropic-only Haiku 4.5 + Sonnet 4.6 + Opus 4.7 with Qwen3-Coder-30B as tertiary open-weight; execution protocol updated to match implemented harness (retries with `--resume`, wait-for-inference, cwd-based process detection); blinding preprocessor, detector calibration protocol, and reference-solution file paths pinned; bootstrap analysis tool specified as R `boot`)*
+*Revised: 2026-08 (framing retired from retrieval-versus-composition to observable scaffolding effects; conditions described as interventions; outcomes reorganised into eight axes with four confirmatory (statistical correctness, component correctness, interpretability, reviewability) and four descriptive (execution reliability, robustness, maintainability, epistemic quality); predictions rewritten as intervention-effect claims with per-axis thresholds; capability-conditional gap added as prediction 9)*
 *Status: Revised draft, pending pre-registration*
