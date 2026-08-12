@@ -1,158 +1,108 @@
-# Download UK COVID-19 data for the LLM epidemic model composition study
+# Download UK COVID-19 data from the UKHSA Dashboard API.
+# Produces data/observations.csv, data/cases.csv, data/cases_dow.csv.
+# Retained per analysis_plan.md as a secondary realism check on the
+# simulation-based evaluation.
 #
-# Data source: UKHSA COVID-19 Archive
-# https://ukhsa-dashboard.data.gov.uk/covid-19-archive-data-download
-#
-# This script downloads and processes UK COVID-19 data including:
-# - Daily case counts
-# - Hospital admissions
-# - Deaths
+# Run from the repository root:
+#   Rscript scripts/download_data.R
 
-library(httr)
+library(httr2)
 library(jsonlite)
 library(dplyr)
 library(readr)
 library(lubridate)
+library(tidyr)
 
-# Output directory
-data_dir <- here::here("data")
-dir.create(data_dir, showWarnings = FALSE, recursive = TRUE)
+base_url <- "https://api.ukhsa-dashboard.data.gov.uk"
 
-# ---- Download from legacy API ----
-# The legacy API at coronavirus.data.gov.uk can still be used for historical data
-
-base_url <- "https://api.coronavirus.data.gov.uk/v1/data"
-
-# Function to download data from the API
-download_covid_data <- function(metrics, area_type = "overview") {
-  # Build structure parameter
-  structure <- c(
-    list(date = "date", areaName = "areaName"),
-    setNames(as.list(metrics), metrics)
+download_ukhsa_metric <- function(metric, geography = "England", page_size = 365) {
+  endpoint <- sprintf(
+    "%s/themes/infectious_disease/sub_themes/respiratory/topics/COVID-19/geography_types/Nation/geographies/%s/metrics/%s",
+    base_url, geography, metric
   )
 
-  params <- list(
-    filters = paste0("areaType=", area_type),
-    structure = toJSON(structure, auto_unbox = TRUE),
-    format = "csv"
-  )
+  all_results <- list()
+  page <- 1
 
-  response <- GET(base_url, query = params)
+  repeat {
+    message(sprintf("  Fetching page %d...", page))
 
+    resp <- request(endpoint) |>
+      req_url_query(page_size = page_size, page = page) |>
+      req_perform()
 
-  if (status_code(response) == 200) {
-    content(response, as = "text", encoding = "UTF-8") |>
-      read_csv(show_col_types = FALSE)
-  } else {
-    stop("API request failed with status: ", status_code(response))
+    data <- resp |>
+      resp_body_json()
+
+    if (length(data$results) == 0) break
+
+    all_results <- c(all_results, data$results)
+
+    if (is.null(data$`next`)) break
+    page <- page + 1
   }
+
+  df <- bind_rows(lapply(all_results, as.data.frame))
+  return(df)
 }
 
-# ---- Download cases ----
 message("Downloading case data...")
-cases_metrics <- c(
-  "newCasesBySpecimenDate",
-  "cumCasesBySpecimenDate"
-)
+cases_raw <- download_ukhsa_metric("COVID-19_cases_casesByDay")
+cases <- cases_raw |>
+  select(date, cases = metric_value) |>
+  mutate(date = as.Date(date)) |>
+  arrange(date)
 
-cases_raw <- tryCatch(
-
-download_covid_data(cases_metrics),
-  error = function(e) {
-    message("API download failed: ", e$message)
-    message("Please download data manually from:")
-    message("https://ukhsa-dashboard.data.gov.uk/covid-19-archive-data-download")
-    NULL
-  }
-)
-
-# ---- Download hospitalisations ----
 message("Downloading hospitalisation data...")
-hosp_metrics <- c(
-  "newAdmissions",
-  "cumAdmissions"
-)
+hosp_raw <- download_ukhsa_metric("COVID-19_healthcare_admissionByDay")
+hospitalisations <- hosp_raw |>
+  select(date, hospitalisations = metric_value) |>
+  mutate(date = as.Date(date)) |>
+  arrange(date)
 
-hosp_raw <- tryCatch(
-  download_covid_data(hosp_metrics, area_type = "nation"),
-  error = function(e) {
-    message("Hospitalisation data download failed: ", e$message)
-    NULL
-  }
-)
-
-# ---- Download deaths ----
 message("Downloading death data...")
-deaths_metrics <- c(
-  "newDeaths28DaysByDeathDate",
-  "cumDeaths28DaysByDeathDate"
-)
+deaths_raw <- download_ukhsa_metric("COVID-19_deaths_ONSByDay")
+deaths <- deaths_raw |>
+  select(date, deaths = metric_value) |>
+  mutate(date = as.Date(date)) |>
+  arrange(date)
 
-deaths_raw <- tryCatch(
-  download_covid_data(deaths_metrics),
-  error = function(e) {
-    message("Death data download failed: ", e$message)
-    NULL
-  }
-)
+message("Merging data...")
+combined <- cases |>
+  full_join(hospitalisations, by = "date") |>
+  full_join(deaths, by = "date") |>
+  arrange(date)
 
-# ---- Process and combine data ----
-if (!is.null(cases_raw) && !is.null(deaths_raw)) {
-  # Select a reasonable time period (e.g., 2020-2021 wave)
-  start_date <- as.Date("2020-09-01")
-  end_date <- as.Date("2021-03-31")
+combined <- combined |>
+  mutate(day_of_week = wday(date, week_start = 1))
 
-  # Process cases
-  cases <- cases_raw |>
-    filter(date >= start_date, date <= end_date) |>
-    transmute(
-      date = as.Date(date),
-      cases = newCasesBySpecimenDate
-    ) |>
-    arrange(date) |>
-    mutate(day_of_week = wday(date, week_start = 1))
+# Filter to a wave with clear Rt variation.
+date_start <- as.Date("2020-09-01")
+date_end <- as.Date("2021-03-31")
 
-  # Process deaths
-  deaths <- deaths_raw |>
-    filter(date >= start_date, date <= end_date) |>
-    transmute(
-      date = as.Date(date),
-      deaths = newDeaths28DaysByDeathDate
-    ) |>
-    arrange(date)
+combined_filtered <- combined |>
+  filter(date >= date_start, date <= date_end) |>
+  filter(!is.na(cases))
 
-  # Combine (hospitalisations may need separate handling due to nation-level data)
-  combined <- cases |>
-    left_join(deaths, by = "date")
+write_csv(combined_filtered, "data/observations.csv")
+message("Saved: data/observations.csv")
 
-  # Save individual files for scenarios
-  write_csv(cases, file.path(data_dir, "cases.csv"))
-  message("Saved: ", file.path(data_dir, "cases.csv"))
+cases_only <- combined_filtered |>
+  select(date, cases)
+write_csv(cases_only, "data/cases.csv")
+message("Saved: data/cases.csv")
 
-  if (!is.null(hosp_raw)) {
-    hosp <- hosp_raw |>
-      filter(areaName == "England") |>
-      filter(date >= start_date, date <= end_date) |>
-      transmute(
-        date = as.Date(date),
-        hospitalisations = newAdmissions
-      ) |>
-      arrange(date)
+cases_dow <- combined_filtered |>
+  select(date, cases, day_of_week)
+write_csv(cases_dow, "data/cases_dow.csv")
+message("Saved: data/cases_dow.csv")
 
-    observations <- combined |>
-      left_join(hosp, by = "date")
-
-    write_csv(observations, file.path(data_dir, "observations.csv"))
-    message("Saved: ", file.path(data_dir, "observations.csv"))
-  }
-
-  message("\nData download complete!")
-  message("Date range: ", start_date, " to ", end_date)
-  message("Number of days: ", nrow(cases))
-
-} else {
-  message("\n--- Manual download required ---")
-  message("1. Go to: https://ukhsa-dashboard.data.gov.uk/covid-19-archive-data-download")
-  message("2. Download 'Cases metrics data', 'Deaths metrics data', and 'Healthcare metrics data'")
-  message("3. Extract and place CSV files in: ", data_dir)
-}
+message("\nData summary:")
+message(sprintf("Date range: %s to %s", min(combined_filtered$date), max(combined_filtered$date)))
+message(sprintf("Number of days: %d", nrow(combined_filtered)))
+message(sprintf("Cases: %d total, range %d-%d daily",
+                sum(combined_filtered$cases, na.rm = TRUE),
+                min(combined_filtered$cases, na.rm = TRUE),
+                max(combined_filtered$cases, na.rm = TRUE)))
+message(sprintf("Hospitalisations: %d total", sum(combined_filtered$hospitalisations, na.rm = TRUE)))
+message(sprintf("Deaths: %d total", sum(combined_filtered$deaths, na.rm = TRUE)))

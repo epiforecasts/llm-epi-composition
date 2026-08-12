@@ -1,14 +1,8 @@
-# Data files (may be large)
-data/*.csv
+# Large data / intermediate files
 data/*.rds
 data/*.parquet
 
-# Output files
-outputs/**/*.json
-outputs/**/*.csv
-outputs/**/*.rds
-
-# Agentic run outputs
+# Agentic run outputs (per-run directories under runs/)
 runs/
 
 # Environment
@@ -32,8 +26,10 @@ venv/
 # Julia
 *.jl.cov
 *.jl.mem
-Manifest.toml
+# The Julia env under evaluation/julia_env/ IS tracked for reproducibility;
+# ignore any other Manifest.toml (e.g. transient tool envs).
+/simulations/Manifest.toml
 
-# Expert review - confidential (breaks blinding)
+# Expert review outputs - confidential (would deanonymise samples)
 expert_review/CONFIDENTIAL_mapping.csv
 expert_review/submissions/
