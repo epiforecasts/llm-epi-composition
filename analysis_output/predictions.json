@@ -1,0 +1,144 @@
+{
+  "P1_no_spec_package_default": {
+    "estimate": 0.5455,
+    "ci_lo": 0.3182,
+    "ci_hi": 0.7273,
+    "threshold": "lower CI bound >= 0.70",
+    "confirmed": false,
+    "n": 22
+  },
+  "P3_missing_components": [
+    {
+      "scenario": "scenario_2",
+      "component": "flag_no_dow",
+      "diff_est": -0.1667,
+      "ci_lo": -0.4167,
+      "ci_hi": 0,
+      "confirmed": false
+    },
+    {
+      "scenario": "scenario_2",
+      "component": "flag_no_ascertainment",
+      "diff_est": -0.1667,
+      "ci_lo": -0.4167,
+      "ci_hi": 0,
+      "confirmed": false
+    },
+    {
+      "scenario": "scenario_2",
+      "component": "flag_poisson_only",
+      "diff_est": 0.0833,
+      "ci_lo": 0,
+      "ci_hi": 0.25,
+      "confirmed": false
+    },
+    {
+      "scenario": "scenario_3",
+      "component": "flag_no_dow",
+      "diff_est": -0.2143,
+      "ci_lo": -0.4286,
+      "ci_hi": 0,
+      "confirmed": false
+    },
+    {
+      "scenario": "scenario_3",
+      "component": "flag_no_ascertainment",
+      "diff_est": 0.1667,
+      "ci_lo": 0,
+      "ci_hi": 0.4167,
+      "confirmed": false
+    },
+    {
+      "scenario": "scenario_3",
+      "component": "flag_poisson_only",
+      "diff_est": 0.1667,
+      "ci_lo": 0,
+      "ci_hi": 0.4167,
+      "confirmed": false
+    },
+    {
+      "scenario": "scenario_3",
+      "component": "flag_no_multistream_latent",
+      "diff_est": 0.9167,
+      "ci_lo": 0.75,
+      "ci_hi": 1,
+      "confirmed": true
+    }
+  ],
+  "P5_epiaware_lower_adversarial_rmse": {
+    "estimate": 0.0233,
+    "ci_lo": -0.0449,
+    "ci_hi": 0.1062,
+    "threshold": "median difference >= 0.03 with 95%-CI excluding zero",
+    "confirmed": false
+  },
+  "P6a_no_delay_x_long_delay": {
+    "estimate": null,
+    "ci_lo": null,
+    "ci_hi": null,
+    "threshold": "median difference >= 0.05 with 95%-CI excluding zero",
+    "confirmed": false
+  },
+  "P6b_poisson_x_extreme_dispersion": {
+    "estimate": null,
+    "ci_lo": null,
+    "ci_hi": null,
+    "threshold": "coverage drop >= 0.15 with 95%-CI excluding zero",
+    "confirmed": false
+  },
+  "P7_loc": {
+    "julia_minus_epi": {
+      "estimate": -54,
+      "ci_lo": -256.0375,
+      "ci_hi": 83.5125,
+      "threshold": "median difference >= 50 with 95%-CI excluding zero",
+      "confirmed": false
+    },
+    "no_spec_minus_epi": {
+      "estimate": -89.5,
+      "ci_lo": -287.025,
+      "ci_hi": 37.5125,
+      "threshold": "median difference >= 100 with 95%-CI excluding zero",
+      "confirmed": false
+    }
+  },
+  "P8_defect_detection_sensitivity": {
+    "note": "expert_review/reviews.csv or mutation_manifest.csv not present; run after reviews complete."
+  },
+  "P9_capability_conditional_gap": [
+    {
+      "model": "claude-haiku-4-5",
+      "gap_est": 0.1349,
+      "gap_lo": -0.0767,
+      "gap_hi": 0.3332
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "gap_est": 0.0246,
+      "gap_lo": -0.0173,
+      "gap_hi": 0.1107
+    },
+    {
+      "model": "claude-opus-4-7",
+      "gap_est": null,
+      "gap_lo": null,
+      "gap_hi": null
+    }
+  ],
+  "P10_hallucination": {
+    "epi_minus_julia": {
+      "estimate": -0.006,
+      "ci_lo": -0.011,
+      "ci_hi": -0.0004,
+      "threshold": ">= 0.10 with 95%-CI excluding zero",
+      "confirmed": false
+    },
+    "epi_minus_no_spec": {
+      "estimate": 0.0184,
+      "ci_lo": 0.0165,
+      "ci_hi": 0.0224,
+      "threshold": ">= 0.10 with 95%-CI excluding zero",
+      "confirmed": false
+    }
+  }
+}

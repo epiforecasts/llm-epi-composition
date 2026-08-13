@@ -1,0 +1,13 @@
+scenario,condition,n,median_loc,iqr_loc
+scenario_1a,epiaware,12,147,392.5
+scenario_1a,julia,12,212.5,207.75
+scenario_1a,no-spec,11,62,64
+scenario_1b,epiaware,13,151,441
+scenario_1b,julia,12,119,71
+scenario_1b,no-spec,11,124,60.5
+scenario_2,epiaware,12,354,327
+scenario_2,julia,12,193,364
+scenario_2,no-spec,11,197,360
+scenario_3,epiaware,14,315,780.5
+scenario_3,julia,12,344.5,461.75
+scenario_3,no-spec,11,425,461.5

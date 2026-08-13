@@ -1,0 +1,13 @@
+scenario,condition,n,median_retries,median_waits,median_dur_min
+scenario_1a,epiaware,24,0,0,81.04166666666666
+scenario_1a,julia,24,0,0,59.1
+scenario_1a,no-spec,23,0,0,11.283333333333333
+scenario_1b,epiaware,25,4,4.5,164.05
+scenario_1b,julia,22,3,3,93.475
+scenario_1b,no-spec,23,0,0,19.566666666666666
+scenario_2,epiaware,24,1,1,104.73333333333333
+scenario_2,julia,24,0,0,64.16666666666667
+scenario_2,no-spec,23,0,0,24.3
+scenario_3,epiaware,26,0,0,87.79166666666666
+scenario_3,julia,24,0,0,101.04166666666666
+scenario_3,no-spec,23,0,0,36.15

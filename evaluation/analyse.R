@@ -34,6 +34,7 @@ suppressPackageStartupMessages({
   library(jsonlite)
   library(boot)
   library(ggplot2)
+  library(lubridate)
 })
 
 RUNS_ROOT   <- "runs"
@@ -93,11 +94,11 @@ collect_runs <- function() {
     p$end_time   <- m$end_time   %||% NA_character_
     p
   })
-  meta$duration_min <- as.numeric(difftime(
-    as.POSIXct(meta$end_time, tz = "UTC"),
-    as.POSIXct(meta$start_time, tz = "UTC"),
-    units = "mins"
-  ))
+  # Metadata timestamps are ISO 8601 with offset (e.g. "2026-06-17T22:34+01:00").
+  # lubridate::ymd_hms handles them; as.POSIXct silently ignores the offset.
+  start_t <- lubridate::ymd_hms(meta$start_time, quiet = TRUE)
+  end_t   <- lubridate::ymd_hms(meta$end_time,   quiet = TRUE)
+  meta$duration_min <- as.numeric(difftime(end_t, start_t, units = "mins"))
   meta
 }
 
@@ -321,13 +322,24 @@ if ("chosen_package" %in% colnames(runs)) {
     filter(condition == "no-spec",
            scenario %in% c("scenario_1a", "scenario_1b"),
            variant == CANONICAL_VARIANT)
-  matching_packages <- c("EpiEstim", "EpiNow2", "PyMC", "numpyro")
-  is_match <- s12_no_spec$chosen_package %in% matching_packages
+  # chosen_package labels are of the form "R_EpiNow2" / "Python_numpyro" / etc.,
+  # or just "Python" / "R" if no probabilistic framework was identified.
+  # The prediction only counts canonical packages, not hand-rolled scipy/base R.
+  matching_labels <- c(
+    "R_EpiEstim", "R_EpiNow2", "R_epinowcast",
+    "Python_PyMC", "Python_numpyro", "Python_pyro"
+  )
+  is_match <- s12_no_spec$chosen_package %in% matching_labels
+  # Report the tool distribution as a descriptive side-output.
+  tool_dist <- s12_no_spec %>%
+    count(chosen_package, sort = TRUE)
+  readr::write_csv(tool_dist, file.path(OUT_DIR, "table_6_no_spec_tool_distribution.csv"))
   p <- bootstrap_proportion(is_match)
   preds$P1_no_spec_package_default <- list(
     estimate = p$est, ci_lo = p$lo, ci_hi = p$hi,
     threshold = "lower CI bound >= 0.70",
-    confirmed = isTRUE(p$lo >= 0.70)
+    confirmed = isTRUE(p$lo >= 0.70),
+    n = length(is_match)
   )
 } else {
   preds$P1_no_spec_package_default <- list(

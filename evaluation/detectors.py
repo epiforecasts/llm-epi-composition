@@ -411,6 +411,78 @@ def detect_no_multistream_latent(sources: dict[str, str], run_dir: Path) -> Dete
     )
 
 
+def detect_chosen_package(sources: dict[str, str]) -> Detection:
+    """Identify the primary language + package the agent used.
+
+    Non-boolean detector: `flagged` is the package label (e.g. "R_EpiNow2",
+    "Python_numpyro", "Julia_EpiAware", "Julia_Turing"), or None if
+    indeterminate. Used by analyse.R to test the "no-spec defaults to
+    packages" prediction and to populate Table 6.
+    """
+    label: str | None = None
+    # Prefer the language of the largest source file that isn't a helper.
+    largest = None
+    largest_len = -1
+    for name, src in sources.items():
+        n = len(src)
+        if n > largest_len:
+            largest_len = n
+            largest = (name, src)
+    if largest is None:
+        return Detection(name="chosen_package", flagged=None, feasibility="partial",
+                          evidence={"reason": "no source files"})
+    name, src = largest
+    ext = Path(name).suffix.lower()
+    # Detect language.
+    if ext == ".jl":
+        lang = "Julia"
+    elif ext == ".r":
+        lang = "R"
+    elif ext == ".py":
+        lang = "Python"
+    elif ext == ".stan":
+        lang = "Stan"
+    else:
+        lang = "unknown"
+    # Detect package by looking across all sources (imports may be elsewhere).
+    joined = "\n".join(sources.values())
+    pkg = None
+    # Julia
+    if re.search(r"\busing\s+EpiAware\b", joined) or re.search(r"\bEpiAware\.\w+", joined):
+        pkg = "EpiAware"; lang = "Julia"
+    elif re.search(r"\busing\s+Turing\b", joined) and lang == "Julia":
+        pkg = "Turing"
+    # R
+    elif re.search(r"library\s*\(\s*EpiNow2\s*\)", joined) or re.search(r"\bEpiNow2::", joined):
+        pkg = "EpiNow2"; lang = "R"
+    elif re.search(r"library\s*\(\s*EpiEstim\s*\)", joined) or re.search(r"\bEpiEstim::", joined):
+        pkg = "EpiEstim"; lang = "R"
+    elif re.search(r"library\s*\(\s*epinowcast\s*\)", joined) or re.search(r"\bepinowcast::", joined):
+        pkg = "epinowcast"; lang = "R"
+    elif re.search(r"library\s*\(\s*cmdstanr\s*\)", joined) or re.search(r"\bcmdstanr::", joined):
+        pkg = "cmdstanr"; lang = "R"
+    elif re.search(r"library\s*\(\s*rstan\s*\)", joined) or re.search(r"\brstan::", joined):
+        pkg = "rstan"; lang = "R"
+    # Python
+    elif re.search(r"\bimport\s+numpyro\b", joined) or re.search(r"\bfrom\s+numpyro\b", joined):
+        pkg = "numpyro"; lang = "Python"
+    elif re.search(r"\bimport\s+pymc\b", joined) or re.search(r"\bfrom\s+pymc\b", joined) or re.search(r"\bimport\s+pymc\s+as\s+pm\b", joined):
+        pkg = "PyMC"; lang = "Python"
+    elif re.search(r"\bimport\s+pyro\b", joined) or re.search(r"\bfrom\s+pyro\b", joined):
+        pkg = "pyro"; lang = "Python"
+    elif re.search(r"\bimport\s+cmdstanpy\b", joined) or re.search(r"\bfrom\s+cmdstanpy\b", joined):
+        pkg = "cmdstanpy"; lang = "Python"
+    elif re.search(r"\bimport\s+stan\b", joined) or re.search(r"\bfrom\s+stan\b", joined):
+        pkg = "pystan"; lang = "Python"
+    label = f"{lang}_{pkg}" if pkg else lang
+    return Detection(
+        name="chosen_package",
+        flagged=label,
+        feasibility="partial",
+        evidence={"primary_file": name, "primary_ext": ext},
+    )
+
+
 def _infer_scenario(run_dir: Path) -> str | None:
     """Extract scenario name from run_dir path.
 
@@ -459,6 +531,7 @@ DETECTOR_FUNCS_SOURCE = (
     detect_no_ascertainment,
     detect_no_discretisation,
     detect_wrong_likelihood,
+    detect_chosen_package,
 )
 DETECTOR_FUNCS_OUTPUT = (
     detect_no_uncertainty,
@@ -511,7 +584,17 @@ def emit_csv_summary(results: list[dict[str, Any]]) -> str:
         row = [r["run_dir"], str(r["n_source_files"])]
         for name in detector_names:
             v = flags.get(name)
-            row.append("" if v is None else ("1" if v else "0"))
+            if v is None:
+                row.append("")
+            elif isinstance(v, bool):
+                row.append("1" if v else "0")
+            else:
+                # String label (e.g. chosen_package). Quote if it contains a
+                # comma; otherwise emit as-is.
+                s = str(v)
+                if "," in s or '"' in s:
+                    s = '"' + s.replace('"', '""') + '"'
+                row.append(s)
         out_lines.append(",".join(row))
     return "\n".join(out_lines)
 
