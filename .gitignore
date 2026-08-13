@@ -33,3 +33,9 @@ venv/
 # Expert review outputs - confidential (would deanonymise samples)
 expert_review/CONFIDENTIAL_mapping.csv
 expert_review/submissions/
+
+# Generated analysis artefacts (produced by evaluation/analyse.R)
+analysis_output/
+
+# Detector CSV (produced by evaluation/detectors.py --all)
+evaluation/detectors_output.csv
