@@ -38,7 +38,7 @@ Secondary questions:
 
 This study was designed and run in two phases:
 
-1. **Phase 1 (2024-12 to 2025):** Original design under the plan as committed on 2024-12-07 (see git history). Conditions were R / Python / Julia / EpiAware. Some scenario 1a runs were executed; scenario 1b, 2, and 3 runs were not completed. The phase was abandoned before the pre-specified analysis was carried out, and no results from phase 1 are used in the confirmatory analysis below.
+1. **Phase 1 (2025-12 to 2026-04):** Original design under the plan as committed on 2025-12-07 (see git history). Conditions were R / Python / Julia / EpiAware. Some scenario 1a runs were executed; scenario 1b, 2, and 3 runs were not completed. The phase was abandoned before the pre-specified analysis was carried out, and no results from phase 1 are used in the confirmatory analysis below.
 2. **Phase 2 (2026-04 onwards):** Design revised in response to methodological concerns raised by Omar et al. (*Nat Med* 2026) and observations during phase 1 (notably that "from-scratch" code generation collapses to task-specific packages when they exist). Phase 2 uses simulation with ground truth (new data, not previously queried) as the primary evaluation, plus additional methodological controls. The revised plan is time-stamped by commit to the public repository before any model is queried under it.
 
 Phase 1 artefacts have been removed from the working tree. The original analysis plan, phase 1 prompts, and tracked expert-review scaffolding are preserved in git history and can be reconstructed from earlier commits. Phase 1 run outputs (agent conversation logs, generated code, in-progress expert-review drafts) were gitignored and have not been retained.
@@ -859,7 +859,7 @@ capable ones.
 
 ---
 
-*Document created: 2024-12-07*
+*Document created: 2025-12-07*
 *Revised: 2026-04-23 (recovery-based evaluation, no-spec/Julia/EpiAware axis, adversarial DGPs, automated detectors, prompt randomisation, minimum working knowledge docs principle, hallucination rate as secondary outcome)*
 *Revised: 2026-06 (main reviewer concerns addressed: explicit sample-size and crossing, temperature axis dropped, quantitative effect sizes for all predictions, reference EpiAware AR prior calibrated to HalfNormal(0.05), evaluation window days 25–125, sinusoidal_rt variant added, extreme_dispersion rename, three-family LLM paraphrase scheme, structural-pattern detector framing, slot-01 base prompts acknowledged as LLM-drafted)*
 *Revised: 2026-07 (compact design: 5 runs × 4 paraphrases × 1 replicate on canonical + 3 runs on 4 non-canonical variants, ~420 runs per model; model panel switched to Anthropic-only Haiku 4.5 + Sonnet 4.6 + Opus 4.7 with Qwen3-Coder-30B as tertiary open-weight; execution protocol updated to match implemented harness (retries with `--resume`, wait-for-inference, cwd-based process detection); blinding preprocessor, detector calibration protocol, and reference-solution file paths pinned; bootstrap analysis tool specified as R `boot`)*
