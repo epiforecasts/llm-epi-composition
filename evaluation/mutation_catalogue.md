@@ -1,16 +1,47 @@
 # Mutation catalogue
 
-This document defines the defects that can be injected into review samples for
-the reviewability outcome (analysis plan, evaluation axis 4). Each mutation
-takes a defect-free source file and produces a variant that omits, breaks,
-or subtly perverts a modelling component. Reviewers try to identify the
-defects on a mixed pool of clean and mutated samples. Detection sensitivity
-per condition is a confirmatory outcome.
+This document lists candidate defects for the H3 reviewability outcome.
+Package-specific operations below are legacy development examples and require
+validation against the pinned ComposableTuringIDModels API and revised scientific
+tasks before use. A mutation must introduce an actual modelling error; changing
+a conditional Poisson observation model or using supplied ascertainment is not
+intrinsically a defect. The frozen matched-defect schedule includes only validated,
+applicable operations.
 
 The catalogue is internal to the review-coordinator role and **not**
 distributed to reviewers. Reviewers know the space of possible defects
 (because they know what components each scenario requires) but not which
 sample has which injected defect.
+
+## Migration and eligibility checks
+
+Retain the EpiAware operations below as a translation checklist. They are not
+executable instructions for ComposableTuringIDModels. For each mutation selected
+for the frozen schedule, record the legacy operation, replacement operation,
+pinned package commit, applicable scenarios and applicable conditions. Validate
+the replacement on both an unmodified and a mutated sample before approving it.
+
+`evaluation/mutate.py` currently implements legacy concrete patterns. Its regex
+helpers may be reusable, but each selected pattern needs implementation and
+validation against the pinned API and generated-code forms. A successful text
+replacement is not proof that exactly one intended scientific defect was created.
+Record the tool version, diff and independent validation result; manual mutations
+require the same checks.
+
+For H3, eligibility is the intersection of three requirements:
+
+- The mutation applies to scenario 2 or 3, as assigned in the schedule.
+- The same scientific defect can be introduced in both `julia` and `composable`.
+- Both selected base submissions support a validated implementation of that defect.
+
+Catalogue tags such as “all scenarios” describe broader potential use; they do
+not expand the H3 pool. A condition-specific operation can implement a shared
+defect, but a defect applicable to only one condition cannot enter an H3 matched
+pair. Such defects may be retained for separate descriptive or detector-validation
+work. Do not substitute a different defect in the other condition to fill a pair.
+Check these requirements when freezing the schedule and again when constructing
+the sealed manifest. If the planned pool cannot be assembled, follow the protocol's
+not-estimable rule rather than changing the schedule after review outcomes appear.
 
 ## Convention
 
@@ -139,62 +170,26 @@ used to balance the review pool so reviewers see a mix of difficulties.
   Sampler may diverge or explore weird posterior modes.
 - Component: no specific detector. Expert only.
 
-## Injection protocol
+## Injection and scoring
 
-The **review coordinator** produces the review pool as follows:
+Use [the expert review protocol](review_protocol.md) for the authoritative sample
+allocation, masking, timing and scoring rules. H3 uses 24 matched pairs of generated
+base submissions (48 bases), each with one clean and one mutated version. The
+96 versions each receive one review; a reviewer never sees both versions of a base.
+Reference mutations are separate detector-validation materials and do not enter H3.
 
-1. Start with defect-free base samples. First-pass source: the three
-   condition-specific reference solutions per scenario
-   (`reference_solutions/*.jl`). Second-pass source (optional, only if
-   time permits): a curated set of real LLM submissions that pass every
-   automated detector.
-2. For each (scenario, condition, base sample), generate up to 8 mutated
-   variants, each with exactly one mutation from the catalogue. Choose
-   mutations to cover a range of difficulties and to include at least one
-   mutation per required-component per scenario.
-3. Include unmutated controls: for each (scenario, condition), 3–5 samples
-   with no injected defect.
-4. Randomise the order in which each reviewer sees samples so that clean
-   controls are interleaved with mutations across conditions.
-5. Record, per sample, the mutation ID applied (or "clean"). Reviewers do
-   not see this until after the review pass completes.
+Record mutation ID, base and pair IDs, source run, applicability checks, validation
+result and reviewer assignment in the sealed manifest. Match defect type across
+conditions within pairs. Do not infer clean status from passing automated detectors.
 
-Blinding to which specific mutation was applied is achievable in a way
-that blinding to condition is not: the mutation-selection is a coordinator
-choice invisible to the reviewer, and mutations are applied
-deterministically enough that no visual tell survives.
+Report detections and denominators even when H3 cannot support a confirmatory
+conclusion. A wide valid interval leaves the hypothesis unresolved; a degenerate
+or invalid interval does not establish certainty. H3's multiplicity allocation
+remains reserved. See the analysis plan and review protocol for the exact rules.
 
-## Scoring
+## Review workload
 
-Per (reviewer, sample):
-
-- If the sample is mutated with mutation M:
-  - **True positive** if the reviewer's defect list includes M (or a
-    reasonable paraphrase of it under the component ontology).
-  - **False negative** if the reviewer's list omits M.
-- If the sample is clean:
-  - **True negative** if the reviewer's list is empty (or contains only
-    component-not-required-here entries).
-  - **False positive** for any spurious defect claim.
-
-Per condition:
-
-- **Sensitivity** = TP / (TP + FN) — the fraction of injected defects
-  reviewers catch. This is the headline reviewability metric.
-- **Specificity** = TN / (TN + FP)
-- **Precision** = TP / (TP + FP)
-
-Per mutation type:
-
-- Detection rate = fraction of applications caught by any reviewer, and by
-  both reviewers.
-- Comparison against detector output for the corresponding
-  component-correctness flag (calibration data for the automated detectors).
-
-## Cost
-
-For a review pool of 40 samples (roughly 3 mutations per scenario per
-condition, 12 scenarios × 3 conditions × 3 mutations minus overlap, plus
-4 clean controls), at 20–40 minutes per sample per reviewer, two reviewers,
-the total reviewer time is 27–54 person-hours. Reasonable for an expert
-review pass.
+The H3 pool alone entails 96 individual reviews: 32–64 person-hours at 20–40
+minutes per review, with a maximum of 72 person-hours at the 45-minute cap.
+Clean-code checks, mutation validation, general implementation review, detector
+validation and adjudication require additional time.

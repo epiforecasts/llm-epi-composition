@@ -1,213 +1,191 @@
 # Expert review protocol
 
-This protocol produces the reviewability, component-correctness, and
-scenario-1a method-identification data used in the paper. Reviewers see
-raw code — blinding to condition is not attempted, because language and
-package structure identify the condition on inspection. Instead the review
-pass uses **injected defects** to give reviewability a ground-truth signal
-that doesn't depend on blinding.
+This protocol implements the review outcomes in [the analysis plan](../analysis_plan.md).
+It covers implementation review, method identification, detector validation and
+H3 defect detection. The review allocation and scoring are specified here;
+package-specific mutation validation remains outstanding until the
+ComposableTuringIDModels migration is complete.
 
-Reviewers work independently. A shared discussion happens only after each
-reviewer has finished the review pool.
+## Roles and independence
 
-## What the review measures
+Two infectious-disease modellers work independently. Record their experience
+with each language and framework before review. The coordinator prepares samples
+and assigns random IDs but does not assess samples they prepared. A validator
+who did not implement the automated detectors performs detector validation.
 
-The review pool contains a mix of:
+Condition may be apparent from language and package structure. Conceal model,
+paraphrase and run identity, mutation status, pair identities, truth and detector
+outputs. Do not claim condition blinding or absence of familiarity bias.
+Reviewers use no LLM assistance. Discussion and adjudication occur only after
+initial sheets have been submitted and preserved.
 
-- **Defect-free samples** — reference solutions and a curated set of real
-  LLM submissions that pass every automated detector.
-- **Mutated samples** — reference solutions with one defect from the
-  mutation catalogue (`evaluation/mutation_catalogue.md`) injected by the
-  review coordinator.
+The full protocol includes coordinator-only allocation and scoring instructions.
+Give reviewers only their task instructions, scenario information and sheets;
+do not distribute the mutation catalogue, sealed allocation or hypotheses.
 
-For each sample, reviewers list the defects they identify. Scoring per
-condition (analysis plan §Reviewability):
+## General implementation review
 
-- **Sensitivity** = injected defects correctly flagged / total injected
-  defects. The headline reviewability outcome.
-- **Specificity** = clean samples correctly unmarked / total clean samples.
-- **Precision** = injected defects correctly flagged / (injected + spurious).
+Randomly select four of 20 canonical runs from every scenario–condition–commercial-
+model cell (144 submissions), and one of three runs from every sensitivity-panel
+cell (180 submissions), using recorded seeds. Both reviewers independently assess
+the same original code in this pool. Include incomplete or failed code where
+review is possible; retain missing-code counts without replacing them with
+successful submissions. Keep panels separate in prevalence estimates.
 
-The reviewer knows which condition each sample is from (this is visible
-from the code). Sensitivity is still meaningful because the reviewer has
-to actually read the code to find the injected defect; knowing the
-condition doesn't tell them where the defect is.
+Assess compliance with the prompt, correctness of the stated implementation and
+scientific adequacy separately. Use these component categories:
 
-The pool also includes each scenario-1a real submission, for method
-identification (renewal vs Wallinga-Teunis vs …). Method identification
-is factual and unaffected by blinding.
+- Reproduction-number definition and infection process.
+- Generation-interval discretisation.
+- Reporting-delay convolution and daily interval integration.
+- Finite delay support and boundary treatment, assessed separately.
+- Weekly reporting variation.
+- Ascertainment inputs, timing convention and identifiability assumptions.
+- Infection-process variation and conditional observation likelihood.
+- Regularisation or smoothing assumptions.
+- Shared infections and stream-specific observation models, where required.
 
-## What the review no longer does
+For each applicable component, record **correct**, **incorrect**, **unclear** or
+**absent**, with a short explanation; use **not applicable** otherwise. Presence
+alone does not establish correctness. Accept scientifically equivalent methods.
+Scenario 1a allows open method choice; record its estimand rather than requiring
+a renewal model. A Poisson observation model is not itself an error. Assess
+where variation occurs and whether this matches the task and stated model.
+Known ascertainment need not be estimated, and an unknown smooth ascertainment
+curve does not establish identifiability.
 
-The earlier draft asked reviewers for subjective readability and
-confidence ratings on a 1–5 scale. Those are dropped from the confirmatory
-pass because knowing the condition would bias the ratings: reviewers who
-recognise a package they consider well-designed would inflate readability,
-and familiarity would inflate confidence. Both remain optional descriptive
-fields on the sheet but are not reported as confirmatory outcomes.
+Classify implementation departures as equivalent alternative, minor error,
+major error or fundamental model/estimand error, with a scientific justification.
+Record semantic concerns about reproduction-number definitions, likelihood and
+serial versus generation intervals. Identify the method for scenario 1a.
 
-## Setup per reviewer
+The independent detector-validation sample contains 60 submissions, five per
+scenario–condition cell, distributed across models. Its selection is independent
+of this review pool; overlap is allowed and recorded. Compare detector flags with
+human classifications using confusion matrices, agreement and kappa. Screening
+flags do not certify defect-free code. Additional purposively selected cases do
+not enter error-prevalence estimates.
 
-Each reviewer is given:
+## H3 sample allocation — coordinator only
 
-- A **review folder** on disk containing samples named `sample_{ID}/` where
-  `{ID}` is a random integer assigned by the coordinator. The mapping from
-  `{ID}` to (source: reference or submission; condition; scenario; mutation
-  applied if any) is kept sealed by the coordinator until both reviewers
-  have submitted.
-- Inside each `sample_{ID}/`:
-  - `code/`: the source file(s) for the sample. If the sample is a
-    mutated reference, the mutation has been applied and no marker is left
-    behind indicating that.
-  - `data_summary.txt`: a fixed short description of the data the model is
-    supposed to consume. Same text across samples for the same scenario.
-  - `review_sheet.md`: blank sheet to fill in.
-- The **scenario prompt** for orientation (the shared statement of what
-  the scenario asks for; not the specific paraphrase text).
-- The **component list per scenario** (see below). This tells reviewers
-  which components a fully-specified submission would include.
-- The **departure classification** definitions (A/B/C/D).
-- The **semantic-departure flag list** (`confused_rt_r`, `wrong_likelihood`,
-  `si_not_gi`).
+H3 concerns eligible clean generated code in canonical scenarios 2 and 3, for
+`julia` and `composable`, across the three commercial models. It excludes legacy
+EpiAware runs and reference solutions.
 
-Reviewers do **not** have access to:
+Within each of six scenario–model cells:
 
-- Which samples are clean and which are mutated.
-- The mutation catalogue itself.
-- Model, paraphrase, or run identity (for real submissions).
-- The DGP script, true `Rt`, or generated infections.
-- Any automated detector outputs.
-- Other reviewers' sheets until the discussion round.
+1. Select four independently checked clean submissions per condition by random
+   candidate order among valid runs. Keep all candidate exclusions and reasons.
+   Static-detector success is insufficient evidence of clean code.
+2. Match the four submissions across conditions to form four pairs. Assign the
+   same defect type within each pair, using a balanced schedule frozen before
+   candidate-code inspection. Independently check that the mutation creates the
+   intended error. Record inapplicable candidates and take the next eligible one.
+   Verify both scenario and condition applicability: each pair must express the
+   same scientific defect in `julia` and `composable`, even if the code edits differ.
+   One-condition-only defects are excluded from H3. Broad catalogue tags do not
+   extend the pool beyond scenarios 2 and 3. Record these checks in the manifest.
+3. Produce one clean and one mutated version per base. Reviewer A sees one and
+   reviewer B the other, never both. Balance assignments so each reviewer sees
+   two clean and two mutated versions within each scenario–model–condition cell.
+4. Assign unrelated random IDs and randomise presentation order. Keep the map of
+   base, pair, condition, source run, mutation and reviewer assignment sealed.
 
-## Time recording
+Totals are **24 matched pairs, 48 base submissions and 96 reviews**: 48 mutated
+versions and 48 clean versions, with 24 of each per condition. Each exact version
+has one reviewer; general implementation review supplies the dual assessments
+used for inter-rater agreement. Do not compute agreement between clean and
+mutated versions as though reviewers assessed identical code.
 
-The reviewer starts a timer at the moment they open `sample_{ID}/` and
-stops it at the moment they finalise the defect list. If a sample stalls
-past 45 minutes, the reviewer stops, records "gave up at 45 min", and
-moves on; time for that sample is recorded as ≥ 45 min.
+H3 must precede any general review that could expose a reviewer to its base code.
+Build both allocations before review and record overlap. The independent clean-
+code check must be performed by someone other than the two H3 reviewers.
+
+If the planned pool cannot be assembled, record H3 as not estimable under this
+protocol. Do not substitute reference mutations or select a new pool after seeing
+detection results. If two reviewers cannot be recruited, H3 is not conducted.
+General implementation review may continue with one reviewer, with no inter-rater
+agreement claim.
+
+## Reviewer materials and timing
+
+Each sample folder contains source code, a fixed scenario data summary, the
+scientific prompt and a blank sheet. Supply the frozen GI/delay and ascertainment
+information required to judge the task. Do not include truth or mutation records.
+
+Start timing when opening the sample and stop when submitting the defect list.
+Stop at 45 minutes, retain findings made so far and record the review as incomplete.
+Time to complete an unfinished review is right-censored; it is not a completed
+review at 45 minutes. Record completeness separately from elapsed time.
 
 ## Review sheet
 
-Filled in per sample. All fields are required.
+Use this sheet for both pools. The coordinator supplies the applicable component
+list for general implementation review. H3 reviewers list defects without access
+to mutation status or catalogue.
 
-```
-Sample ID: {ID}
-Reviewer: {A|B}
+```text
+Sample ID:
+Reviewer ID:
+Elapsed minutes:
+Review complete: yes / no
+If incomplete: time cap / other reason (specify)
 
-Time to complete review (minutes): __
+Defects identified:
+For each, record component, code location and a short scientific explanation.
+Leave blank if none identified; an empty list does not imply review completion.
 
-Defects identified. List every defect you see. Do not restrict yourself to
-the component checklist. For each defect, note the component (if it maps
-onto one) and a one-sentence description.
+Component assessment (general implementation pool):
+Component | correct / incorrect / unclear / absent / not applicable | explanation
 
-  Format per defect:
-    [component_flag] short description
-  where component_flag is one of:
-    dow, ascertainment, delay, censoring, truncation, poisson_only,
-    multistream, smoothing, other
-
-  Example:
-    [dow] no day-of-week term in the observation model
-    [other] generation-interval vector appears reversed relative to the
-            convolution
-
-  Enter one line per defect. Leave blank if none.
-
-Component checklist. Independently of the defect list above, tick the box
-for each component you would say is PRESENT and correct in this sample.
-This is the factual-identification pass. Missing / unclear / present-but-
-broken all count as "not ticked".
-
-  [ ] Renewal-equation infection process
-  [ ] Discretised generation interval
-  [ ] Reporting-delay convolution
-  [ ] Delay handled with censoring / interval integration
-  [ ] Delay support truncated with renormalisation
-  [ ] Day-of-week / weekend effect
-  [ ] Time-varying ascertainment structure
-  [ ] Overdispersed observation likelihood
-  [ ] Smoothing prior on Rt (AR / RW / GP / spline)
-  [ ] Shared latent across streams (scenario 3 only)
-
-Departure classification (single choice, for real LLM submissions only):
-  A = Equivalent alternative
-  B = Minor error
-  C = Major error
-  D = Fundamental misunderstanding
-
-Justification (1–2 sentences):
-
-Semantic departure flags (tick any that apply):
-  [ ] confused_rt_r
-  [ ] wrong_likelihood
-  [ ] si_not_gi
-
-Method identification (scenario 1a real submissions only):
-  [ ] Renewal equation
-  [ ] Wallinga–Teunis
-  [ ] Bettencourt–Ribeiro
-  [ ] Naive ratio
-  [ ] Other: __
-
-Free-text notes (optional, 3 sentences max):
+Prompt compliance concerns:
+Scientific adequacy or identifiability concerns:
+Departure classification and justification:
+Semantic concerns (estimand / likelihood / serial versus generation interval):
+Method and target (scenario 1a):
+Optional notes:
 ```
 
-## Scenario expectations
+## Scoring — coordinator and analyst only
 
-- **Scenario 1a — Rt from cases, open method.** Renewal or renewal-equivalent
-  method; discretised GI; delay handling; truncation.
-- **Scenario 1b — Rt from cases with renewal.** As 1a, plus explicit
-  renewal equation.
-- **Scenario 2 — Cases with DoW, time-varying ascertainment, overdispersion.**
-  As 1b, plus day-of-week effect, time-varying ascertainment structure, and
-  overdispersed likelihood.
-- **Scenario 3 — Multi-stream.** As 2, plus a single shared latent
-  generating three streams through separate observation models.
+Preserve initial defect lists. Adjudicate disputed matches and genuine uninjected
+errors independently; reviewers do not revise initial detections after learning
+the mutation record. Apply the same rules in both conditions.
 
-Components not required for a scenario should not be ticked on the
-checklist even if they happen to be present.
+- **Sensitivity:** injected defects identified / all validated injected defects.
+  A timeout without detection is a missed defect. Detection before timeout counts.
+- **Specificity among completed clean reviews:** completed clean reviews without
+  a false defect report / all completed clean reviews.
+- **Successful clean-review proportion:** completed clean reviews without a false
+  report / all assigned clean reviews. Incomplete reviews are unsuccessful here.
+- **Other false reports:** report spurious defect counts on mutated samples
+  separately. Do not call genuine uninjected defects false positives.
+- **Detection precision:** matched injected-defect reports / (matched reports plus
+  adjudicated spurious reports), with duplicate descriptions collapsed. Report
+  genuine uninjected findings separately and disclose the pool's mutation prevalence.
 
-## Coordinator role
+Report all numerators, denominators, timeouts and exclusions by condition, cell
+and reviewer. If an unexpected genuine defect invalidates a nominally clean
+control, mark it invalid, retain its record and disclose the denominator change;
+do not replace it after observing reviews. If a mutation/base validation failure
+breaks the required complete H3 allocation, the planned contrast is not estimable.
 
-The **review coordinator** (see Roles & Responsibilities in the plan):
+H3 is the equally weighted mean of the six cell sensitivity differences,
+`composable` minus `julia`. Bootstrap matched pairs within cells, retaining both
+conditions, versions and reviewer assignments, exactly as specified in the plan.
+Use 10,000 resamples and a recorded seed. Inference conditions on the selected
+reviewers and defect types.
 
-- Builds the review pool from reference solutions and clean real
-  submissions.
-- Applies mutations per `mutation_catalogue.md`, one per mutated sample,
-  covering the difficulty and component distribution the catalogue
-  requires.
-- Assigns random IDs, distributes samples in randomised order (not grouped
-  by condition, scenario, or clean/mutated status).
-- Keeps the sealed ID → (source, condition, mutation) mapping until both
-  reviewers have submitted.
-- Does not review any samples themselves.
+A valid, wide interval that includes zero leaves the pre-specified H3 unresolved.
+Show its counts and interval; do not change its status because the result is
+uninformative. If the interval procedure fails validation, produces no resampling
+variation or the required pool is unavailable, report descriptive counts and the
+reason no confirmatory conclusion is available. A degenerate interval does not
+establish certainty. Keep H3's share of the three-hypothesis Bonferroni allocation
+reserved even if H3 is not conducted or cannot support inference. Do not reuse
+that allocation for H1/H2 or introduce a more favourable analysis after inspection.
 
-## After both reviewers finish
-
-- **Sensitivity, specificity, and precision** are computed per condition
-  from the defect lists against the sealed mutation record.
-- **Detector validation**: reviewers' component-checklist ticks are
-  compared against `evaluation/detectors.py` output on the same samples,
-  giving a confusion matrix and Cohen's kappa per detector.
-- **Inter-rater kappa** is computed on the component checklist, the
-  departure classification, and the semantic-departure flags.
-- **Disagreements** are resolved by discussion. If discussion fails, a
-  third reviewer is consulted; their independent call is tie-breaking.
-
-## Semantic-departure lightweight pass
-
-The review pool covers the stratified subsample plus mutation-injected
-controls. Every remaining real submission (outside the subsample) receives
-a lightweight pass:
-
-- One reviewer per submission.
-- One-page sheet: submission ID, three tick boxes (`confused_rt_r`,
-  `wrong_likelihood`, `si_not_gi`), one-sentence justification per ticked
-  box, no timing, no checklist.
-
-## No LLM assistance
-
-Reviewers may not use any LLM (Claude, GPT, Gemini, or otherwise) to help
-with reading code, filling the checklist, or writing the defect list.
-Framing sensitivity in LLM judges is a known concern; using them would
-compromise the independence of expert review from the primary evaluation.
+General implementation agreement is computed from initial independent ratings
+on identical samples; adjudicated results are reported separately. Consult a
+third reviewer where disagreement persists. Remaining submissions receive a
+single-reviewer semantic-concern pass with a justification for each flagged case.

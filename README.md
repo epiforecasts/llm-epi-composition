@@ -1,21 +1,21 @@
 # LLM Epidemiological Code Composition
 
-How do software instructions and scaffolding — from unconstrained free choice, through Julia with a general-purpose probabilistic programming framework, to Julia with a domain-specific composable framework — affect the correctness, component fidelity, reliability, interpretability, reviewability, and cost of LLM-generated epidemic model code?
+How do unrestricted tool choice, Julia with Turing, and Julia with ComposableTuringIDModels.jl compare in statistical performance, implementation errors, execution success and reviewability when LLM agents generate epidemic model code?
 
 ## Status
 
-Phase 2 design in preparation. See `analysis_plan.md` for the full pre-registered protocol: three conditions on a scaffolding gradient (no-spec / julia / epiaware), four scenarios of increasing complexity, three Claude models (Haiku 4.5 / Sonnet 4.6 / Opus 4.7) with Qwen3-Coder-30B as a tertiary open-weight comparison, simulation-based evaluation with ground truth, eight outcome axes (four confirmatory, four descriptive), and pre-specified predictions with quantitative thresholds.
+Phase 2 is in development. The [analysis plan](analysis_plan.md) is a revised draft, not a registered protocol. It compares unrestricted tool choice, Julia with Turing, and Julia with [ComposableTuringIDModels.jl](https://composableturingidmodels.epiaware.org/dev/) across four epidemiological tasks. The new `composable` condition replaces EpiAware in the planned study; existing `epiaware` prompts, references and harness settings still need migration and validation. Legacy development runs retain their original identity.
 
-An earlier framing (2026-04 through 2026-07) described the conditions as a retrieval-versus-composition gradient. That framing was retired in August 2026 because neither mode is identifiable from model outputs. The current plan reports observable effects of scaffolding on observable code properties; see `analysis_plan.md` §Framing.
+The scientific review identified changes required before confirmatory runs: align the simulated reproduction number with the estimation target, constrain ascertainment in primary recovery tasks, distinguish process from observation variation, and freeze independent evaluation data and analysis rules. Existing code and prompts still implement the development design. The plan retains the compact allocation and specifies three hypotheses on recovery, valid outputs and defect detection, with explicit effect benchmarks and inference rules. Additional datasets and a common time cap are optional extensions.
 
-Reviewability is measured via injected-defect detection: the review coordinator plants known defects from `evaluation/mutation_catalogue.md` into a subset of samples, and expert reviewers try to detect them. See `evaluation/review_protocol.md`. This gives the reviewability outcome a ground-truth signal that does not depend on blinding (which is not achievable when language and package structure identify the condition on inspection).
+Reviewability is assessed through injected-defect detection. The [review protocol](evaluation/review_protocol.md) now specifies the generated-code pool, independent clean-code checks and rules for unresolved or invalid H3 inference. Package-specific operations in the [mutation catalogue](evaluation/mutation_catalogue.md) still require validation after migration.
 
-Phase 1 ran under an earlier design (see `analysis_plan.md` → Study History) and was not carried through to analysis. Its artefacts have been removed; see git history for the original plan and tracked materials.
+Phase 1 was not carried through to analysis. Tracked materials remain in git history; its gitignored run outputs were not retained. Phase 2 pilots and reference calibration must be documented as development work preceding registration.
 
 ## Repository layout
 
 ```
-analysis_plan.md                 # Pre-registered protocol (current draft)
+analysis_plan.md                 # Analysis protocol (unregistered draft)
 data/                            # Real data (retained as secondary realism check)
 evaluation/
   run_agentic.sh                 # Agentic run harness (Claude Code CLI)
@@ -24,7 +24,7 @@ evaluation/
   review_protocol.md             # Expert review protocol
   generate_paraphrases.py        # LLM paraphrase generation for slots 02–04
 prompts/                         # Base prompts (slot 01) and paraphrases; API docs bundles
-reference_solutions/             # EpiAware and EpiNow2 references for sanity checks
+reference_solutions/             # Development references; EpiAware migration pending
 runs/                            # Per-run output directories (agent code, conversation, metadata)
 scripts/                         # Data download and utilities
 setup/                           # Language environment setup (R, Python, Julia)
