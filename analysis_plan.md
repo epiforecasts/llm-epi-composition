@@ -21,6 +21,14 @@ agents generate epidemic model code?
 - How do differences between software conditions vary across the three commercial
   Claude deployments (Haiku 4.5, Sonnet 4.6, Opus 4.7)?
 
+The conditions are observable software interventions: task instruction, required
+language or framework, and supplied API documentation. The outcomes are observable
+properties of the code and estimates the agent produces. Whether an agent recalled
+a solution or assembled one from primitives cannot be identified from its outputs.
+Package use is not evidence of recall, and package-free code is not evidence of
+assembly from primitives. Differences between conditions are reported as effects
+of the intervention on the produced code.
+
 ## Study history and registration
 
 Phase 1 (December 2025–April 2026) compared R, Python, Julia and EpiAware. Some
@@ -38,9 +46,8 @@ their dates and whether outcomes had been inspected.
 
 ## Scientific requirements and implementation status
 
-The current implementation is suitable for development, but several assumptions
-in the earlier plan need resolving before its recovery results can support a
-confirmatory comparison:
+The current implementation is suitable for development. The following requirements
+must be met before recovery results can support a confirmatory comparison:
 
 1. **Align the reproduction-number target.** The generator assigns expected
    offspring at the parent's infection time. Its saved trajectory is a cohort
@@ -69,8 +76,9 @@ resolved before recovery can be scored. Independent data replicates are required
 only for claims across outbreaks; the retained allocation below makes a narrower,
 dataset-conditional claim. Validated mutations are required for the review
 hypothesis. These scientific requirements are distinct from recruitment and
-implementation tasks, listed at the end of the plan. The generator, prompts and
-analysis code have not yet been brought into line with this specification.
+implementation tasks, listed under Work required before registration and
+execution. The generator, prompts and analysis code have not yet been brought
+into line with this specification.
 
 ## Conditions and models
 
@@ -83,10 +91,9 @@ analysis code have not yet been brought into line with this specification.
 The domain-specific condition uses
 [ComposableTuringIDModels.jl](https://composableturingidmodels.epiaware.org/dev/),
 which assembles infection and observation components into Turing models through
-`as_turing_model`. It replaces the earlier EpiAware package in the planned study.
-The package has a revised API; migration requires adapting and validating models,
-not just changing imports. Pin its source commit, compatible Turing environment
-and documentation snapshot. The linked `/dev/` site is a documentation source,
+`as_turing_model`. Its API differs from EpiAware, which was used during
+development; migration requires adapting and validating models. Pin its source
+commit, compatible Turing environment and documentation snapshot. The linked `/dev/` site is a documentation source,
 not a reproducible version identifier.
 
 Before registration, identify a candidate commit and record its API changes,
@@ -123,23 +130,24 @@ multi-stream models, and general probabilistic programming frameworks require
 the user to specify the whole model. Whether a submission implements the task
 correctly is assessed from the code and estimates, not inferred from imports.
 
-The study retains three conditions. A Julia-only instruction with optional Turing
-would assess framework choice within a fixed language; it could reproduce the
-Turing condition if agents consistently chose that framework. Explicitly banning
-Turing would assess performance under a restriction on inference tools. Neither
-comparison is needed to ask whether domain-specific components help relative to
-Turing itself. Fully crossing a fourth condition with the current allocation
-would raise the commercial panel from 1260 to 1680 runs, with additional review
-work. Such a comparison is an optional follow-up with its own question and
-pre-specified analysis, rather than another comparison selected after inspecting
-results. The `no-spec` observations alone cannot estimate its causal effect.
+A Julia condition with optional Turing, or one that excludes Turing, would address
+framework choice within a fixed language. Either is a possible follow-up with its
+own question and pre-specified analysis. Crossing a fourth condition with the
+current allocation would raise the commercial panel from 1260 to 1680 runs. The
+`no-spec` observations alone cannot estimate its effect.
 
 Documentation is part of the intervention. Training exposure and usable API
 knowledge cannot be equalised by assumption. Record the exact document versions,
 lengths and contents. Bundles may contain signatures, argument descriptions and
 short examples of individual functions, but no complete solution to a study
-scenario. Human review determines compliance; the existing LLM checking script
+scenario. Human review determines compliance; `evaluation/validate_api_docs.py`
 can assist this audit. Low API-error rates would not isolate a package-design effect.
+
+The authors develop ComposableTuringIDModels, so the domain bundle may be better
+written than the Turing bundle for reasons unrelated to package design. Before
+freezing, an auditor who did not write either bundle records, for each, its
+length, the number of function entries and short examples, and the coverage of
+functions needed for each scenario. Report these counts with the results.
 
 At freeze time, a human audit of the shared Turing reference must explicitly
 exclude renewal equations, reproduction-number estimation, epidemic observation
@@ -202,8 +210,7 @@ Here Gamma uses shape and scale. Offspring arrive at $t_i+\tau_{ij}$, so the
 expected lifetime number of offspring is $R_c(t_i)$. The Gamma–Poisson mixture
 represents individual transmission heterogeneity, following
 [Lloyd-Smith et al. (2005)](https://www.nature.com/articles/nature04153).
-Offspring occur at separate ages; calling this a Bellman–Harris process, in which
-reproduction occurs at the end of a lifetime, is unnecessarily specific.
+Offspring occur at separate ages.
 
 Ignoring the initial seed contribution, its mean incidence satisfies
 
@@ -281,7 +288,6 @@ The current generator seeds days −19 through 0 with Poisson counts at integrat
 rate $0.3\times100\exp(r_0t)$, then propagates their descendants. The factor 0.3 is
 an empirical development choice. Continuous GI draws are not truncated at 20 days;
 20 days sets the seed window and the GI approximation used for initialisation.
-The earlier procedural formula using $(1-R_0)$ did not describe the code.
 
 Before freezing a replacement generator, check the initial growth equation and
 day indexing, provide enough prehistory for all delay supports, and test a longer
@@ -318,12 +324,15 @@ errors, but use of a particular package function is not required for correctness
 | `abrupt_change` | Reproduction trajectory falls 1.5 to 0.5 over days 74–77 | Response to rapid change |
 | `sinusoidal_rt` | $1+0.4\sin(2\pi t/60)$ | Repeated changes; 2.5 cycles over 150 days |
 
+The trajectories in this table and in Development parameters are cohort
+reproduction numbers under the current generator. Re-express them as
+instantaneous trajectories when the replacement generator is frozen.
+
 These alter more than estimator difficulty: GI changes affect incidence, and
 stronger heterogeneity affects extinction and information content. They are
-sensitivity analyses, not isolated tests proving why a component failed.
-The value $k=0.1$ is a strong-heterogeneity setting; it is not justified to call it
-outside all observed pathogen ranges. Infection-level $k$ does not identify an
-observation-level dispersion parameter.
+sensitivity analyses and do not isolate why a component failed. The value
+$k=0.1$ is a strong-heterogeneity setting. Infection-level $k$ does not identify
+an observation-level dispersion parameter.
 
 The compact panel includes canonical, short GI, long delay, extreme dispersion
 and abrupt change. It cannot test the proposed low-dispersion comparison without
@@ -345,13 +354,14 @@ implemented simple reference, including a multi-stream check. Apply the same
 scientific specification, input information and computational budget where a
 comparison is intended.
 
-The earlier draft reported median RMSE 0.086 and median temporal coverage 1.00
-across 20 canonical development replicates with a `HalfNormal(0.05)` innovation
-prior. These are development results under the earlier target. They do not
-validate the revised task, prove nominal calibration or establish that excess
-coverage is inevitable. Freeze priors using development data and evaluate them
+Development calibration under the cohort target gave median RMSE 0.086 and
+median temporal coverage 1.00 across 20 canonical replicates with a
+`HalfNormal(0.05)` innovation prior. These results do not transfer to the
+instantaneous target. Freeze priors using development data and evaluate them
 on independent datasets. Inspect interval width, interval score, convergence and
-prior sensitivity alongside recovery.
+prior sensitivity alongside recovery. Before evaluating references on the new
+generator, record pass/fail thresholds for median RMSE and median 90% coverage
+on the scoring window; a reference that fails them blocks registration.
 
 ## Sampling, randomisation and execution
 
@@ -369,7 +379,7 @@ Canonical runs in the two panels are distinct agent runs on the same dataset;
 the panels are not independent replications of epidemic variability. The Qwen
 allocation is 240 canonical runs plus 108 runs across canonical, long delay and
 extreme dispersion. Runtime and cost estimates must be updated from recorded
-usage before launch; the earlier commercial budget estimate was about US$2700.
+usage before launch; development pilots gave a commercial estimate of about US$2700.
 
 One dataset per variant supports a conditional comparison for those datasets.
 Agent reruns do not increase the number of simulated outbreaks. Data-level
@@ -383,21 +393,37 @@ An optional extension would replace the five canonical reruns with five
 independent datasets shared across conditions and paraphrases, at the same run
 count. This would change the estimand and require a protocol amendment before
 execution. It is not required for the conditional comparison specified here.
-A precision assessment will describe expected interval widths and the chance of
-resolving the hypotheses under plausible effects. Lack of a power calculation
-does not establish low power, and the sample size alone does not establish
-adequate power. Retain inconclusive results if the fixed budget is insufficient.
+A precision assessment describes expected interval widths and the chance of
+resolving the hypotheses under plausible effects. Inconclusive results are
+retained if the fixed budget is insufficient.
 
 ### Prompts and scheduling
 
-There are four prompt versions per scenario and condition. Slot 01 was drafted
-with LLM assistance and edited by the authors. Slots 02–04 use GPT-5, Gemini 2.5
-Flash and Claude Sonnet 4.5 paraphrases. These are four selected wordings, not a
+Each prompt contains the epidemiological task, a description of the data files,
+the language or framework requirement for its condition, and the supplied inputs:
+GI and delay distributions (family, mean and SD) and, in the primary tasks,
+ascertainment information. Prompts do not specify an inference method, disclose
+the simulation model, or give values of quantities the agent must estimate. Data
+files, prompts and metadata describe an infectious disease outbreak without
+naming a pathogen or country, and observed files follow the format of the real
+surveillance data. Every run must write `outputs/rt_estimates.csv` with one row
+per day and columns `date` (YYYY-MM-DD), `Rt_median`, `Rt_lower` (5th percentile)
+and `Rt_upper` (95th percentile). Methods without uncertainty quantification may
+omit the interval columns.
+
+There are four prompt versions per scenario and condition, stored at
+`prompts/{scenario}/paraphrases/{condition}/NN.md`. Slot 01 was drafted with LLM
+assistance and edited by the authors. Slots 02–04 are paraphrases generated by
+GPT-5, Gemini 2.5 Flash and Claude Sonnet 4.5 using
+`evaluation/generate_paraphrases.py`. These are four selected wordings, not a
 random sample of human prompting behaviour. Human checking must confirm that
 paraphrases preserve the estimand, information and requirements.
 
-Freeze all 48 prompts and the shared Turing and domain-specific API bundles. In variant runs, verify that supplied
-GI/delay parameters match that variant. Randomise execution order in blocks across
+Freeze the 48 canonical prompts, their variant instantiations and the shared
+Turing and domain-specific API bundles. Variant prompts differ from canonical
+prompts only in the supplied GI, delay and ascertainment values; generate them
+from the frozen text by substituting those values, and verify that they match
+the variant. Randomise execution order in blocks across
 conditions and models to reduce confounding with service changes or machine load.
 Record the allocation seed and preserve failed attempts. Claude Code runs use
 its default sampling settings; there is no temperature comparison.
@@ -408,12 +434,15 @@ its default sampling settings; there is no temperature comparison.
 Claude agent. `evaluation/run_agentic_qwen.sh` provides the Qwen implementation.
 The agent writes code, executes it and attempts repairs:
 
-1. Maximum 200 assistant turns per session.
+1. Maximum 200 assistant turns per session (`claude --print --max-turns 200`;
+   the equivalent limit in Qwen Code).
 2. Up to five resumed retries (`MAX_RETRIES=5`).
 3. If output is absent but inference continues, wait up to 60 minutes
    (`POST_AGENT_WAIT_MIN=60`) before consuming a retry.
 4. Save conversations, code, outputs, retry counts, waits, start/end times and
-   token usage. Preserve run and model identifiers.
+   token usage to
+   `runs/{scenario}/{condition}/par_{p}/{variant}/rep_{r}/{model}/run_{n}/`, with
+   run metadata in `metadata.json`. Preserve run and model identifiers.
 
 Retain these turn, retry and waiting limits for the main comparison. They define
 success under this agent workflow, rather than at equal elapsed time or cost.
@@ -426,7 +455,9 @@ Each run receives only its prompt, applicable API documentation and observed
 files in an isolated working directory. Cases alone are supplied for scenarios
 1a/1b/2; scenario 3 receives all streams. Truth, references, other runs and the
 plan must be inaccessible. A temporary directory alone is not a filesystem
-sandbox: verify the actual read and network restrictions before launch.
+sandbox. The development harness runs agents with unrestricted permissions, so
+repository files, including simulation truth, are readable by absolute path.
+Enforce and verify read and network restrictions before launch.
 
 Simulation files retain the structure
 `simulations/{variant}/rep_{rr}/{data,truth}/`. Evaluation uses truth outside the
@@ -437,8 +468,8 @@ inference seeds where available.
 
 | Outcome | Estimand and denominator | Measurement | Role |
 |---|---|---|---|
-| Recovery | Mean of six scenario–model cell median RMSEs among valid canonical runs; equal condition weighting over four prompts within each cell | RMSE on days 25–125 against the matched target | Primary hypothesis H1 |
-| Execution | Mean valid-output proportion across the same six cells and four prompts; all allocated canonical runs | Date and numerical validation, by assigned condition | Primary hypothesis H2; accompanies H1 |
+| Recovery | Mean of six scenario–model cell median RMSEs among valid canonical-panel runs; equal weighting of the four prompts within each condition and cell | RMSE on days 25–125 against the matched target | Primary hypothesis H1 |
+| Execution | Mean valid-output proportion across the same six cells and four prompts; all allocated canonical-panel runs | Date and numerical validation, by assigned condition | Primary hypothesis H2; accompanies H1 |
 | Reviewability | Mean injected-defect sensitivity across scenarios 2/3 and three models in the selected generated-code pool; all validated mutations, including review timeouts | Independent defect identification | Secondary hypothesis H3 |
 | Uncertainty | Interval availability among all runs; coverage, width and interval score among valid intervals | Numerical validation and scoring | Secondary estimation |
 | Implementation | Per-component error proportions among randomly sampled reviewable submissions; missing-code counts reported separately | Human review, with detector validation | Secondary estimation |
@@ -532,7 +563,7 @@ descriptive, especially across languages.
 
 For reviewability, use a randomised pool of independently checked clean samples
 and samples with one validated defect. Match defect types and difficulty across
-conditions and scenarios. Reviewers see the code and therefore may recognise the
+conditions within each scenario. Reviewers see the code and therefore may recognise the
 condition, but must not know mutation status, model identity or other reviewers'
 answers. Record their language/package experience and randomise review order.
 Two reviewers independently assess samples, with a 45-minute cap per sample;
@@ -550,7 +581,8 @@ clean submissions per condition, by random order among valid runs. This gives 48
 base submissions: 24 matched pairs across conditions, not 24 individual samples.
 Record every candidate checked, exclusions and reasons; do not
 select on LOC or reviewer preference. This measures reviewability among eligible
-clean generated submissions, not all generated code.
+clean generated submissions. Assign difficulty classes to the matched-defect
+schedule before the coordinator knows which submissions will host each pair.
 
 Form four pairs across conditions within each scenario–model combination. Assign
 the same defect type to both members of a pair, with types balanced across pairs
@@ -622,8 +654,8 @@ assumptions built into scoring. All three can be contradicted by the results.
 
 | Hypothesis | Contrast, positive in the predicted direction | Prediction | Practical benchmark |
 |---|---|---|---|
-| H1: improved recovery | Mean over six cells of median RMSE in `julia` minus median RMSE in `composable`, canonical data | Contrast > 0 | 0.03 RMSE units |
-| H2: more valid outputs | Mean over six cells of valid-output proportion in `composable` minus that in `julia`, canonical data | Contrast > 0 | 0.10, or 10 percentage points |
+| H1: improved recovery | Mean over six cells of median RMSE in `julia` minus median RMSE in `composable`, canonical panel | Contrast > 0 | 0.03 RMSE units |
+| H2: more valid outputs | Mean over six cells of valid-output proportion in `composable` minus that in `julia`, canonical panel | Contrast > 0 | 0.10, or 10 percentage points |
 | H3: easier defect detection | Mean over six cells of sensitivity in `composable` minus that in `julia`, selected generated-code mutations | Contrast > 0 | 0.15, or 15 percentage points |
 
 H1 and H2 are primary; H3 is a secondary confirmatory hypothesis with a restricted
@@ -634,19 +666,20 @@ distributions among valid runs; take its median using the lower 0.5 quantile.
 If any prompt–condition–cell has no valid run, H1 is not estimable as specified.
 Report the available conditional distributions without dropping that stratum or
 renormalising weights. H2 remains estimable. H3 gives each of the four mutations
-per cell equal weight and conditions on the two participating reviewers.
+per condition within each cell equal weight and conditions on the two
+participating reviewers. Each cell has equal weight across the three commercial
+models regardless of their capability; model-specific contrasts are reported
+alongside.
 
-The practical benchmarks are study design judgements, not effects established by
-previous evidence or the smallest detectable effects. For H1, 0.03 is a 30%
+The practical benchmarks are study design judgements. For H1, 0.03 is a 30%
 reduction if comparator RMSE is 0.10, but only 10% if it is 0.30; report the
-relative change as well. The H2 benchmark corresponds to ten more usable outputs
-per 100 attempts under the same retry policy. The H3 benchmark corresponds to
-15 more detected defects per 100 reviews within the time allowance. These scales
-make the expected benefit explicit without claiming universal scientific cut-offs.
-Document investigator agreement on these benchmarks in the registration; do not
-choose them from evaluation results. The precision assessment evaluates whether
-the allocation can distinguish effects on these scales, rather than setting the
-scales to whatever the study can detect.
+relative change as well. The H1 value is provisional: fix it before registration
+from reference RMSE on development data under the instantaneous generator, or
+restate it as a relative reduction. The H2 benchmark corresponds to ten more
+usable outputs per 100 attempts under the same retry policy. The H3 benchmark
+corresponds to 15 more detected defects per 100 reviews within the time
+allowance. Document investigator agreement on these benchmarks in the
+registration; do not choose them from evaluation results.
 
 Use two-sided 98.33% intervals for the three contrasts (Bonferroni allocation of
 a familywise 5% error rate, with exact level $1-0.05/3$). For each hypothesis:
@@ -683,11 +716,10 @@ h=\sqrt{\frac{\log(2/\delta)}{120}},\quad\delta=0.05/3.$$
 This follows from Hoeffding's bound applied to 240 independent signed Bernoulli
 terms, each with range width $1/120$. It permits different success probabilities
 across fixed strata and remains non-degenerate at all-success/all-failure
-outcomes. Its half-width is about 0.20: it can establish large improvements, but
-will leave modest differences unresolved. It assumes independent agent attempts
-conditional on fixed inputs; blocked scheduling and run logs help assess service
-or resource dependencies. Report this conservative precision explicitly rather
-than claiming the design can reliably establish a 10-point improvement.
+outcomes. Its half-width is about 0.20, so exceeding the 0.10 benchmark requires
+an estimated difference of at least 0.30; smaller differences leave the benchmark
+unresolved. It assumes independent agent attempts conditional on fixed inputs;
+blocked scheduling and run logs help assess service or resource dependencies.
 
 For H3, bootstrap the four matched pairs of base submissions within each of the
 six scenario–model cells, preserving both conditions, both versions and reviewer
@@ -698,6 +730,10 @@ than treating a degenerate interval as certainty. The small pool makes assessmen
 of this interval procedure especially important. Always report detected/total
 counts by condition, cell and reviewer. A valid interval that spans zero leaves
 H3 unresolved; a wide interval alone does not change its pre-specified status.
+Report the LOC of each H3 base submission and the H3 contrast stratified by
+whether the `composable` member of a pair is shorter than its `julia` member.
+Domain components may shorten code, and a detection difference may then reflect
+less code to search as well as clearer structure.
 If the interval procedure fails validation, has no resampling variation, or the
 required pool cannot be assembled, report descriptive counts with the reason
 no confirmatory conclusion is available. Do not change methods or relabel H3
@@ -733,7 +769,9 @@ The following tasks make those decisions executable:
 | Check wording, variant parameters and API bundles | Project lead | Frozen prompt/document versions and human audit before registration |
 | Recruit two reviewers and an independent detector validator | Project lead | Names, roles and relevant experience recorded before review; roles and fallback rules fixed at registration |
 | Align mutation catalogue, sampling and review sheets | Review coordinator | Feasible matched-defect schedule and checked sample-building procedure before registration; sealed sample manifest before review |
-| Verify run isolation and reproducibility records | Project lead | Harness validation and pinned environment/model configuration before agent execution |
+| Verify run isolation and reproducibility records | Project lead | Harness validation, including enforced filesystem restrictions, and pinned environment/model configuration before agent execution |
+| Fix the H1 benchmark | Project lead | Reference RMSE under the instantaneous generator on development data, and the agreed absolute or relative benchmark, before registration |
+| Audit API bundle comparability | Independent auditor | Length, entry and example counts, and scenario coverage for both bundles before freezing |
 
 The migration audit must cover the following code paths, not just package names:
 
@@ -744,16 +782,17 @@ The migration audit must cover the following code paths, not just package names:
 | `evaluation/detectors.py` | Validate component patterns on new generated code and matched mutations, including false positives and negatives; retain legacy interpretation for pilot data |
 | `evaluation/analyse.R` | Add explicit `composable` handling and implement the specified H1/H2/H3 populations, denominators, weights, intervals and review manifest; prevent pooling with legacy `epiaware` records |
 
-The analysis entry point is `evaluation/analyse.R`; there is no separate
-`evaluation/evaluate.R`. Existing tool behaviour remains a development implementation
-until these checks pass. Preserve protocol/package identity in records so labels
+The analysis entry point is `evaluation/analyse.R`. Existing tool behaviour remains
+a development implementation until these checks pass. Preserve protocol/package identity in records so labels
 cannot silently combine different interventions. Freeze tool versions with the
 validated package, documentation and mutation schedule before creating the sealed
 review manifest.
 
 The precision report uses the fixed allocation and plausible success rates,
 RMSE distributions and within-pair detection associations, including null effects
-and the practical benchmarks. Report interval widths, empirical interval coverage,
+and the practical benchmarks. For H3, each condition within a cell rests on four
+mutated reviews split between two reviewers; report the resulting interval widths
+and the frequency of resamples without variation. Report interval widths, empirical interval coverage,
 and probabilities of support, contradiction and unresolved results. If an interval
 procedure fails validation, amend it before registration and retain the validation
 record. A low chance of resolving a prediction can be reported honestly; it does
@@ -774,7 +813,7 @@ Publish run allocation and exclusions; execution success; conditional RMSE;
 interval availability, score, width and coverage; human-reviewed implementation
 errors; detector validation; selected tools; code size; review results; and costs.
 Show results by scenario and model, with variant sensitivity alongside canonical
-results. Select example trajectories by a fixed rule, such as the median-RMSE
+results. Report variation between the four prompt versions within each cell. Select example trajectories by a fixed rule, such as the median-RMSE
 valid run within each cell, and show failures in the aggregate summaries.
 
 UKHSA England data may provide a secondary workflow demonstration. It has no
@@ -785,22 +824,37 @@ Sebastian Funk coordinates simulation, prompts, execution and analysis. Two
 infectious-disease modellers review code independently; a validator who did not
 implement the detectors assesses their accuracy. The mutation coordinator does
 not review samples they prepared. Record disagreements before adjudication and
-use a third reviewer where needed. Apply the recruitment fallback specified above and record changes before
+use a third reviewer where needed. Apply the recruitment fallback specified above
+and record changes before
 analysing review results. Reviewers use no LLM assistance to
 preserve independence from the evaluated systems.
 
 Disclose authors' contributions to ComposableTuringIDModels, EpiAware, EpiNow2
-or EpiEstim, funding and
-research credits. Publish unfavourable and inconclusive results as well as
+or EpiEstim, funding and research credits. Publish unfavourable and inconclusive results as well as
 successful runs. No patient-level data are used.
 
 The principal limits are the selected models, prompts and epidemic processes;
 the bundled nature of the conditions; dependence on externally supplied delay
 parameters; and possible reviewer familiarity effects. Simulation misspecification
 can favour one estimator and therefore one condition: exposure to the same DGP
-does not ensure an unbiased comparison for other epidemic settings. A modest
-benchmark can support conclusions about the tested workflows without establishing
-clinical usefulness or general superiority of a framework.
+does not ensure an unbiased comparison for other epidemic settings. Conclusions
+concern the tested workflows and do not establish clinical usefulness or general
+superiority of a framework. Further limits:
 
-*Created: 2025-12-07. Revised: 2026-09-11 following scientific and editorial review.
-Earlier versions and development decisions remain in git history.*
+- **Structural contamination.** Renewal models are common in training data.
+  Simulated data avoid memorised datasets, but not recall of model structure.
+- **Prompt wording.** All prompt versions are LLM-drafted or LLM-generated; no
+  independently written human prompt is sampled.
+- **Model family.** Commercial results come from one provider's models and may
+  not generalise to other providers.
+- **Sampling settings.** Claude Code does not expose temperature, so run-to-run
+  variation reflects default sampling only.
+- **Simplified observation process.** Overdispersion arises only from individual
+  transmission heterogeneity; ascertainment is a deterministic function of time;
+  observation noise is independent across streams. Estimators that model other
+  sources of variation, individual-level ascertainment or correlated reporting
+  errors gain nothing from those features here.
+- **Replication.** There is no independent replication. The harness, prompts and
+  analysis code are published to allow it.
+
+*Created: 2025-12-07. Earlier versions and development decisions remain in git history.*

@@ -76,16 +76,18 @@ used to balance the review pool so reviewers see a mix of difficulties.
 ## Mutations targeting `flag_no_ascertainment`
 
 **M_asc_remove_obvious** · difficulty: obvious · scenarios 2, 3
-- Replace the time-varying ascertainment structure with a scalar constant.
-  EpiAware: remove the `Ascertainment(...)` block wrapping the observation
-  model. Raw code: replace `alpha[t]` with `alpha` (single scalar).
+- Drop the supplied ascertainment trajectory from the expected-count expression,
+  so reports are modelled as if every infection were observed. Raw code: replace
+  `alpha[t] * ...` with `...`; package code: remove the ascertainment component
+  wrapping the observation model.
 - Component: `flag_no_ascertainment`.
 
-**M_asc_fixed_wrong** · difficulty: moderate · scenarios 2, 3
-- Keep a vector `alpha[t]` but hard-code it to a constant across time
-  (`alpha[t] = 0.5` for all t). Model appears time-varying but isn't.
-- Component: `flag_no_ascertainment` (detector may not catch; reviewer
-  should notice on inspection).
+**M_asc_wrong_date** · difficulty: moderate · scenarios 2, 3
+- Apply the supplied ascertainment on the infection date (inside the delay
+  convolution) where the task specifies the report date. The model runs and the
+  multiplier is present, but it is misaligned by the reporting delay.
+- Component: `flag_no_ascertainment` (detector will not catch; reviewer should
+  notice on inspection).
 
 ## Mutations targeting `flag_no_delay_handling`
 
@@ -109,19 +111,11 @@ used to balance the review pool so reviewers see a mix of difficulties.
   an unrenormalised PMF over the finite window.
 - Component: `flag_no_truncation`.
 
-**M_trunc_extend_wrong** · difficulty: subtle · all scenarios
-- Extend the truncation window to a value that includes near-zero mass
-  (e.g. change `D_max = 30` to `D_max = 90` for a delay with mean 5).
-  Doesn't break the model but adds costly zero-contribution convolution
-  terms and slightly changes the discrete PMF's renormalisation.
-- Component: `flag_no_truncation` (detector won't catch; reviewer might).
-
-## Mutations targeting `flag_poisson_only`
-
-**M_likelihood_poisson** · difficulty: obvious · scenarios 2, 3
-- Replace `NegativeBinomialError(...)` (EpiAware) or the negative-binomial
-  observation likelihood with a Poisson. Delete any dispersion parameter.
-- Component: `flag_poisson_only`.
+**M_trunc_shorten_wrong** · difficulty: subtle · all scenarios
+- Shorten the delay support so it excludes substantial probability mass and
+  renormalise over the shortened window (e.g. `D_max = 30` to `D_max = 6` for a
+  delay with mean 5 days). The model runs; the effective delay is too short.
+- Component: `flag_no_truncation` (detector will not catch; reviewer might).
 
 ## Mutations targeting `flag_no_multistream_latent` (scenario 3 only)
 
