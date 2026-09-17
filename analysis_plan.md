@@ -38,8 +38,8 @@ No phase 1 results enter the confirmatory analysis.
 
 Phase 2 development included simulated datasets, reference calibration, prompt
 revision and agent/harness pilots. These activities preceded registration and
-must be reported as such. A repository commit records a version; it does not make
-analyses informed by earlier results prospective. Before registration, publish an
+must be reported as such. Analyses informed by development results are reported
+as retrospective. Before registration, publish an
 inventory of development datasets and runs, freeze the protocol and analysis
 code, and specify the unused evaluation seeds. Record subsequent amendments with
 their dates and whether outcomes had been inspected.
@@ -124,11 +124,11 @@ such as EpiEstim or EpiNow2, a general probabilistic programming framework such
 as PyMC or numpyro, or write from lower-level primitives. `julia` supplies a
 general probabilistic programming framework with no epidemic-specific vocabulary.
 `composable` supplies infectious-disease modelling components, including renewal
-processes, delays and observation models. Package identity does not certify correctness: EpiEstim does not
-correct for reporting delays, EpiNow2 does not natively support shared-latent
-multi-stream models, and general probabilistic programming frameworks require
-the user to specify the whole model. Whether a submission implements the task
-correctly is assessed from the code and estimates, not inferred from imports.
+processes, delays and observation models. Package identity does not certify
+correctness: EpiEstim does not correct for reporting delays, EpiNow2 does not
+natively support shared-latent multi-stream models, and general probabilistic
+programming frameworks require the user to specify the whole model. Whether a
+submission implements the task correctly is assessed from its code and estimates.
 
 A Julia condition with optional Turing, or one that excludes Turing, would address
 framework choice within a fixed language. Either is a possible follow-up with its
@@ -141,7 +141,7 @@ knowledge cannot be equalised by assumption. Record the exact document versions,
 lengths and contents. Bundles may contain signatures, argument descriptions and
 short examples of individual functions, but no complete solution to a study
 scenario. Human review determines compliance; `evaluation/validate_api_docs.py`
-can assist this audit. Low API-error rates would not isolate a package-design effect.
+can assist this audit.
 
 The authors develop ComposableTuringIDModels, so the domain bundle may be better
 written than the Turing bundle for reasons unrelated to package design. Before
@@ -180,8 +180,8 @@ agent harness. The study does not estimate performance across model families.
 
 Scenarios 1a and 1b compare instructions; the chosen methods may be identical.
 Scenarios 2 and 3 add modelling requirements. They do not define a calibrated
-scale of difficulty. Package coverage is recorded from submissions rather than
-assumed in advance, including for multi-stream models.
+scale of difficulty. Package coverage, including for multi-stream models, is
+recorded from submissions.
 
 All conditions within a scenario receive the same scientific information and
 output requirements. GI and reporting-delay distributions are supplied as known
@@ -222,9 +222,8 @@ $$m(t)=R_{\mathrm{inst}}(t)\int_0^\infty m(t-a)g(a)\,da.$$
 
 The location of the time-varying multiplier matters. Instantaneous and cohort
 reproduction numbers can differ systematically during changing transmission,
-even at high incidence. Wallinga–Teunis and Cori-type methods target different
-quantities; their distinction is not simply sampling noise around the same
-parameter. See [Cori et al. (2013)](https://pmc.ncbi.nlm.nih.gov/articles/PMC3816335/)
+even at high incidence, and Wallinga–Teunis and Cori-type methods target
+different quantities. See [Cori et al. (2013)](https://pmc.ncbi.nlm.nih.gov/articles/PMC3816335/)
 and [Gostic et al. (2020)](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008409).
 
 **Primary target:** instantaneous $R_{\mathrm{inst}}(t)$. Before registration,
@@ -233,8 +232,8 @@ truth and observed data. A discrete renewal generator with an explicit process
 noise model is a sufficient starting point. Retain the existing cohort process
 as a sensitivity analysis only with its own correctly defined target. Do not
 score an instantaneous estimate against the existing `true_rt.csv` and label the
-difference an implementation error. Dividing realised infections by realised
-infectiousness also does not recover a noise-free simulation parameter.
+difference an implementation error. The ratio of realised infections to realised
+infectiousness is a noisy quantity distinct from the simulation parameter.
 
 ### Current observation process
 
@@ -249,8 +248,7 @@ It is not binomial ascertainment of a fixed set of infected individuals. Counts
 can exceed infections and streams are conditionally independent. Marginal
 variation from stochastic infections must be distinguished from additional
 measurement variation. A Poisson observation model with a suitable latent
-process may be appropriate; a negative-binomial observation model may provide a
-useful approximation but is not automatically more correct.
+process and a negative-binomial approximation can both be appropriate.
 
 Here ascertainment multiplies reports on the **report date**. An infection-date
 probability would instead appear inside the convolution. The prompts and
@@ -302,14 +300,14 @@ The current delay PMF integrates over a uniform infection time within a day:
 
 $$P(D=d)=\int_0^1\{F(d+1-p)-F(\max(d-p,0))\}\,dp,$$
 
-then renormalises over the finite support. This is an assumed within-day timing
-distribution, not an exact description for every epidemic growth rate. Daily
+then renormalises over the finite support. This assumes uniform timing within
+a day, an approximation whose accuracy depends on the epidemic growth rate. Daily
 aggregation of continuous transmission also introduces an approximation.
 
 Distinguish integration over observation intervals, finite-support truncation of
 a delay distribution, and missing future reports near the observation boundary.
 These require different checks. Short-delay sensitivity may reveal discretisation
-errors, but use of a particular package function is not required for correctness.
+errors; any correct implementation is accepted.
 
 ### Simulation variants
 
@@ -348,8 +346,8 @@ EpiAware references must be ported to ComposableTuringIDModels and revalidated;
 legacy calibration results do not establish performance of the replacement.
 
 References check feasibility and provide benchmarks. They are not a grading
-standard, and using ComposableTuringIDModels references alone risks favouring assumptions that
-suit that framework. Validate the corrected target with an independently
+standard, and using ComposableTuringIDModels references alone risks favouring
+assumptions that suit that framework. Validate the corrected target with an independently
 implemented simple reference, including a multi-stream check. Apply the same
 scientific specification, input information and computational budget where a
 comparison is intended.
@@ -382,17 +380,17 @@ extreme dispersion. Runtime and cost estimates must be updated from recorded
 usage before launch; development pilots gave a commercial estimate of about US$2700.
 
 One dataset per variant supports a conditional comparison for those datasets.
-Agent reruns do not increase the number of simulated outbreaks. Data-level
-variation is absent from these run distributions, not pooled with agent variation.
+Agent reruns do not increase the number of simulated outbreaks, and data-level
+variation is absent from these run distributions.
 The study retains this allocation and makes dataset-conditional claims. Use the
 same frozen dataset for every condition, model and paraphrase within a variant.
-Select unused evaluation seeds after auditing development use; seed 101 is not
-an independent evaluation dataset merely because new agent runs use it.
+Select unused evaluation seeds after auditing development use; seed 101 was used
+in development and is excluded.
 
 An optional extension would replace the five canonical reruns with five
 independent datasets shared across conditions and paraphrases, at the same run
 count. This would change the estimand and require a protocol amendment before
-execution. It is not required for the conditional comparison specified here.
+execution.
 A precision assessment describes expected interval widths and the chance of
 resolving the hypotheses under plausible effects. Inconclusive results are
 retained if the fixed budget is insufficient.
@@ -446,8 +444,7 @@ The agent writes code, executes it and attempts repairs:
 
 Retain these turn, retry and waiting limits for the main comparison. They define
 success under this agent workflow, rather than at equal elapsed time or cost.
-Report resources consumed alongside success. An additional common wall-time or
-cost cap is an optional alternative design, not a prerequisite for this study.
+Report resources consumed alongside success.
 Reconcile prompts requesting foreground-only execution with harness support for
 continued background inference before freezing the prompts.
 
@@ -502,9 +499,7 @@ RMSE as overall task success. Report instruction adherence separately.
 
 Use days 25–125 inclusive as the proposed retrospective scoring window, subject
 to boundary validation under the corrected generator. Early estimates depend on
-prehistory; late infections have reports after day 150. The latter is the reason
-for excluding the right boundary. Observed reports do not originate from future
-infections. Also report early and late performance separately. Fitting all 150
+prehistory; late infections have reports after day 150. Also report early and late performance separately. Fitting all 150
 days is retrospective inference; evaluating operational real-time estimation
 would require fitting successive data cut-offs.
 
@@ -538,7 +533,7 @@ regular-expression matches cannot establish semantic correctness. Validate flags
 against independent human review of 60 randomly selected submissions, balanced
 across the 12 scenario–condition cells and distributed across models. Report
 sensitivity, specificity, raw agreement and kappa with denominators and
-uncertainty. A kappa threshold alone does not establish adequate measurement.
+uncertainty.
 Use the human-reviewed sample for correctness estimates; detector rates remain
 screening results unless their accuracy supports the intended use.
 
@@ -578,7 +573,7 @@ Detection precision depends on the chosen mutation prevalence, which must be rep
 The H3 pool uses generated code from canonical scenarios 2 and 3 in `julia` and
 `composable`. For each scenario–model combination, select four independently checked
 clean submissions per condition, by random order among valid runs. This gives 48
-base submissions: 24 matched pairs across conditions, not 24 individual samples.
+base submissions in 24 matched pairs across conditions.
 Record every candidate checked, exclusions and reasons; do not
 select on LOC or reviewer preference. This measures reviewability among eligible
 clean generated submissions. Assign difficulty classes to the matched-defect
@@ -589,8 +584,7 @@ the same defect type to both members of a pair, with types balanced across pairs
 using a schedule frozen before examining candidate code. Check that each mutation
 introduces the intended scientific error. If it cannot be applied, record the
 exclusion and take the next randomly ordered eligible candidate. Persistent lack
-of eligible samples makes H3 unestimable under this protocol; do not silently
-replace it with a reference-code hypothesis.
+of eligible samples makes H3 unestimable under this protocol.
 
 Create one clean and one mutated version of every base submission. Reviewer A
 sees one version and reviewer B the other, so neither sees the same base twice.
@@ -649,8 +643,7 @@ only where its independence assumptions apply. Freeze and test
 
 The predictions concern `composable` versus `julia` under the specified workflow.
 They are motivated by the possibility that supplied domain components reduce
-implementation work and make model structure easier to inspect. They are not
-assumptions built into scoring. All three can be contradicted by the results.
+implementation work and make model structure easier to inspect.
 
 | Hypothesis | Contrast, positive in the predicted direction | Prediction | Practical benchmark |
 |---|---|---|---|
@@ -695,16 +688,14 @@ a familywise 5% error rate, with exact level $1-0.05/3$). For each hypothesis:
 
 Keep all three slots in the multiplicity allocation even if H3 cannot be run.
 Report conventional 95% intervals for secondary estimation, without additional
-confirmatory labels. Bonferroni adjustment does not correct poorly calibrated
-individual intervals; assess interval behaviour before freezing analysis code.
+confirmatory labels. Assess interval behaviour before freezing analysis code.
 
 For H1, bootstrap independent agent runs within each fixed
 scenario–model–condition–prompt stratum and recompute the weighted contrast using
 10,000 resamples. Any resample with no valid runs in a required stratum has an
 undefined contrast. Report their frequency; do not silently discard them. If
 such resamples occur, report H1 descriptively without a confirmatory bootstrap
-interval. This makes sparse success a limitation of recovery inference, not an
-excuse to exclude difficult prompts.
+interval.
 
 For H2, all 24 strata per condition contain five attempts, so the weighted
 contrast is also the difference between two proportions with 120 attempts each.
@@ -773,12 +764,12 @@ The following tasks make those decisions executable:
 | Fix the H1 benchmark | Project lead | Reference RMSE under the instantaneous generator on development data, and the agreed absolute or relative benchmark, before registration |
 | Audit API bundle comparability | Independent auditor | Length, entry and example counts, and scenario coverage for both bundles before freezing |
 
-The migration audit must cover the following code paths, not just package names:
+The migration audit covers the following code paths:
 
 | File | Required migration check |
 |---|---|
 | `evaluation/mutation_catalogue.md` | Translate selected legacy operations; verify that each scheduled defect applies to its scenario and both matched conditions |
-| `evaluation/mutate.py` | Reimplement and validate concrete patterns against the pinned API; reusable regex helpers alone do not establish support |
+| `evaluation/mutate.py` | Reimplement and validate concrete patterns against the pinned API |
 | `evaluation/detectors.py` | Validate component patterns on new generated code and matched mutations, including false positives and negatives; retain legacy interpretation for pilot data |
 | `evaluation/analyse.R` | Add explicit `composable` handling and implement the specified H1/H2/H3 populations, denominators, weights, intervals and review manifest; prevent pooling with legacy `epiaware` records |
 
@@ -795,11 +786,10 @@ mutated reviews split between two reviewers; report the resulting interval width
 and the frequency of resamples without variation. Report interval widths, empirical interval coverage,
 and probabilities of support, contradiction and unresolved results. If an interval
 procedure fails validation, amend it before registration and retain the validation
-record. A low chance of resolving a prediction can be reported honestly; it does
-not automatically require more runs or deleting the prediction.
+record. Predictions with a low chance of resolution are retained and reported
+with that chance.
 
-Reviewer names are an operational dependency, not an unresolved scientific design
-choice. If two reviewers cannot be recruited, H3 is not conducted under a
+If two reviewers cannot be recruited, H3 is not conducted under a
 single-reviewer replacement. General implementation review may proceed with one
 reviewer, with the change disclosed and no inter-rater reliability claim.
 
