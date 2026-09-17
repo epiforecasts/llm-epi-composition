@@ -8,7 +8,7 @@ been used to choose prompts, reference priors, outcomes or thresholds.
 
 **Primary question.** How do unrestricted tool choice, Julia with Turing, and
 Julia with ComposableTuringIDModels.jl compare in statistical performance,
-implementation errors, execution success and reviewability when LLM coding
+implementation errors and execution success when LLM coding
 agents generate epidemic model code?
 
 **Secondary questions.**
@@ -66,16 +66,14 @@ must be met before recovery results can support a confirmatory comparison:
    one-dataset design estimates variation between agent runs conditional on that
    dataset. Claims about performance across outbreaks require independent data
    replicates, with an analysis that retains their grouping.
-5. **Validate review sampling and scoring.** Passing static detectors does not
-   certify a sample as defect-free. Reference mutations measure the reviewability
-   of those reference implementations; they do not by themselves measure the
-   reviewability of generated code.
+5. **Validate automated implementation checks.** Passing static detectors does
+   not certify code as correct. Detector flags support per-component error
+   estimates only to the extent their accuracy is measured against human review.
 
 The target, ascertainment information and interpretation of variation must be
 resolved before recovery can be scored. Independent data replicates are required
 only for claims across outbreaks; the retained allocation below makes a narrower,
-dataset-conditional claim. Validated mutations are required for the review
-hypothesis. These scientific requirements are distinct from recruitment and
+dataset-conditional claim. These scientific requirements are distinct from recruitment and
 implementation tasks, listed under Work required before registration and
 execution. The generator, prompts and analysis code have not yet been brought
 into line with this specification.
@@ -101,7 +99,7 @@ release notes and relevant unresolved issues. Confirm the expected timing of
 required API changes with the maintainer and record the response when available;
 no release date or stability commitment is assumed here. Accept the candidate
 only after a clean environment instantiates, all study reference models run,
-and inference/output checks and planned mutations pass against that exact
+and inference/output checks pass against that exact
 commit. A tagged release is useful but not required. If no candidate passes,
 delay registration of the affected comparison. Once frozen, later upstream
 releases do not trigger upgrades; a necessary fix requires a documented protocol
@@ -476,16 +474,15 @@ inference seeds where available.
 |---|---|---|---|
 | Recovery | Mean of six scenario–model cell median WIS among valid canonical-panel runs; equal weighting of the four prompts within each condition and cell | Weighted interval score on days 25–125 against the instantaneous target | Primary hypothesis H1 |
 | Execution | Mean valid-output proportion across the same six cells and four prompts; all allocated canonical-panel runs | Date and numerical validation, by assigned condition | Primary hypothesis H2; accompanies H1 |
-| Reviewability | Mean injected-defect sensitivity across scenarios 2/3 and three models in the selected generated-code pool; all validated mutations, including review timeouts | Independent defect identification | Secondary hypothesis H3 |
 | Uncertainty and point error | Interval availability among all runs; 50% and 90% coverage, width, WIS components and absolute error of the median among valid runs | Numerical validation and scoring | Secondary estimation |
-| Implementation | Per-component error proportions among randomly sampled reviewable submissions; missing-code counts reported separately | Human review, with detector validation | Secondary estimation |
+| Implementation | Per-component detector flag proportions among runs with reviewable code, with detector accuracy from 18 human-reviewed submissions | Automated detectors, validated by human review | Secondary estimation |
 | Code size and resources | LOC among submitted scripts; time, retries and cost among all runs | Static counts and execution records | Descriptive |
 | Method choice and diagnostics | Tool/method frequencies and diagnostic reporting, with applicable denominators | Code and log review | Descriptive |
 
 The six primary cells are scenarios 2 and 3 crossed with the three commercial
 models. Scenarios 1a/1b, the open-weight model and sensitivity variants retain the
 same outcome definitions and are reported separately. They do not enter the
-three-hypothesis testing family below.
+two-hypothesis testing family below.
 
 ### Primary assessment: execution and recovery
 
@@ -540,118 +537,40 @@ achieve high coverage, so higher coverage alone is not evidence of better perfor
 
 ### Implementation assessment
 
-Assess whether each submission implements its stated model, complies with the
-prompt and uses defensible epidemiological assumptions. Report these separately:
-an instruction can require a component that is not identifiable or needed under
-the DGP. Check delays, GI discretisation, boundary treatment, weekly reporting,
-ascertainment assumptions, process/observation variation and shared infections.
-Accept scientifically equivalent implementations. Scenario 1a permits methods
-other than a renewal estimator, with their estimands recorded explicitly.
+Implementation assessment covers delays, GI discretisation, boundary treatment,
+weekly reporting, ascertainment assumptions, process/observation variation and
+shared infections. Prompt compliance and scientific adequacy are recorded
+separately: an instruction can require a component that is not identifiable or
+needed under the DGP. Scientifically equivalent implementations are accepted.
+Scenario 1a permits methods other than a renewal estimator, with their estimands
+recorded explicitly.
 
-`evaluation/detectors.py` supplies structural screening flags. Imports, names or
-regular-expression matches cannot establish semantic correctness. Validate flags
-against independent human review of 60 randomly selected submissions, balanced
-across the 12 scenario–condition cells and distributed across models. Report
-sensitivity, specificity, raw agreement and kappa with denominators and
-uncertainty.
-Use the human-reviewed sample for correctness estimates; detector rates remain
-screening results unless their accuracy supports the intended use.
+`evaluation/detectors.py` supplies per-component flags for every run with
+reviewable code. Imports, names or regular-expression matches cannot establish
+semantic correctness, so flags are reported with their measured accuracy.
 
-For general implementation review, randomly sample four of the 20 canonical runs
-within every scenario–condition–commercial-model cell: 144 submissions. For the
-sensitivity panel, sample one of the three runs in each cell: 180 submissions.
-Use a recorded seed and retain the two panels separately in prevalence estimates.
-Include failed or incomplete code where review is possible; record cases with no
-reviewable code without substituting a successful run. Select the 60 detector
-validation submissions independently; overlap with this pool is permitted and
-recorded. Review semantic concerns in remaining submissions and identify methods
-in scenario 1a. Purposively selected flagged cases illustrate failure modes; do
-not pool them into prevalence estimates.
+One infectious-disease modeller who did not implement the detectors reviews 18
+submissions: one randomly selected canonical run with reviewable code per
+scenario–condition–commercial-model cell in scenarios 2 and 3, using a recorded
+seed. For each detector component, the reviewer records **correct**,
+**incorrect**, **absent** or **unclear** on a fixed checklist; open-ended review
+is not required. Review is capped at 30 minutes per submission, giving a
+maximum of 9 hours. Report per-component sensitivity, specificity and raw
+agreement with counts and exact binomial intervals. With 18 submissions these
+intervals are wide; they indicate gross detector failures, not precise accuracy.
+Per-component error estimates remain detector-based.
 
-### Review workload
+Purposively selected failed or flagged runs may illustrate failure modes in the
+report, within a total human review budget of 10 hours, and do not enter any
+estimate. Record the language, packages and method of every run from code and
+logs, including scenario 1a estimands, without separate human review.
 
-| Review task | Assessments | Hours at 45-minute cap |
-|---|---|---|
-| General implementation review, dual | 324 × 2 = 648 | 486 |
-| H3 defect detection | 96 | 72 |
-| Subtotal for the two reviewers | 744 | 558 |
-| Detector validation (validator) | 60 | 45 |
-| Remaining-submission semantic pass, single | 936 commercial runs, plus Qwen runs if included | 702 for commercial runs |
-
-Clean-code checking of H3 candidates, mutation validation and adjudication add
-further time. Before fixing this allocation, pilot both review types on
-development submissions in each condition, record median and 90th-percentile
-review durations, and record the hours each reviewer commits. If committed hours
-do not cover the pilot-based requirement, reduce in this order before
-registration: (1) restrict the remaining-submission semantic pass to
-detector-flagged submissions; (2) dual-review a random 60 of the general pool
-for agreement and single-review the rest; (3) reduce sensitivity-panel general
-review. The H3 allocation is not reduced.
-
-### Code size, reviewability and diagnostics
+### Code size and diagnostics
 
 Non-comment, non-blank lines of code measure submitted code size. They do not
 measure interpretability or maintainability: libraries move implementation out
 of the submitted script. Report LOC descriptively, using consistent file inclusion
-rules. Optional readability ratings and static complexity measures are also
-descriptive, especially across languages.
-
-For reviewability, use a randomised pool of independently checked clean samples
-and samples with one validated defect. Match defect types and difficulty across
-conditions within each scenario. Reviewers see the code and therefore may recognise the
-condition, but must not know mutation status, model identity or other reviewers'
-answers. Record their language/package experience and randomise review order.
-Two reviewers independently assess samples, with a 45-minute cap per sample;
-timeouts are censored observations, not completed reviews at 45 minutes.
-
-Report injected-defect detection sensitivity and clean-sample specificity.
-Specificity uses clean samples as its denominator; false-positive defect reports
-on mutated samples are a separate count. Adjudicate unexpected findings before
-calling them false positives: a sample may contain a genuine uninjected defect.
-Detection precision depends on the chosen mutation prevalence, which must be reported.
-
-The H3 pool uses generated code from canonical scenarios 2 and 3 in `julia` and
-`composable`. For each scenario–model combination, select four independently checked
-clean submissions per condition, by random order among valid runs. This gives 48
-base submissions in 24 matched pairs across conditions.
-Record every candidate checked, exclusions and reasons; do not
-select on LOC or reviewer preference. This measures reviewability among eligible
-clean generated submissions. Assign difficulty classes to the matched-defect
-schedule before the coordinator knows which submissions will host each pair.
-
-Form four pairs across conditions within each scenario–model combination. Assign
-the same defect type to both members of a pair, with types balanced across pairs
-using a schedule frozen before examining candidate code. Check that each mutation
-introduces the intended scientific error. If it cannot be applied, record the
-exclusion and take the next randomly ordered eligible candidate. Persistent lack
-of eligible samples makes H3 unestimable under this protocol.
-
-Create one clean and one mutated version of every base submission. Reviewer A
-sees one version and reviewer B the other, so neither sees the same base twice.
-Within each scenario–model cell, the same reviewer receives both mutated members
-of two pairs, and the other reviewer both mutated members of the other two pairs.
-Each reviewer therefore sees two clean and two mutated samples per condition
-within each cell, and each within-pair comparison uses one reviewer and one defect
-type. Balance defect types across reviewers in the frozen schedule. Randomise presentation order and conceal
-pair identities. The total is 96 reviews: 48 mutated and 48 clean, 24 of each per
-condition. Independent dual review for general implementation errors uses the
-separate pool above. Reference mutations may supplement detector validation but
-are excluded from H3. Clean-code validation is performed by someone other
-than the H3 reviewers. Conduct H3 before any overlapping general review exposes
-its base code, and record overlap between pools. If an independently adjudicated
-base or mutation defect invalidates the complete allocation, retain the records
-and report H3 as not estimable rather than replacing samples after review.
-
-A timeout without identifying the injected defect is a missed detection. Clean
-samples count as correctly reviewed only if the reviewer completes the review
-without reporting a defect; incomplete clean reviews are reported separately and
-count as unsuccessful clean reviews in the all-assigned proportion. Report
-specificity among completed clean reviews alongside that proportion. Preserve
-initial defect lists for scoring and use independent adjudication for disputed
-matches or genuine uninjected defects. `evaluation/review_protocol.md` specifies
-reviewer instructions and scoring; `evaluation/mutation_catalogue.md` specifies
-the coordinator's candidate defects. Package-specific mutations still require
-validation after migration.
+rules.
 
 Report retries, wall time, cost, API-related errors and diagnostic reporting.
 An undefined function or method error is not necessarily hallucination: classify
@@ -673,8 +592,7 @@ condition allocation, and label intervals conditional on those strata. For a
 multi-dataset allocation, resample datasets as matched clusters across conditions
 and retain all nested runs and prompts. Do not resample days as independent units.
 Variants are fixed sensitivity settings, not random replicates of a population
-of DGPs. Review uncertainty must account for shared base code and repeated reviewer
-assessments; two reviewers do not establish generalisation to all reviewers.
+of DGPs.
 
 Use a recorded seed for bootstrap intervals, after checking each procedure on
 simulated evaluation outcomes. Sparse/all-success proportions
@@ -686,26 +604,20 @@ only where its independence assumptions apply. Freeze and test
 
 The predictions concern `composable` versus `julia` under the specified workflow.
 They are motivated by the possibility that supplied domain components reduce
-implementation work and make model structure easier to inspect.
+implementation work.
 
 | Hypothesis | Contrast, positive in the predicted direction | Prediction | Practical benchmark |
 |---|---|---|---|
 | H1: improved recovery | Mean over six cells of median WIS in `julia` minus median WIS in `composable`, canonical panel | Contrast > 0 | Awaiting calibration |
 | H2: more valid outputs | Mean over six cells of valid-output proportion in `composable` minus that in `julia`, canonical panel | Contrast > 0 | 0.10, or 10 percentage points |
-| H3: easier defect detection | Mean over six cells of sensitivity in `composable` minus that in `julia`, selected generated-code mutations | Contrast > 0 | 0.15, or 15 percentage points |
 
-H1 and H2 are primary; H3 is a secondary confirmatory hypothesis with a restricted
-review population. H3 inference concerns the fixed defect schedule, reviewer
-assignment and the two participating reviewers; it does not generalise to a
-population of defect types or reviewers. Each cell has equal weight, and each of its four canonical
+Each cell has equal weight, and each of its four canonical
 prompt versions has equal weight before summarising runs. For H1, construct the
 cell's WIS distribution as an equal-weight mixture of prompt-specific empirical
 distributions among valid runs; take its median using the lower 0.5 quantile.
 If any prompt–condition–cell has no valid run, H1 is not estimable as specified.
 Report the available conditional distributions without dropping that stratum or
-renormalising weights. H2 remains estimable. H3 gives each of the four mutations
-per condition within each cell equal weight and conditions on the two
-participating reviewers. Each cell has equal weight across the three commercial
+renormalising weights. H2 remains estimable. Each cell has equal weight across the three commercial
 models regardless of their capability; model-specific contrasts are reported
 alongside.
 
@@ -713,13 +625,11 @@ The practical benchmarks are study design judgements. The H1 benchmark is not
 yet set: fix it before registration from reference WIS on development data under
 the instantaneous generator, as an absolute difference or a relative reduction.
 Report the relative change in either case. The H2 benchmark corresponds to ten more
-usable outputs per 100 attempts under the same retry policy. The H3 benchmark
-corresponds to 15 more detected defects per 100 reviews within the time
-allowance. Document investigator agreement on these benchmarks in the
+usable outputs per 100 attempts under the same retry policy. Document investigator agreement on these benchmarks in the
 registration; do not choose them from evaluation results.
 
-Use two-sided 98.33% intervals for the three contrasts (Bonferroni allocation of
-a familywise 5% error rate, with exact level $1-0.05/3$). For each hypothesis:
+Use two-sided 97.5% intervals for the two contrasts (Bonferroni allocation of
+a familywise 5% error rate). For each hypothesis:
 
 - **Supported direction:** the entire interval is above zero.
 - **Contradicted direction:** the entire interval is below zero.
@@ -730,7 +640,6 @@ a familywise 5% error rate, with exact level $1-0.05/3$). For each hypothesis:
   supported by the interval even when the direction is positive. Otherwise its
   practical magnitude remains unresolved.
 
-Keep all three slots in the multiplicity allocation even if H3 cannot be run.
 Report conventional 95% intervals for secondary estimation, without additional
 confirmatory labels. Assess interval behaviour before freezing analysis code.
 
@@ -750,38 +659,15 @@ contrast is also the difference between two proportions with 120 attempts each.
 Use the bounded-outcome concentration interval
 
 $$[\widehat\Delta_2-h,\widehat\Delta_2+h]\cap[-1,1],\qquad
-h=\sqrt{\frac{\log(2/\delta)}{120}},\quad\delta=0.05/3.$$
+h=\sqrt{\frac{\log(2/\delta)}{120}},\quad\delta=0.05/2.$$
 
 This follows from Hoeffding's bound applied to 240 independent signed Bernoulli
 terms, each with range width $1/120$. It permits different success probabilities
 across fixed strata and remains non-degenerate at all-success/all-failure
-outcomes. Its half-width is about 0.20, so exceeding the 0.10 benchmark requires
-an estimated difference of at least 0.30; smaller differences leave the benchmark
+outcomes. Its half-width is about 0.19, so exceeding the 0.10 benchmark requires
+an estimated difference of at least 0.29; smaller differences leave the benchmark
 unresolved. It assumes independent agent attempts conditional on fixed inputs;
 blocked scheduling and run logs help assess service or resource dependencies.
-
-For H3, the unit is the matched pair. Let $d_j\in\{-1,0,1\}$ be detection in
-the `composable` member minus detection in the `julia` member of pair $j$. With
-four pairs in every cell, the equal-weight mean over cells equals the mean of
-the 24 values $d_j$, so the schedule, defect balance and reviewer margins stay
-fixed. Randomness arises from the randomly selected base submissions and review
-outcomes. Use the Tango score interval for a difference in paired proportions at
-the 98.33% level. The precision report checks its coverage under the fixed
-schedule, allowing detection probabilities to vary by defect type and reviewer;
-if coverage falls below nominal, use the Hoeffding interval
-$\bar d\pm\sqrt{2\log(2/\delta)/24}$ with $\delta=0.05/3$ (half-width about 0.63).
-Four pairs per cell do not support estimating variation within defect types;
-report detections by defect type descriptively. Always report detected/total
-counts by condition, cell, defect type and reviewer. A valid interval that spans zero leaves
-H3 unresolved; a wide interval alone does not change its pre-specified status.
-Report the LOC of each H3 base submission and the H3 contrast stratified by
-whether the `composable` member of a pair is shorter than its `julia` member.
-Domain components may shorten code, and a detection difference may then reflect
-less code to search as well as clearer structure.
-If the required pool cannot be assembled, report descriptive counts with the
-reason no confirmatory conclusion is available. Do not change methods or relabel H3
-based on whether the observed result is favourable. Its allocation of the
-familywise error rate remains reserved in every case.
 
 Support for H1 alone establishes lower error among successful runs. It does not
 establish greater overall usefulness if H2 shows lower execution success. Present
@@ -799,22 +685,20 @@ motivated their expected direction.
 ## Work required before registration and execution
 
 The design decisions retained here are the compact run allocation, fixed-input
-estimand, three hypotheses, resource limits, scoring rules and review allocation.
+estimand, two hypotheses, resource limits, scoring rules and review allocation.
 The following tasks make those decisions executable:
 
 | Work | Owner | Required evidence and deadline |
 |---|---|---|
-| Migrate the domain-specific condition | Project lead | ComposableTuringIDModels references, prompt/API bundles, pinned Julia environment, harness routing, detectors, analysis labels and mutation checks validated before registration; legacy EpiAware runs kept separate |
+| Migrate the domain-specific condition | Project lead | ComposableTuringIDModels references, prompt/API bundles, pinned Julia environment, harness routing, detectors and analysis labels validated before registration; legacy EpiAware runs kept separate |
 | Align instantaneous target, ascertainment inputs and process/observation specification | Project lead | Validated generator, truth, prompts and references before registration |
 | Validate initialisation, scoring window and reference inference | Project lead, with independent implementation check | Versioned development validation report, including coverage, width, WIS and diagnostics, before registration |
 | Inventory development use and select evaluation seeds | Project lead | Frozen dataset allocation and record of previous exposure before registration |
 | Implement outcome definitions, contrasts and intervals | Project lead | Updated `evaluation/analyse.R`, synthetic-data checks and reproducible precision report before registration |
 | Check wording, variant parameters and API bundles | Project lead | Frozen prompt/document versions and human audit before registration |
-| Recruit two reviewers and an independent detector validator | Project lead | Names, roles and relevant experience recorded before review; roles and fallback rules fixed at registration |
-| Align mutation catalogue, sampling and review sheets | Review coordinator | Feasible matched-defect schedule and checked sample-building procedure before registration; sealed sample manifest before review |
+| Recruit a detector reviewer | Project lead | Name and relevant experience recorded, and the component checklist frozen, before registration |
 | Verify run isolation and reproducibility records | Project lead | Harness validation, including enforced filesystem restrictions, and pinned environment/model configuration before agent execution |
 | Fix the H1 benchmark | Project lead | Reference WIS under the instantaneous generator on development data, and the agreed absolute or relative benchmark, before registration |
-| Establish review budget | Project lead and reviewers | Pilot review durations, committed reviewer hours and the resulting allocation before registration |
 | Update output specification | Project lead | Quantile columns in prompts, validity checks and `analyse.R` before prompts are frozen |
 | Audit API bundle comparability | Independent auditor | Length, entry and example counts, and scenario coverage for both bundles before freezing |
 
@@ -822,30 +706,22 @@ The migration audit covers the following code paths:
 
 | File | Required migration check |
 |---|---|
-| `evaluation/mutation_catalogue.md` | Translate selected legacy operations; verify that each scheduled defect applies to its scenario and both matched conditions |
-| `evaluation/mutate.py` | Reimplement and validate concrete patterns against the pinned API |
-| `evaluation/detectors.py` | Validate component patterns on new generated code and matched mutations, including false positives and negatives; retain legacy interpretation for pilot data |
-| `evaluation/analyse.R` | Add explicit `composable` handling and implement the specified H1/H2/H3 populations, denominators, weights, intervals and review manifest; prevent pooling with legacy `epiaware` records |
+| `evaluation/detectors.py` | Validate component patterns on new generated code, including false positives and negatives; retain legacy interpretation for pilot data |
+| `evaluation/analyse.R` | Add explicit `composable` handling and implement the specified H1/H2 populations, denominators, weights and intervals; prevent pooling with legacy `epiaware` records |
 
 The analysis entry point is `evaluation/analyse.R`. Existing tool behaviour remains
 a development implementation until these checks pass. Preserve protocol/package
 identity in records so labels cannot silently combine different interventions. Freeze tool versions with the
-validated package, documentation and mutation schedule before creating the sealed
-review manifest.
+validated package and documentation before agent execution.
 
 The precision report uses the fixed allocation and plausible success rates,
-WIS distributions and within-pair detection associations, including null effects
-and the practical benchmarks. It covers the H1 conditional bootstrap under sparse
-success and the H3 paired interval under the fixed schedule. Report interval
+WIS distributions, including null effects and the practical benchmarks. It
+covers the H1 conditional bootstrap under sparse success. Report interval
 widths, empirical interval coverage, and probabilities of support, contradiction
 and unresolved results. If an interval
 procedure fails validation, amend it before registration and retain the validation
 record. Predictions with a low chance of resolution are retained and reported
 with that chance.
-
-If two reviewers cannot be recruited, H3 is not conducted under a
-single-reviewer replacement. General implementation review may proceed with one
-reviewer, with the change disclosed and no inter-rater reliability claim.
 
 Optional extensions are additional datasets, a common elapsed-time/cost cap,
 extra DGP variants and real-time data cut-offs. None is required for the stated
@@ -854,8 +730,8 @@ conditional hypotheses. Any adoption changes the protocol prospectively.
 ## Reporting, responsibilities and limitations
 
 Publish run allocation and exclusions; execution success; conditional WIS;
-interval availability, width and coverage; human-reviewed implementation
-errors; detector validation; selected tools; code size; review results; and costs.
+interval availability, width and coverage; detector-based implementation
+errors with detector validation; selected tools; code size; and costs.
 Show results by scenario and model, with variant sensitivity alongside canonical
 results. Report variation between the four prompt versions within each cell.
 Select example trajectories by a fixed rule, such as the median-WIS valid run
@@ -865,13 +741,9 @@ UKHSA England data may provide a secondary workflow demonstration. It has no
 known true reproduction trajectory and cannot validate recovery. Specify the
 data version and period; package agreement alone is not evidence of correctness.
 
-Sebastian Funk coordinates simulation, prompts, execution and analysis. Two
-infectious-disease modellers review code independently; a validator who did not
-implement the detectors assesses their accuracy. The mutation coordinator does
-not review samples they prepared. Record disagreements before adjudication and
-use a third reviewer where needed. Apply the recruitment fallback specified above
-and record changes before analysing review results. Reviewers use no LLM
-assistance to preserve independence from the evaluated systems.
+Sebastian Funk coordinates simulation, prompts, execution and analysis. One
+infectious-disease modeller who did not implement the detectors reviews the
+detector-validation sample, without LLM assistance.
 
 Disclose authors' contributions to ComposableTuringIDModels, EpiAware, EpiNow2
 or EpiEstim, funding and research credits. Publish unfavourable and inconclusive
@@ -879,7 +751,9 @@ results as well as successful runs. No patient-level data are used.
 
 The principal limits are the selected models, prompts and epidemic processes;
 the bundled nature of the conditions; dependence on externally supplied delay
-parameters; and possible reviewer familiarity effects. Simulation misspecification
+parameters; and detector-based implementation assessment validated on a small
+human-reviewed sample. Reviewability of the generated code is not assessed.
+Simulation misspecification
 can favour one estimator and therefore one condition: exposure to the same DGP
 does not ensure an unbiased comparison for other epidemic settings. Conclusions
 concern the tested workflows and do not establish clinical usefulness or general

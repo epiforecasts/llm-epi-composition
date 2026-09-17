@@ -1,6 +1,9 @@
 # Mutation catalogue
 
-This document lists candidate defects for the H3 reviewability outcome.
+This catalogue is not used in the current study design, which does not assess
+reviewability. It is retained for a possible follow-up study of defect detection.
+
+This document lists candidate defects for an injected-defect reviewability outcome.
 Package-specific operations below are legacy development examples and require
 validation against the pinned ComposableTuringIDModels API and revised scientific
 tasks before use. A mutation must introduce an actual modelling error; changing

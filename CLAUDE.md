@@ -14,18 +14,18 @@ The study reports observable effects of software scaffolding on the produced cod
 - Four scenarios (1a, 1b, 2, 3). Commercial models: Haiku 4.5, Sonnet 4.6, Opus 4.7. Qwen3-Coder-30B is a secondary open-weight comparison (Qwen Code + vLLM on the LSHTM HPC stack, `~/code/dotfiles/lshtm-local-llm-stack.md`).
 - Four paraphrases per (scenario, condition): slot 01 = LLM-drafted-and-edited by project authors; slots 02–04 = GPT-5, Gemini 2.5 Flash, Sonnet 4.5.
 - Compact allocation per model: 240 canonical runs (4 paraphrases × 5 reruns on one dataset) + 180 sensitivity runs (5 variants incl. canonical × 3 reruns, paraphrase 01). 1260 commercial runs total. Claims are conditional on the frozen datasets.
-- Three hypotheses, `composable` vs `julia`, averaged over six cells (scenarios 2/3 × three commercial models): H1 median weighted interval score (WIS, benchmark **awaiting calibration** under the new generator), H2 valid-output proportion (0.10), H3 injected-defect detection sensitivity (0.15, paired interval over 24 pairs conditional on the fixed schedule). Other outcomes are descriptive.
+- Two hypotheses, `composable` vs `julia`, averaged over six cells (scenarios 2/3 × three commercial models), 97.5% intervals: H1 median weighted interval score (WIS, benchmark **awaiting calibration** under the new generator), H2 valid-output proportion (0.10). Other outcomes are descriptive.
+- Human review budget is **10 hours total**: one reviewer checks 18 submissions against a fixed component checklist to validate `detectors.py`. No reviewability outcome; the mutation catalogue and `mutate.py` are not used.
 - Scoring target: **instantaneous Rt**. Agents output nine quantiles per day (`q0.025` … `q0.975`); H1 uses WIS on days 25–125.
 - Confirmatory simulation: daily discrete renewal generator with negative-binomial process noise (size kΛ_d), **not yet implemented**. Sensitivity panel variants: short_gi, long_delay, extreme_dispersion, abrupt_change; strong_dow, high_asc_var, low_dispersion, sinusoidal_rt remain defined.
 - **Development implementation only:** `simulations/generate.jl` is an individual-level branching process whose `true_rt.csv` is a *cohort* Rt, and current prompts ask for median/5%/95% columns and estimated ascertainment. Do not treat these as the confirmatory design.
 
 ## Required before registration (see plan §Work required before registration)
 
-- Migrate to ComposableTuringIDModels: API docs bundle, references, pinned `evaluation/julia_env/`, harness routing, detectors, `analyse.R` labels, `mutate.py` patterns.
+- Migrate to ComposableTuringIDModels: API docs bundle, references, pinned `evaluation/julia_env/`, harness routing, detectors, `analyse.R` labels.
 - Implement the instantaneous-Rt renewal generator; supply ascertainment information in the primary tasks; switch output spec to quantiles; regenerate truth/data and select unused evaluation seeds.
-- Implement H1–H3 estimands and intervals in `evaluation/analyse.R` (H1 bootstrap conditional on valid-run counts; H3 Tango paired interval); precision report.
-- Pilot review durations and record committed reviewer hours (dual general review + H3 is ~558 h at the 45-min cap).
-- Recruit two expert reviewers and an independent detector validator.
+- Implement H1/H2 estimands and intervals in `evaluation/analyse.R` (H1 bootstrap conditional on valid-run counts); precision report.
+- Recruit one detector-validation reviewer (not the detector implementer).
 - Regenerate stale paraphrases (slots 02–04) once prompts are revised; needs `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`.
 - Raise the Anthropic account spend cap (hit ~$500 during the July adversarial matrix) before launch.
 
@@ -36,8 +36,8 @@ The study reports observable effects of software scaffolding on the produced cod
 - `evaluation/run_study.sh` — study driver.
 - `evaluation/analyse.R` — analysis entry point.
 - `evaluation/detectors.py` — automated component detectors.
-- `evaluation/mutate.py`, `evaluation/mutation_catalogue.md` — injected defects for H3.
-- `evaluation/review_protocol.md` — expert review protocol.
+- `evaluation/mutate.py`, `evaluation/mutation_catalogue.md` — injected defects; not used in the current design.
+- `evaluation/review_protocol.md` — detector validation review (18 submissions, ≤10 h).
 - `evaluation/generate_paraphrases.py` — paraphrase generator for slots 02–04.
 - `evaluation/calibrate_reference.jl` — reference calibration.
 - `evaluation/validate_api_docs.py` — LLM check that bundled API docs contain no worked solutions.
