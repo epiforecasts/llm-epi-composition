@@ -86,8 +86,12 @@ Within each of six scenario–model cells:
    One-condition-only defects are excluded from H3. Broad catalogue tags do not
    extend the pool beyond scenarios 2 and 3. Record these checks in the manifest.
 3. Produce one clean and one mutated version per base. Reviewer A sees one and
-   reviewer B the other, never both. Balance assignments so each reviewer sees
-   two clean and two mutated versions within each scenario–model–condition cell.
+   reviewer B the other, never both. In each cell, one reviewer receives both
+   mutated members of two pairs and the other reviewer both mutated members of
+   the remaining two pairs. Each reviewer then sees two clean and two mutated
+   versions per condition within each cell, and each pair is compared within one
+   reviewer and one defect type. Balance defect types across reviewers in the
+   frozen schedule.
 4. Assign unrelated random IDs and randomise presentation order. Keep the map of
    base, pair, condition, source run, mutation and reviewer assignment sealed.
 
@@ -106,6 +110,13 @@ protocol. Do not substitute reference mutations or select a new pool after seein
 detection results. If two reviewers cannot be recruited, H3 is not conducted.
 General implementation review may continue with one reviewer, with no inter-rater
 agreement claim.
+
+## Workload
+
+The analysis plan's Review workload section gives assessment counts and hours at
+the time cap. Pilot both review types on development submissions before the
+allocation is fixed, record committed reviewer hours, and apply the plan's
+reduction order if the hours are insufficient.
 
 ## Reviewer materials and timing
 
@@ -171,15 +182,14 @@ do not replace it after observing reviews. If a mutation/base validation failure
 breaks the required complete H3 allocation, the planned contrast is not estimable.
 
 H3 is the equally weighted mean of the six cell sensitivity differences,
-`composable` minus `julia`. Bootstrap matched pairs within cells, retaining both
-conditions, versions and reviewer assignments, exactly as specified in the plan.
-Use 10,000 resamples and a recorded seed. Inference conditions on the selected
-reviewers and defect types.
+`composable` minus `julia`, which equals the mean within-pair detection difference
+over the 24 pairs. Inference concerns the fixed defect schedule, reviewer
+assignment and the two reviewers. Use the paired-proportion interval specified in
+the plan; do not resample pairs, which would alter the fixed margins.
 
 A valid, wide interval that includes zero leaves the pre-specified H3 unresolved.
 Show its counts and interval; do not change its status because the result is
-uninformative. If the interval procedure fails validation, produces no resampling
-variation or the required pool is unavailable, report descriptive counts and the
+uninformative. If the required pool is unavailable, report descriptive counts and the
 reason no confirmatory conclusion is available. A degenerate interval does not
 establish certainty. Keep H3's share of the three-hypothesis Bonferroni allocation
 reserved even if H3 is not conducted or cannot support inference. Do not reuse

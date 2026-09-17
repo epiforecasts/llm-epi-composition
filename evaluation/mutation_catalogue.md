@@ -183,7 +183,5 @@ remains reserved. See the analysis plan and review protocol for the exact rules.
 
 ## Review workload
 
-The H3 pool alone entails 96 individual reviews: 32–64 person-hours at 20–40
-minutes per review, with a maximum of 72 person-hours at the 45-minute cap.
-Clean-code checks, mutation validation, general implementation review, detector
-validation and adjudication require additional time.
+The H3 pool entails 96 reviews, up to 72 person-hours at the 45-minute cap.
+See the analysis plan's Review workload section for the full review budget.

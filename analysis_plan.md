@@ -49,11 +49,11 @@ their dates and whether outcomes had been inspected.
 The current implementation is suitable for development. The following requirements
 must be met before recovery results can support a confirmatory comparison:
 
-1. **Align the reproduction-number target.** The generator assigns expected
-   offspring at the parent's infection time. Its saved trajectory is a cohort
-   reproduction number, whereas standard instantaneous renewal estimators use a
-   multiplier at the time of onward transmission. Prompts, simulation truth and
-   scoring must specify the same quantity.
+1. **Align the reproduction-number target.** The development generator assigns
+   expected offspring at the parent's infection time, so its saved trajectory is
+   a cohort reproduction number. Standard renewal estimators use a multiplier at
+   the time of onward transmission. The study target is the instantaneous
+   reproduction number; the generator, truth, prompts and scoring must all use it.
 2. **Make ascertainment identifiable in the primary recovery task.** With unknown
    time-varying ascertainment, case counts alone cannot generally distinguish
    changing transmission from changing observation. Use known ascertainment or
@@ -197,7 +197,7 @@ has been estimated from the data.
 
 ## Simulation and estimands
 
-### Current infection process
+### Development infection process
 
 `simulations/generate.jl` implements an age-dependent branching process. For an
 individual infected at continuous time $t_i$:
@@ -226,11 +226,19 @@ even at high incidence, and Wallinga–Teunis and Cori-type methods target
 different quantities. See [Cori et al. (2013)](https://pmc.ncbi.nlm.nih.gov/articles/PMC3816335/)
 and [Gostic et al. (2020)](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008409).
 
-**Primary target:** instantaneous $R_{\mathrm{inst}}(t)$. Before registration,
-implement and validate a generator with this parameterisation, then regenerate
-truth and observed data. A discrete renewal generator with an explicit process
-noise model is a sufficient starting point. Retain the existing cohort process
-as a sensitivity analysis only with its own correctly defined target. Do not
+**Target:** instantaneous $R_{\mathrm{inst}}(d)$. The confirmatory generator is a
+daily discrete renewal process. With infectiousness
+$\Lambda_d=\sum_{s\ge1}g_sI_{d-s}$ and individual offspring dispersion $k$,
+
+$$I_d\mid I_{<d}\sim\mathrm{NegBin}\bigl(\text{mean }R_{\mathrm{inst}}(d)\Lambda_d,\
+\text{size }k\Lambda_d\bigr),$$
+
+which approximates the total offspring of $\Lambda_d$ effective infectors each drawing a
+Gamma–Poisson offspring number. $g_s$ is the discretised generation interval.
+Validate this generator, including its initialisation, before registration, then
+regenerate truth and observed data. The individual-level branching process in
+`simulations/generate.jl` remains a development implementation; it may be used as
+a sensitivity analysis only with the cohort reproduction number as its target. Do not
 score an instantaneous estimate against the existing `true_rt.csv` and label the
 difference an implementation error. The ratio of realised infections to realised
 infectiousness is a noisy quantity distinct from the simulation parameter.
@@ -356,9 +364,9 @@ Development calibration under the cohort target gave median RMSE 0.086 and
 median temporal coverage 1.00 across 20 canonical replicates with a
 `HalfNormal(0.05)` innovation prior. These results do not transfer to the
 instantaneous target. Freeze priors using development data and evaluate them
-on independent datasets. Inspect interval width, interval score, convergence and
-prior sensitivity alongside recovery. Before evaluating references on the new
-generator, record pass/fail thresholds for median RMSE and median 90% coverage
+on independent datasets. Inspect interval width, WIS, convergence and prior
+sensitivity alongside recovery. Before evaluating references on the new
+generator, record pass/fail thresholds for median WIS and median 90% coverage
 on the scoring window; a reference that fails them blocks registration.
 
 ## Sampling, randomisation and execution
@@ -405,9 +413,10 @@ the simulation model, or give values of quantities the agent must estimate. Data
 files, prompts and metadata describe an infectious disease outbreak without
 naming a pathogen or country, and observed files follow the format of the real
 surveillance data. Every run must write `outputs/rt_estimates.csv` with one row
-per day and columns `date` (YYYY-MM-DD), `Rt_median`, `Rt_lower` (5th percentile)
-and `Rt_upper` (95th percentile). Methods without uncertainty quantification may
-omit the interval columns.
+per day and columns `date` (YYYY-MM-DD) and `q0.025`, `q0.05`, `q0.1`, `q0.25`,
+`q0.5`, `q0.75`, `q0.9`, `q0.95`, `q0.975`, the predictive quantiles of the
+reproduction number. Methods without uncertainty quantification report the
+point estimate in every quantile column.
 
 There are four prompt versions per scenario and condition, stored at
 `prompts/{scenario}/paraphrases/{condition}/NN.md`. Slot 01 was drafted with LLM
@@ -465,10 +474,10 @@ inference seeds where available.
 
 | Outcome | Estimand and denominator | Measurement | Role |
 |---|---|---|---|
-| Recovery | Mean of six scenario–model cell median RMSEs among valid canonical-panel runs; equal weighting of the four prompts within each condition and cell | RMSE on days 25–125 against the matched target | Primary hypothesis H1 |
+| Recovery | Mean of six scenario–model cell median WIS among valid canonical-panel runs; equal weighting of the four prompts within each condition and cell | Weighted interval score on days 25–125 against the instantaneous target | Primary hypothesis H1 |
 | Execution | Mean valid-output proportion across the same six cells and four prompts; all allocated canonical-panel runs | Date and numerical validation, by assigned condition | Primary hypothesis H2; accompanies H1 |
 | Reviewability | Mean injected-defect sensitivity across scenarios 2/3 and three models in the selected generated-code pool; all validated mutations, including review timeouts | Independent defect identification | Secondary hypothesis H3 |
-| Uncertainty | Interval availability among all runs; coverage, width and interval score among valid intervals | Numerical validation and scoring | Secondary estimation |
+| Uncertainty and point error | Interval availability among all runs; 50% and 90% coverage, width, WIS components and absolute error of the median among valid runs | Numerical validation and scoring | Secondary estimation |
 | Implementation | Per-component error proportions among randomly sampled reviewable submissions; missing-code counts reported separately | Human review, with detector validation | Secondary estimation |
 | Code size and resources | LOC among submitted scripts; time, retries and cost among all runs | Static counts and execution records | Descriptive |
 | Method choice and diagnostics | Tool/method frequencies and diagnostic reporting, with applicable denominators | Code and log review | Descriptive |
@@ -488,32 +497,43 @@ retain the original records.
 Report two linked outcomes:
 
 - **Valid-output proportion**, with every allocated run in the denominator.
-  Validity requires correct dates, finite non-negative estimates, and no duplicate
-  or missing dates in the scoring window. File existence alone is insufficient.
-- **RMSE conditional on valid point estimates**, calculated per run against the
-  matched simulation target. Report its distribution and the denominator. This
-  comparison is affected by selective success and must accompany the failure rate.
+  Validity requires correct dates, all nine quantile columns with finite,
+  non-negative and non-decreasing values, and no duplicate or missing dates in
+  the scoring window. File existence alone is insufficient.
+- **Weighted interval score (WIS) conditional on valid output**, calculated per
+  run as the mean daily WIS against the matched simulation target. Report its
+  distribution and the denominator. This comparison is affected by selective
+  success and must accompany the failure rate.
 
-Do not assign an arbitrary finite RMSE to failed runs or describe conditional
-RMSE as overall task success. Report instruction adherence separately.
+For quantile levels forming central intervals $\alpha_k\in\{0.05,0.1,0.2,0.5\}$
+with median $m$ and truth $y$,
+
+$$\mathrm{WIS}(y)=\frac{1}{K+1/2}\Bigl(\tfrac12|y-m|+\sum_{k=1}^{K}
+\tfrac{\alpha_k}{2}\mathrm{IS}_{\alpha_k}(l_k,u_k;y)\Bigr),\qquad
+\mathrm{IS}_\alpha(l,u;y)=(u-l)+\tfrac{2}{\alpha}(l-y)\mathbf 1(y<l)+\tfrac{2}{\alpha}(y-u)\mathbf 1(y>u),$$
+
+with $K=4$. WIS approximates the continuous ranked probability score
+([Bracher et al. 2021](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008618)).
+A point-only submission reduces to absolute error. Score on the natural scale;
+report WIS on the log scale as a secondary analysis.
+
+Do not assign an arbitrary finite score to failed runs or describe conditional
+WIS as overall task success. Report instruction adherence separately.
 
 Use days 25–125 inclusive as the proposed retrospective scoring window, subject
 to boundary validation under the corrected generator. Early estimates depend on
-prehistory; late infections have reports after day 150. Also report early and late performance separately. Fitting all 150
+prehistory; late infections have reports after day 150. Also report early and
+late performance separately. Fitting all 150
 days is retrospective inference; evaluating operational real-time estimation
 would require fitting successive data cut-offs.
 
-### Uncertainty
+### Uncertainty and point error
 
-Report availability and validity of 90% intervals over all runs. For runs with
-valid intervals, report temporal coverage, mean width and the 90% interval score:
-
-$$\mathrm{IS}_{0.1}(l,u;y)=(u-l)+20(l-y)\mathbf{1}(y<l)
- +20(y-u)\mathbf{1}(y>u).$$
-
-Require finite, ordered bounds and record point estimates outside their reported
-intervals. Missing intervals do not count as zero coverage, and their omission
-must remain visible. Temporal coverage on a single trajectory is descriptive;
+Report the proportion of runs with non-degenerate intervals. For valid runs,
+report 50% and 90% temporal coverage, mean interval widths, the WIS decomposition
+into dispersion, overprediction and underprediction, and the absolute error of the
+median. Point-only submissions are excluded from coverage and width summaries,
+and their number is reported. Temporal coverage on a single trajectory is descriptive;
 pointwise repeated-sampling calibration requires independent simulated datasets.
 Adjacent days are not independent observations. Excessively wide intervals can
 achieve high coverage, so higher coverage alone is not evidence of better performance.
@@ -547,6 +567,26 @@ validation submissions independently; overlap with this pool is permitted and
 recorded. Review semantic concerns in remaining submissions and identify methods
 in scenario 1a. Purposively selected flagged cases illustrate failure modes; do
 not pool them into prevalence estimates.
+
+### Review workload
+
+| Review task | Assessments | Hours at 45-minute cap |
+|---|---|---|
+| General implementation review, dual | 324 × 2 = 648 | 486 |
+| H3 defect detection | 96 | 72 |
+| Subtotal for the two reviewers | 744 | 558 |
+| Detector validation (validator) | 60 | 45 |
+| Remaining-submission semantic pass, single | 936 commercial runs, plus Qwen runs if included | 702 for commercial runs |
+
+Clean-code checking of H3 candidates, mutation validation and adjudication add
+further time. Before fixing this allocation, pilot both review types on
+development submissions in each condition, record median and 90th-percentile
+review durations, and record the hours each reviewer commits. If committed hours
+do not cover the pilot-based requirement, reduce in this order before
+registration: (1) restrict the remaining-submission semantic pass to
+detector-flagged submissions; (2) dual-review a random 60 of the general pool
+for agreement and single-review the rest; (3) reduce sensitivity-panel general
+review. The H3 allocation is not reduced.
 
 ### Code size, reviewability and diagnostics
 
@@ -588,8 +628,11 @@ of eligible samples makes H3 unestimable under this protocol.
 
 Create one clean and one mutated version of every base submission. Reviewer A
 sees one version and reviewer B the other, so neither sees the same base twice.
-Balance mutation status within each scenario–model–condition cell: each reviewer
-sees two clean and two mutated samples. Randomise presentation order and conceal
+Within each scenario–model cell, the same reviewer receives both mutated members
+of two pairs, and the other reviewer both mutated members of the other two pairs.
+Each reviewer therefore sees two clean and two mutated samples per condition
+within each cell, and each within-pair comparison uses one reviewer and one defect
+type. Balance defect types across reviewers in the frozen schedule. Randomise presentation order and conceal
 pair identities. The total is 96 reviews: 48 mutated and 48 clean, 24 of each per
 condition. Independent dual review for general implementation errors uses the
 separate pool above. Reference mutations may supplement detector validation but
@@ -633,8 +676,8 @@ Variants are fixed sensitivity settings, not random replicates of a population
 of DGPs. Review uncertainty must account for shared base code and repeated reviewer
 assessments; two reviewers do not establish generalisation to all reviewers.
 
-Use 10,000 resamples with a recorded seed for bootstrap intervals, after checking
-the procedure on simulated evaluation outcomes. Sparse/all-success proportions
+Use a recorded seed for bootstrap intervals, after checking each procedure on
+simulated evaluation outcomes. Sparse/all-success proportions
 need intervals that do not collapse to certainty; use a suitable binomial method
 only where its independence assumptions apply. Freeze and test
 `evaluation/analyse.R` against these definitions before registration.
@@ -647,14 +690,16 @@ implementation work and make model structure easier to inspect.
 
 | Hypothesis | Contrast, positive in the predicted direction | Prediction | Practical benchmark |
 |---|---|---|---|
-| H1: improved recovery | Mean over six cells of median RMSE in `julia` minus median RMSE in `composable`, canonical panel | Contrast > 0 | 0.03 RMSE units |
+| H1: improved recovery | Mean over six cells of median WIS in `julia` minus median WIS in `composable`, canonical panel | Contrast > 0 | Awaiting calibration |
 | H2: more valid outputs | Mean over six cells of valid-output proportion in `composable` minus that in `julia`, canonical panel | Contrast > 0 | 0.10, or 10 percentage points |
 | H3: easier defect detection | Mean over six cells of sensitivity in `composable` minus that in `julia`, selected generated-code mutations | Contrast > 0 | 0.15, or 15 percentage points |
 
 H1 and H2 are primary; H3 is a secondary confirmatory hypothesis with a restricted
-review population. Each cell has equal weight, and each of its four canonical
+review population. H3 inference concerns the fixed defect schedule, reviewer
+assignment and the two participating reviewers; it does not generalise to a
+population of defect types or reviewers. Each cell has equal weight, and each of its four canonical
 prompt versions has equal weight before summarising runs. For H1, construct the
-cell's RMSE distribution as an equal-weight mixture of prompt-specific empirical
+cell's WIS distribution as an equal-weight mixture of prompt-specific empirical
 distributions among valid runs; take its median using the lower 0.5 quantile.
 If any prompt–condition–cell has no valid run, H1 is not estimable as specified.
 Report the available conditional distributions without dropping that stratum or
@@ -664,11 +709,10 @@ participating reviewers. Each cell has equal weight across the three commercial
 models regardless of their capability; model-specific contrasts are reported
 alongside.
 
-The practical benchmarks are study design judgements. For H1, 0.03 is a 30%
-reduction if comparator RMSE is 0.10, but only 10% if it is 0.30; report the
-relative change as well. The H1 value is provisional: fix it before registration
-from reference RMSE on development data under the instantaneous generator, or
-restate it as a relative reduction. The H2 benchmark corresponds to ten more
+The practical benchmarks are study design judgements. The H1 benchmark is not
+yet set: fix it before registration from reference WIS on development data under
+the instantaneous generator, as an absolute difference or a relative reduction.
+Report the relative change in either case. The H2 benchmark corresponds to ten more
 usable outputs per 100 attempts under the same retry policy. The H3 benchmark
 corresponds to 15 more detected defects per 100 reviews within the time
 allowance. Document investigator agreement on these benchmarks in the
@@ -690,12 +734,16 @@ Keep all three slots in the multiplicity allocation even if H3 cannot be run.
 Report conventional 95% intervals for secondary estimation, without additional
 confirmatory labels. Assess interval behaviour before freezing analysis code.
 
-For H1, bootstrap independent agent runs within each fixed
-scenario–model–condition–prompt stratum and recompute the weighted contrast using
-10,000 resamples. Any resample with no valid runs in a required stratum has an
-undefined contrast. Report their frequency; do not silently discard them. If
-such resamples occur, report H1 descriptively without a confirmatory bootstrap
-interval.
+H1 is conditional on successful execution, so its interval conditions on the
+observed number of valid runs in each stratum; H2 covers variation in success.
+For each scenario–model–condition–prompt stratum with $n_v\ge1$ valid runs,
+resample $n_v$ valid runs with replacement, then recompute the weighted contrast.
+Use 10,000 resamples and percentile limits. Strata with no observed valid run
+make H1 not estimable, as above. Strata with one valid run contribute no
+resampling variation; report how many there are. The precision report checks
+coverage of this procedure under sparse success, including strata with one or
+two valid runs, and the procedure is amended before registration if coverage
+falls below nominal.
 
 For H2, all 24 strata per condition contain five attempts, so the weighted
 contrast is also the difference between two proportions with 120 attempts each.
@@ -712,22 +760,26 @@ an estimated difference of at least 0.30; smaller differences leave the benchmar
 unresolved. It assumes independent agent attempts conditional on fixed inputs;
 blocked scheduling and run logs help assess service or resource dependencies.
 
-For H3, bootstrap the four matched pairs of base submissions within each of the
-six scenario–model cells, preserving both conditions, both versions and reviewer
-assignments within each pair. This conditions inference on the selected defect
-types and reviewers. If observed detection outcomes provide no resampling
-variation, report counts and proportions without a confirmatory interval rather
-than treating a degenerate interval as certainty. The small pool makes assessment
-of this interval procedure especially important. Always report detected/total
-counts by condition, cell and reviewer. A valid interval that spans zero leaves
+For H3, the unit is the matched pair. Let $d_j\in\{-1,0,1\}$ be detection in
+the `composable` member minus detection in the `julia` member of pair $j$. With
+four pairs in every cell, the equal-weight mean over cells equals the mean of
+the 24 values $d_j$, so the schedule, defect balance and reviewer margins stay
+fixed. Randomness arises from the randomly selected base submissions and review
+outcomes. Use the Tango score interval for a difference in paired proportions at
+the 98.33% level. The precision report checks its coverage under the fixed
+schedule, allowing detection probabilities to vary by defect type and reviewer;
+if coverage falls below nominal, use the Hoeffding interval
+$\bar d\pm\sqrt{2\log(2/\delta)/24}$ with $\delta=0.05/3$ (half-width about 0.63).
+Four pairs per cell do not support estimating variation within defect types;
+report detections by defect type descriptively. Always report detected/total
+counts by condition, cell, defect type and reviewer. A valid interval that spans zero leaves
 H3 unresolved; a wide interval alone does not change its pre-specified status.
 Report the LOC of each H3 base submission and the H3 contrast stratified by
 whether the `composable` member of a pair is shorter than its `julia` member.
 Domain components may shorten code, and a detection difference may then reflect
 less code to search as well as clearer structure.
-If the interval procedure fails validation, has no resampling variation, or the
-required pool cannot be assembled, report descriptive counts with the reason
-no confirmatory conclusion is available. Do not change methods or relabel H3
+If the required pool cannot be assembled, report descriptive counts with the
+reason no confirmatory conclusion is available. Do not change methods or relabel H3
 based on whether the observed result is favourable. Its allocation of the
 familywise error rate remains reserved in every case.
 
@@ -754,14 +806,16 @@ The following tasks make those decisions executable:
 |---|---|---|
 | Migrate the domain-specific condition | Project lead | ComposableTuringIDModels references, prompt/API bundles, pinned Julia environment, harness routing, detectors, analysis labels and mutation checks validated before registration; legacy EpiAware runs kept separate |
 | Align instantaneous target, ascertainment inputs and process/observation specification | Project lead | Validated generator, truth, prompts and references before registration |
-| Validate initialisation, scoring window and reference inference | Project lead, with independent implementation check | Versioned development validation report, including coverage, width, interval score and diagnostics, before registration |
+| Validate initialisation, scoring window and reference inference | Project lead, with independent implementation check | Versioned development validation report, including coverage, width, WIS and diagnostics, before registration |
 | Inventory development use and select evaluation seeds | Project lead | Frozen dataset allocation and record of previous exposure before registration |
 | Implement outcome definitions, contrasts and intervals | Project lead | Updated `evaluation/analyse.R`, synthetic-data checks and reproducible precision report before registration |
 | Check wording, variant parameters and API bundles | Project lead | Frozen prompt/document versions and human audit before registration |
 | Recruit two reviewers and an independent detector validator | Project lead | Names, roles and relevant experience recorded before review; roles and fallback rules fixed at registration |
 | Align mutation catalogue, sampling and review sheets | Review coordinator | Feasible matched-defect schedule and checked sample-building procedure before registration; sealed sample manifest before review |
 | Verify run isolation and reproducibility records | Project lead | Harness validation, including enforced filesystem restrictions, and pinned environment/model configuration before agent execution |
-| Fix the H1 benchmark | Project lead | Reference RMSE under the instantaneous generator on development data, and the agreed absolute or relative benchmark, before registration |
+| Fix the H1 benchmark | Project lead | Reference WIS under the instantaneous generator on development data, and the agreed absolute or relative benchmark, before registration |
+| Establish review budget | Project lead and reviewers | Pilot review durations, committed reviewer hours and the resulting allocation before registration |
+| Update output specification | Project lead | Quantile columns in prompts, validity checks and `analyse.R` before prompts are frozen |
 | Audit API bundle comparability | Independent auditor | Length, entry and example counts, and scenario coverage for both bundles before freezing |
 
 The migration audit covers the following code paths:
@@ -774,17 +828,17 @@ The migration audit covers the following code paths:
 | `evaluation/analyse.R` | Add explicit `composable` handling and implement the specified H1/H2/H3 populations, denominators, weights, intervals and review manifest; prevent pooling with legacy `epiaware` records |
 
 The analysis entry point is `evaluation/analyse.R`. Existing tool behaviour remains
-a development implementation until these checks pass. Preserve protocol/package identity in records so labels
-cannot silently combine different interventions. Freeze tool versions with the
+a development implementation until these checks pass. Preserve protocol/package
+identity in records so labels cannot silently combine different interventions. Freeze tool versions with the
 validated package, documentation and mutation schedule before creating the sealed
 review manifest.
 
 The precision report uses the fixed allocation and plausible success rates,
-RMSE distributions and within-pair detection associations, including null effects
-and the practical benchmarks. For H3, each condition within a cell rests on four
-mutated reviews split between two reviewers; report the resulting interval widths
-and the frequency of resamples without variation. Report interval widths, empirical interval coverage,
-and probabilities of support, contradiction and unresolved results. If an interval
+WIS distributions and within-pair detection associations, including null effects
+and the practical benchmarks. It covers the H1 conditional bootstrap under sparse
+success and the H3 paired interval under the fixed schedule. Report interval
+widths, empirical interval coverage, and probabilities of support, contradiction
+and unresolved results. If an interval
 procedure fails validation, amend it before registration and retain the validation
 record. Predictions with a low chance of resolution are retained and reported
 with that chance.
@@ -799,12 +853,13 @@ conditional hypotheses. Any adoption changes the protocol prospectively.
 
 ## Reporting, responsibilities and limitations
 
-Publish run allocation and exclusions; execution success; conditional RMSE;
-interval availability, score, width and coverage; human-reviewed implementation
+Publish run allocation and exclusions; execution success; conditional WIS;
+interval availability, width and coverage; human-reviewed implementation
 errors; detector validation; selected tools; code size; review results; and costs.
 Show results by scenario and model, with variant sensitivity alongside canonical
-results. Report variation between the four prompt versions within each cell. Select example trajectories by a fixed rule, such as the median-RMSE
-valid run within each cell, and show failures in the aggregate summaries.
+results. Report variation between the four prompt versions within each cell.
+Select example trajectories by a fixed rule, such as the median-WIS valid run
+within each cell, and show failures in the aggregate summaries.
 
 UKHSA England data may provide a secondary workflow demonstration. It has no
 known true reproduction trajectory and cannot validate recovery. Specify the
@@ -815,13 +870,12 @@ infectious-disease modellers review code independently; a validator who did not
 implement the detectors assesses their accuracy. The mutation coordinator does
 not review samples they prepared. Record disagreements before adjudication and
 use a third reviewer where needed. Apply the recruitment fallback specified above
-and record changes before
-analysing review results. Reviewers use no LLM assistance to
-preserve independence from the evaluated systems.
+and record changes before analysing review results. Reviewers use no LLM
+assistance to preserve independence from the evaluated systems.
 
 Disclose authors' contributions to ComposableTuringIDModels, EpiAware, EpiNow2
-or EpiEstim, funding and research credits. Publish unfavourable and inconclusive results as well as
-successful runs. No patient-level data are used.
+or EpiEstim, funding and research credits. Publish unfavourable and inconclusive
+results as well as successful runs. No patient-level data are used.
 
 The principal limits are the selected models, prompts and epidemic processes;
 the bundled nature of the conditions; dependence on externally supplied delay
