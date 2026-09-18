@@ -8,7 +8,7 @@ Phase 2 is in development. The [analysis plan](analysis_plan.md) is an unregiste
 
 Before confirmatory runs, the plan requires aligning the simulated reproduction number with the estimation target, constraining ascertainment in primary recovery tasks, distinguishing process from observation variation, and freezing independent evaluation data and analysis rules. Existing code and prompts still implement the development design. The plan retains the compact allocation and specifies two hypotheses on probabilistic recovery and valid outputs, with explicit effect benchmarks and inference rules. Additional datasets and a common time cap are optional extensions.
 
-Implementation errors are measured by automated detectors, validated against a single human reviewer on 18 submissions within a 10-hour budget; see the [review protocol](evaluation/review_protocol.md).
+Implementation errors are measured by automated detectors, validated against two independent human reviewers on the same 18 submissions (up to 10 hours each), with inter-rater agreement and an adjudicated consensus; see the [review protocol](evaluation/review_protocol.md).
 
 Phase 1 was not carried through to analysis. Tracked materials remain in git history; its gitignored run outputs were not retained. Phase 2 pilots and reference calibration must be documented as development work preceding registration.
 

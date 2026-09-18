@@ -15,7 +15,7 @@ The study reports observable effects of software scaffolding on the produced cod
 - Four paraphrases per (scenario, condition): slot 01 = LLM-drafted-and-edited by project authors; slots 02–04 = GPT-5, Gemini 2.5 Flash, Sonnet 4.5.
 - Compact allocation per model: 240 canonical runs (4 paraphrases × 5 reruns on one dataset) + 180 sensitivity runs (5 variants incl. canonical × 3 reruns, paraphrase 01). 1260 commercial runs total. Claims are conditional on the frozen datasets.
 - Two hypotheses, `composable` vs `julia`, averaged over six cells (scenarios 2/3 × three commercial models), 97.5% intervals: H1 median weighted interval score (WIS, benchmark **awaiting calibration** under the new generator), H2 valid-output proportion (0.10). Other outcomes are descriptive.
-- Human review budget is **10 hours total**: one reviewer checks 18 submissions against a fixed component checklist to validate `detectors.py`. No reviewability outcome; the mutation catalogue and `mutate.py` are not used.
+- Human review budget is **10 hours per reviewer**: two reviewers independently check the same 18 submissions against a fixed component checklist to validate `detectors.py`, with inter-rater kappa and project-lead adjudication to a consensus. No reviewability outcome; the mutation catalogue and `mutate.py` are not used.
 - Scoring target: **instantaneous Rt**. Agents output nine quantiles per day (`q0.025` … `q0.975`); H1 uses WIS on days 25–125.
 - Confirmatory simulation: daily discrete renewal generator with negative-binomial process noise (size kΛ_d), **not yet implemented**. Sensitivity panel variants: short_gi, long_delay, extreme_dispersion, abrupt_change; strong_dow, high_asc_var, low_dispersion, sinusoidal_rt remain defined.
 - **Development implementation only:** `simulations/generate.jl` is an individual-level branching process whose `true_rt.csv` is a *cohort* Rt, and current prompts ask for median/5%/95% columns and estimated ascertainment. Do not treat these as the confirmatory design.
@@ -25,7 +25,7 @@ The study reports observable effects of software scaffolding on the produced cod
 - Migrate to ComposableTuringIDModels: API docs bundle, references, pinned `evaluation/julia_env/`, harness routing, detectors, `analyse.R` labels.
 - Implement the instantaneous-Rt renewal generator; supply ascertainment information in the primary tasks; switch output spec to quantiles; regenerate truth/data and select unused evaluation seeds.
 - Implement H1/H2 estimands and intervals in `evaluation/analyse.R` (H1 bootstrap conditional on valid-run counts); precision report.
-- Recruit one detector-validation reviewer (not the detector implementer).
+- Recruit two detector-validation reviewers (not the detector implementer).
 - Regenerate stale paraphrases (slots 02–04) once prompts are revised; needs `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`.
 - Raise the Anthropic account spend cap (hit ~$500 during the July adversarial matrix) before launch.
 

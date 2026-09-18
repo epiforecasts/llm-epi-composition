@@ -475,7 +475,7 @@ inference seeds where available.
 | Recovery | Mean of six scenario–model cell median WIS among valid canonical-panel runs; equal weighting of the four prompts within each condition and cell | Weighted interval score on days 25–125 against the instantaneous target | Primary hypothesis H1 |
 | Execution | Mean valid-output proportion across the same six cells and four prompts; all allocated canonical-panel runs | Date and numerical validation, by assigned condition | Primary hypothesis H2; accompanies H1 |
 | Uncertainty and point error | Interval availability among all runs; 50% and 90% coverage, width, WIS components and absolute error of the median among valid runs | Numerical validation and scoring | Secondary estimation |
-| Implementation | Per-component detector flag proportions among runs with reviewable code, with detector accuracy from 18 human-reviewed submissions | Automated detectors, validated by human review | Secondary estimation |
+| Implementation | Per-component detector flag proportions among runs with reviewable code, with detector accuracy from 18 dual-reviewed submissions | Automated detectors, validated by human review | Secondary estimation |
 | Code size and resources | LOC among submitted scripts; time, retries and cost among all runs | Static counts and execution records | Descriptive |
 | Method choice and diagnostics | Tool/method frequencies and diagnostic reporting, with applicable denominators | Code and log review | Descriptive |
 
@@ -549,21 +549,28 @@ recorded explicitly.
 reviewable code. Imports, names or regular-expression matches cannot establish
 semantic correctness, so flags are reported with their measured accuracy.
 
-One infectious-disease modeller who did not implement the detectors reviews 18
-submissions: one randomly selected canonical run with reviewable code per
-scenario–condition–commercial-model cell in scenarios 2 and 3, using a recorded
-seed. For each detector component, the reviewer records **correct**,
-**incorrect**, **absent** or **unclear** on a fixed checklist; open-ended review
-is not required. Review is capped at 30 minutes per submission, giving a
-maximum of 9 hours. Report per-component sensitivity, specificity and raw
-agreement with counts and exact binomial intervals. With 18 submissions these
-intervals are wide; they indicate gross detector failures, not precise accuracy.
-Per-component error estimates remain detector-based.
+Two infectious-disease modellers who did not implement the detectors
+independently review the same 18 submissions: one randomly selected canonical
+run with reviewable code per scenario–condition–commercial-model cell in
+scenarios 2 and 3, using a recorded seed. For each detector component, each
+reviewer records **correct**, **incorrect**, **absent** or **unclear** on a
+fixed checklist; open-ended review is not required. Review is capped at 30
+minutes per submission, giving a maximum of 9 hours per reviewer, within a
+10-hour-per-reviewer budget.
+
+Report raw agreement and Cohen's kappa between the two reviewers per component.
+The project lead adjudicates disagreements to form a consensus rating; record
+both reviewers' initial ratings and the adjudicated consensus separately.
+Compare detector flags against the adjudicated consensus and report
+per-component sensitivity, specificity and raw agreement with counts and exact
+binomial intervals. With 18 submissions these intervals are wide; they indicate
+gross detector failures, not precise accuracy. Per-component error estimates
+remain detector-based.
 
 Purposively selected failed or flagged runs may illustrate failure modes in the
-report, within a total human review budget of 10 hours, and do not enter any
-estimate. Record the language, packages and method of every run from code and
-logs, including scenario 1a estimands, without separate human review.
+report, within the remaining review time, and do not enter any estimate. Record
+the language, packages and method of every run from code and logs, including
+scenario 1a estimands, without separate human review.
 
 ### Code size and diagnostics
 
@@ -696,7 +703,7 @@ The following tasks make those decisions executable:
 | Inventory development use and select evaluation seeds | Project lead | Frozen dataset allocation and record of previous exposure before registration |
 | Implement outcome definitions, contrasts and intervals | Project lead | Updated `evaluation/analyse.R`, synthetic-data checks and reproducible precision report before registration |
 | Check wording, variant parameters and API bundles | Project lead | Frozen prompt/document versions and human audit before registration |
-| Recruit a detector reviewer | Project lead | Name and relevant experience recorded, and the component checklist frozen, before registration |
+| Recruit two detector-validation reviewers | Project lead | Names and relevant experience recorded, and the component checklist frozen, before registration |
 | Verify run isolation and reproducibility records | Project lead | Harness validation, including enforced filesystem restrictions, and pinned environment/model configuration before agent execution |
 | Fix the H1 benchmark | Project lead | Reference WIS under the instantaneous generator on development data, and the agreed absolute or relative benchmark, before registration |
 | Update output specification | Project lead | Quantile columns in prompts, validity checks and `analyse.R` before prompts are frozen |
@@ -741,9 +748,10 @@ UKHSA England data may provide a secondary workflow demonstration. It has no
 known true reproduction trajectory and cannot validate recovery. Specify the
 data version and period; package agreement alone is not evidence of correctness.
 
-Sebastian Funk coordinates simulation, prompts, execution and analysis. One
-infectious-disease modeller who did not implement the detectors reviews the
-detector-validation sample, without LLM assistance.
+Sebastian Funk coordinates simulation, prompts, execution and analysis, and
+adjudicates disagreements between the two detector-validation reviewers. Two
+infectious-disease modellers who did not implement the detectors independently
+review the detector-validation sample, without LLM assistance.
 
 Disclose authors' contributions to ComposableTuringIDModels, EpiAware, EpiNow2
 or EpiEstim, funding and research credits. Publish unfavourable and inconclusive
