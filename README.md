@@ -32,7 +32,8 @@ Execution and fitting diagnostics accompany scores.
 The proposed input-use checks bring machine-only refits to at most 1,360, including
 unchanged repeats and data/delay/GI/ascertainment probes. Their computing feasibility
 and calibration must be established before registration. No-response flags are
-distinct from confirmed scientific errors.
+distinct from confirmed scientific errors. Report response proportions by probe
+and condition with equal task weights and explicit assessability/failure counts.
 
 Two independent modellers directly assess scientific implementation errors in
 18 sampled implementations for omissions and incorrect handling, within ten hours

@@ -121,6 +121,9 @@ by task. The rubric is not restricted to components recognisable by detectors.
   equivalent factor normalisations are acceptable.
 - Distinguish finite delay support, daily interval integration and unobserved
   future reports. They are separate scientific issues.
+- The instantaneous estimand and transmission-date indexing are supplied in the
+  task. That rubric item assesses compliance and correct implementation, rather
+  than spontaneous recognition of the distinction from cohort R or report-date R.
 - Judge recent-date estimates and withholding against information available at
   the observation cut-off. Justified withholding can be scientifically appropriate;
   an unexplained omission cannot. A caveat does not correct estimates presented
@@ -178,12 +181,22 @@ rubric item before examining ratings. Some rubric items may have no detector;
 some targeted checks assess only part of an item. Report these gaps.
 
 The input-use panel includes an unchanged repeat, independent alternative data,
-delay/GI perturbations and time-varying ascertainment perturbations where applicable.
+an exact three-day translation of all delay laws with extended support, GI
+perturbations and time-varying ascertainment perturbations where applicable.
 Its responsive/no-response/indeterminate flags are not defect labels. Delays can
 change without moving R under constant growth, and some ascertainment changes
 cancel from growth ratios. Calibrate on informative references and known ignored
 inputs. Keep initial human ratings blinded to probe results; only compare after
 ratings are frozen. Never count the several refits as independent implementations.
+
+Summarise each input probe by the responsive fraction among assessable checks
+(responsive plus no detectable response), first within task, then with equal
+weights across applicable tasks. Report each condition and their difference, with
+allocated/applicable/executable/assessable counts and indeterminate/failure rates.
+An empty assessable task makes the standardised summary unavailable. Show block
+counts and keep all linked refits together in any clustered uncertainty analysis.
+The unchanged repeat has a separate reproducibility summary. These summaries are
+conditional response measures, distinct from human-confirmed error rates.
 
 Compare automated flags against adjudicated component ratings. Incorrect and
 required-but-absent are defects; correct is no detected defect. Exclude unclear,

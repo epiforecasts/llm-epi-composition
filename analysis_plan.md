@@ -28,34 +28,25 @@ The primary scientific question is: **does access to expert-informed software he
 an agent avoid epidemiological omissions and implementation mistakes when asked to
 assess current instantaneous R from surveillance data?** The practical question is
 what transmission is now, given reports available at the observation cut-off.
-An accurate estimate for an earlier date can be scientifically useful, but its age
-limits the answer to that question. Assess accuracy, uncertainty, recency and
-qualification together. An omission leaves a relevant issue unaddressed;
-an implementation mistake handles it incorrectly. The evaluation assesses both.
-Code and explanations can show that an issue was considered, but cannot establish
-the agent's internal understanding. Correct behaviour may arise through a package
-default without an explicit explanation of the underlying pitfall.
+Report an estimate's age alongside accuracy and uncertainty. An omission leaves a
+relevant issue unaddressed; an implementation mistake handles it incorrectly.
+Assess both from code and explanations, including correct package defaults.
 
 | Objective | Directional hypothesis | Evidence supplied by this design | Limit |
 |---|---|---|---|
 | Determine whether components help agents avoid epidemiological pitfalls | H_E: fewer substantive omissions and implementation errors under `composable` | Direct human review plus executable input-use probes and targeted checks | Human review remains small; calibrated probe evidence covers specific behaviours, not whole-analysis correctness |
 | Assess whether components support informative, appropriately qualified answers about current transmission | Descriptive prediction: better current recovery without unsupported certainty or misleading date claims | All-attempt current/earlier/withheld answer categories, target-date lag, conditional recovery and uncertainty; sampled review of scientific justification | No single accuracy–recency score or additional confirmatory test; earlier and withheld answers leave the current question partly or wholly unanswered |
 | Determine whether components reduce agent effort | H_T: lower total tokens under `composable` | Complete token accounting, including documentation, execution feedback and repairs, for all allocated attempts | Tokens measure agent resource use, not human effort or total computation |
-| Determine whether components improve statistical recovery | H_R: lower interior held-out WIS under `composable` | Technical check of known instantaneous R recovery on unseen data with different transmission trajectories | Conditional on interior estimates; does not establish an ability to answer the current-transmission question |
+| Determine whether components improve statistical recovery | H_R: lower interior held-out WIS under `composable` | Technical check of known instantaneous R recovery on unseen data with different transmission trajectories | Conditional on interior estimates |
 | Assess practical usability and the limits of packaged expertise | No additional confirmatory hypothesis | Execution, diagnostics and error types; smaller unrestricted-choice and fixed-package benchmarks | Tool choice is not randomised within unrestricted runs; unsupported package features need a separate interpretation |
 
 H_T and H_R form the two-contrast confirmatory testing family. H_E is a central
-scientific prediction assessed by direct estimation and explicit uncertainty about
-unreviewed or unresolved code. Its small human sample does not support a precise
-confirmatory claim. Better recovery alone does not demonstrate fewer implementation
-errors. Input-use probes provide panel-wide evidence about selected omissions, with
-their applicability and calibration reported. They do not remove the uncertainty
-about overall error reduction from limited human review. Fewer tokens alone does
-not demonstrate greater efficiency if useful outputs become less frequent or less
-accurate. The formal testing family is narrower than the scientific evaluation:
-current-transmission assessment is central to interpretation, even though its
-recency, availability and conditional accuracy outcomes are descriptive. Interior
-H_R alone cannot support a claim of better assessment of current transmission.
+scientific prediction assessed descriptively through limited human review and
+calibrated probes, with unresolved cases explicit. Assess efficiency jointly with
+useful-output availability and accuracy. Current-transmission assessment is central
+to interpretation; its recency, availability and conditional accuracy outcomes are
+descriptive. Interior H_R alone cannot support a claim of better assessment of
+current transmission.
 
 [Gostic et al., Practical considerations for measuring the effective reproductive
 number](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1008409)
@@ -79,16 +70,13 @@ limits, installation problems and other breakages informed subsequent developmen
 No phase 1 results enter the confirmatory analysis.
 
 Phase 2 development included simulated data, reference calibration, prompt changes
-and agent/harness pilots. A subsequent design expanded conditions, prompts and
-sensitivity runs, with execution and recovery as its formal hypotheses. This
-revision restores errors and token use to the objectives and concentrates the
-allocation on the controlled software comparison.
+and agent/harness pilots. Earlier designs and hypothesis changes remain in git
+history and belong in the development inventory.
 
 The correspondence in `context/s41591-026-04350-5.pdf` motivates safeguards against
-prompt selection, development/evaluation leakage and selective reporting. Retain
+prompt selection, development/evaluation leakage and selective reporting:
 independent prompt checking, wording variation, preregistration, unused evaluation
-data and complete reporting. These safeguards apply to the scientific question;
-they do not require every possible benchmark axis in the main experiment.
+data and complete reporting.
 
 | Concern raised by the correspondence | Safeguard and remaining limit |
 |---|---|
@@ -191,19 +179,18 @@ Unknown ascertainment remains optional: counts alone generally cannot identify b
 infection and ascertainment trajectories, even with several streams. Recognition
 of insufficient information would be an appropriate response in that extension.
 
-The legacy identifiers 1b, 2 and 3 are retained for storage only. In this revision,
-1b no longer requires a renewal model, and 2/3 no longer prescribe a component
-checklist. Record the protocol version so earlier runs cannot be pooled by task
-identifier. A comparison of broad requests with explicit scientific instructions
-would be a separate extension; the previous 1a/1b distinction is not a core axis.
+The legacy identifiers 1b, 2 and 3 are storage labels. Record protocol versions to
+keep runs with earlier scientific instructions separate. Broad versus checklist-based
+requests are an optional extension.
 
-The core has two Claude deployment slots, one Sonnet and one Haiku. As checked on
-2026-10-12, candidate current models are `claude-sonnet-5-5` and `claude-haiku-5-5`.
-The [official lifecycle table](https://platform.claude.com/docs/en/about-claude/model-deprecations)
-also lists Sonnet 4.6 and Haiku 4.5 as active, with earliest retirement dates of
-2027-02-17 and 2026-10-15 respectively. Those are lower bounds, not announced
-retirement appointments. The corresponding bounds for the 5.5 candidates are
-2027-09-28 and 2027-10-07. Record the checked source snapshot.
+The core has two Claude deployment slots, one Sonnet and one Haiku. The proposed
+models are `claude-sonnet-5-5` and `claude-haiku-5-5`. **Haiku 4.5 is excluded from
+the Haiku slot.** As checked on 2026-10-12, the
+[official lifecycle table](https://platform.claude.com/docs/en/about-claude/model-deprecations)
+gives earliest retirement dates of 2027-09-28 and 2027-10-07 for the proposed models.
+Haiku 4.5's 2026-10-15 date is an earliest-retirement bound, not an announced
+retirement date. Record the checked source snapshot. Any other model choice
+requires a prospective protocol amendment and the same lifecycle checks.
 
 Freeze the actual choices after compatible development pilots and an account-level
 availability check. Verify lifecycle coverage for the projected launch/completion
@@ -285,13 +272,13 @@ draws. Here $z=0$ gives a flat tail, $z=1$ a rising tail and $z=-1$ a falling ta
 Draw $z$ independently with probabilities 0.4, 0.3 and 0.3 respectively; report
 realised class counts without redrawing to enforce a balance. Draw all parameters
 independently between generation and held-out phases. Thus a new dataset changes
-both stochastic realisation and transmission trajectory; it is not merely a new
-draw around the same R curve. No trajectory values are given to agents.
+both stochastic realisation and transmission trajectory. No trajectory values
+are given to agents.
 
-The original fixed 0.8–1.5–0.8–0.8 trajectory is retained for development reference
-checks. Its flat final segment tests spurious truncation-induced decline rather
-than response to a new change. The primary family includes both flat and changing
-tails; show recent-date results by tail class descriptively.
+Show recent-date results by flat, rising and falling tail class descriptively.
+A flat tail assesses spurious cut-off effects; changing tails assess response to
+ongoing changes in transmission. Development references also use a fixed
+0.8–1.5–0.8–0.8 trajectory.
 
 | Quantity | Starting specification, subject to development validation |
 |---|---|
@@ -308,13 +295,11 @@ tails; show recent-date results by tail class descriptively.
 | Delay support | Days 0–30, renormalised |
 | Simulation manifest master seed | Proposed 20261012, subject to prior-use audit before registration |
 
-The listed ascertainment curves now give baseline report-date rates on a mean-one
-reporting-factor scale. Their day-to-day variation means a realised weekly average
-need not equal a single day's baseline. Do not label them
-weekday rates or announce a weekend reduction. This changes the development
-observation mean and requires regenerated data and reference calibration; it is
-not a relabelling of existing counts. Accept equivalent parameterisations with
-compensating scale, assessing their implemented product.
+The ascertainment curves give baseline report-date rates on a mean-one
+reporting-factor scale. Their variation means a realised weekly average need not
+equal a single day's baseline. Input metadata specify this scale without labelling
+rates as weekday-specific or announcing a weekend reduction. Assess equivalent
+parameterisations through their implemented product.
 
 The existing continuous-delay PMF integrates over uniform infection time within
 a day:
@@ -332,7 +317,7 @@ For prehistory, solve $1=R(1)\sum_s g_s\exp(-rs)$ and set
 $I_d=\operatorname{round}(1000\exp(rd))$ for days −59 through 0. Include these
 infections in the observation convolution, then simulate the stochastic process
 from day 1. Validate indexing, rounding, a longer prehistory and scoring-window
-stability. The older generator's omitted seed infections are not retained.
+stability.
 
 Before registration, inspect expected and realised case/hospital/death counts by
 time window across the trajectory family, particularly death counts near the
@@ -372,12 +357,10 @@ the scientific specification. References demonstrate feasibility and provide
 performance context; matching their code or assumptions is not the grading rule.
 Use the same supplied information. Keep references inaccessible to agents.
 
-Historical cohort-target calibration, including median RMSE 0.086 and temporal
-coverage 1.00 over 20 replicates, does not establish recovery under this generator.
-Use development data to choose priors and validate inference, interval width,
-coverage, WIS and diagnostics. Record reference pass/fail criteria before the
-validation that determines acceptance. Freeze practical effect benchmarks using
-development results and investigator judgement, before evaluation data are used.
+Choose priors and validate reference inference, interval width, coverage, WIS and
+diagnostics on development data under the instantaneous generator. Prespecify
+reference pass/fail criteria, then validate acceptance. Freeze practical effect
+benchmarks using development results and investigator judgement before evaluation.
 
 The existing short-GI, long-delay, strong-weekly-effect, high-ascertainment-variation,
 low/extreme-dispersion, abrupt-change and sinusoidal-R variants remain candidate
@@ -421,12 +404,10 @@ prospectively, with its reduced coverage stated; never choose which checks to ru
 from evaluation results. Missing executables remain visible in the allocation.
 
 There is one agent attempt per condition–task–model–wording–block combination.
-The design samples epidemic and agent variation together; it does not separately
-estimate within-dataset rerun variance. The effective data replication is ten
-matched blocks, not 240 independent outbreaks. Precision and computing feasibility
-must be checked before registration. Changes to this proposed allocation must be
-prospective and explicit; do not expand axes at the expense of adequate inference
-or unseen-data evaluation without revisiting the objectives.
+Epidemic and agent variation are sampled together, with ten matched outbreak blocks
+as data replication. Within-dataset rerun variance is not separately estimated.
+Validate precision and computing feasibility before registration; allocation changes
+require prospective amendments.
 
 ### Prompt construction
 
@@ -570,9 +551,25 @@ Keep the original recovery result; probe outputs never replace it or enter H_R.
 |---|---|---|
 | Unchanged repeat | Same data, inputs and inference seed | Detect residual numerical variability and non-reproducible execution |
 | Alternative data | Replace observed counts by the block's independently generated diagnostic dataset; external inputs unchanged | Assess dependence on observed data; detect cached or input-independent output |
-| Delay | Increase each supplied infection-to-observation delay mean by three days; SD and support unchanged | Assess use of delay inputs |
+| Delay | Translate every stream's delay distribution by exactly three days, extending daily support from 0–30 to 0–33 | Assess use of delay inputs |
 | GI | Multiply supplied GI mean and SD by 1.5; support unchanged | Assess use of generation-interval inputs |
 | Ascertainment, tasks 2/3 | Replace each supplied ascertainment trajectory by its time average | Assess use of time-varying observation information |
+
+For each stream's primary daily delay PMF $f_{s,e}$, the delay probe defines
+$f^+_{s,e}=f_{s,e-3}$ on days 3–33 and zero elsewhere. It preserves total mass,
+variance and shape, increasing the discrete mean by exactly three days. The input
+interface represents continuous delay laws with a location parameter, zero for
+primary inputs and three days for this probe, with unchanged base log-normal
+parameters and extended support. Validate that applying the frozen daily
+integration and normalisation reproduces the translated PMF. Both conditions
+receive the same continuous-law metadata; no discretisation recipe or supplied
+PMF is added to core prompts. Pilot this parameterised interface in both references.
+
+Away from boundaries, shifting every stream's delays later is compatible with
+infections and instantaneous R moving approximately three days earlier. Use this
+as a directional positive control on changing trajectories; priors, initialisation,
+stochastic inference and constant-growth periods can limit the fitted response.
+Freeze interior comparison windows and tolerances using the independent references.
 
 Compare estimated medians and quantiles over fixed windows and record changes in
 estimate availability separately. Freeze distances, numerical tolerances and
@@ -587,6 +584,28 @@ indeterminate, even if withholding reasons change. Failure of a diagnostic refit
 not failure of the primary fit. Excessive repeat variability also makes sensitivity
 indeterminate under the frozen rule. Preserve denominators for all allocated code,
 executable code and applicable/assessable probes separately.
+
+For each input probe $p$ and condition $c$, report the task-standardised response
+proportion
+
+$$\widehat P_{p,c}=\frac1{|\mathcal T_p|}\sum_{t\in\mathcal T_p}
+\frac{N_{p,c,t}^{\mathrm{responsive}}}{N_{p,c,t}^{\mathrm{assessable}}},$$
+
+where assessable comprises responsive and no-detectable-response checks.
+$\mathcal T_p$ contains all three tasks for alternative-data, delay and GI probes,
+and tasks 2/3 for ascertainment. Pool deployments and wordings within each task;
+report their constituent results and denominator composition. Give each applicable
+task equal weight. Report the `composable` minus `julia` difference for each probe
+descriptively, with no pooled score across probe types or additional confirmatory
+test. A task with no assessable checks makes its standardised summary unavailable.
+
+Alongside each response proportion, report allocated, applicable, executable and
+assessable counts, and no-response, indeterminate and failure proportions among
+all scientifically applicable allocated checks. The unchanged repeat has a separate
+reproducibility/instability summary. Show block-specific counts and preserve whole
+outbreak blocks and all linked refits for any uncertainty estimates, using the
+validated clustered procedure below. Report undefined resamples. These response
+proportions are conditional on assessability and are not scientific-error rates.
 
 No detectable response is evidence to investigate, not universal proof of an
 omission. Delay changes may leave R unchanged during constant growth; GI changes
@@ -613,7 +632,7 @@ full mutation-study allocation remains outside the core.
 | Current-transmission assessment | All allocated attempts: current/earlier/withheld/invalid or absent assessment; headline and latest-estimate lags; day-150 availability, conditional WIS and uncertainty | Central scientific outcomes, descriptive; assess whether the operational question is answered |
 | Recent recovery and withholding | Days 144–150: WIS, uncertainty, estimate availability and withholding reasons; flat/changing-tail results | Essential secondary context for the current assessment, reported together |
 | Scientific omissions and implementation errors | Three randomly sampled reviewable implementations per task–condition cell, 18 dual-reviewed in total | H_E, direct secondary estimation |
-| Input-use probe results | All executable implementations, with applicable and assessable denominators; repeated fits grouped by source and block | Secondary mechanistic evidence for H_E; not whole-code error rates |
+| Input-use probe results | Task-standardised responsive proportion by probe and condition, condition differences and all-attempt assessability/failure counts; refits grouped by source and block | Secondary mechanistic evidence for H_E; not whole-code error rates |
 | Execution, estimate availability and diagnostics | All allocated implementations; generation/refit completion, valid records, estimated/withheld/invalid dates and diagnostics | Essential companion outcomes; recent-date availability always reported |
 | Automated implementation flags | All reviewable implementations; calibration against human review and targeted checks | Secondary, qualified by measurement accuracy |
 | Further resources and method choice | Runtime, evaluator compute, monetary cost, retries, submitted LOC, components and tools used | Descriptive |
@@ -667,20 +686,19 @@ Classify each primary held-out assessment using the frozen output contract:
 Report category proportions for every assigned condition with all allocated slots
 in the denominator, by task/deployment/wording and overall with equal cell weights.
 Categories describe the submitted answer; scientific adequacy is assessed separately.
-Reporting current R with wide, appropriate uncertainty can be defensible. A clearly
-dated earlier estimate can also be defensible, while providing limited information
-about now. A justified withheld answer leaves the operational question unanswered.
-Neither an earlier nor a withheld answer is automatically an implementation error.
+Appropriate uncertainty and justified withholding are assessed in the sampled
+review. Clearly dated earlier estimates and justified withholding can be
+scientifically defensible; neither is automatically an implementation error.
 Presenting an earlier estimate as current is a substantive scientific error.
 
 Report day-150 estimate availability independently of the headline category: a
 trajectory may contain a current estimate while its summary chooses an earlier
 one. For valid day-150 estimates, report WIS, median absolute error, interval width,
 50%/90% coverage and non-degenerate uncertainty availability, with denominators.
-Show all-attempt availability beside conditional accuracy; neither alone establishes
-a useful current assessment. Use the same rules for point-only submissions as
-below. Where development establishes a meaningful day-150 recovery threshold,
-freeze it and report the all-attempt proportion with both a valid current estimate
+Show all-attempt availability beside conditional accuracy. Use the same rules for
+point-only submissions as below. Where development establishes a meaningful
+day-150 recovery threshold, freeze it and report the all-attempt proportion with
+both a valid current estimate
 and that threshold as a secondary joint outcome, without calling it proof of
 scientific correctness.
 
@@ -694,11 +712,6 @@ current/recent outcomes for flat, rising and falling tails,
 retaining realised category counts. Use sampled review to assess date claims,
 uncertainty handling and the justification of withholding within the existing
 rubric and time caps. Automated validity does not certify those judgements.
-
-Do not collapse accuracy, uncertainty and recency into a scalar ranking in this
-design. Report them together with explanations and all-attempt denominators.
-This preserves the practical distinction between estimating now, estimating an
-earlier date and declining to estimate, without rewarding unsupported confidence.
 
 ### Execution, recovery and uncertainty
 
@@ -771,58 +784,50 @@ record language/framework experience and relevant package contributions.
 
 Randomly sample three reviewable implementations from each task–condition cell,
 across both deployments, wordings and all blocks, after generation is complete.
-Reviewability means source sufficient to attempt the rubric; executable or valid
-output is not required. Preserve sampling probabilities and seed. If fewer than
-three are available in a cell, review all and report the shortfall. Do not replace
-failed submissions with successful ones. Report the fraction with no reviewable
-code among all allocated slots separately.
+Reviewability means source sufficient to attempt the rubric, including failed
+implementations. Preserve sampling probabilities and seed. Review all if fewer
+than three are available in a cell; report shortfalls and unreviewable-source counts.
 
 Use a frozen Gostic-informed rubric for the R estimand, GI handling, reporting
 delays, daily aggregation/support, initialisation, right truncation near the cut-off,
 weekly variation, supplied report-date ascertainment, process/observation variation
 and use of multiple streams. Assess both omission and incorrect handling. Include
 the method notes, current-assessment dates/explanation and any withholding reasons.
-Assess whether an earlier estimate is clearly dated or misleadingly presented as
-current, alongside handling of incomplete recent observations. A named renewal
-model, explicit convolution, particular likelihood or shared-latent architecture is not universally
-required; assess scientific adequacy for the target and available data. Accept
-defensible alternatives, including justified withholding of unreliable recent
-estimates. A caveat does not repair biased estimates that are still presented as
-reliable. Separate scientific defects from instruction violations and uncertain
-adequacy. Reviewers can flag substantive errors outside the listed components.
+The instantaneous estimand and transmission-date indexing are explicitly supplied;
+that rubric item assesses compliance and implementation, not spontaneous recognition
+of the distinction from cohort R or report-date R.
+Assess date claims and handling of incomplete recent observations. Accept
+scientifically defensible alternatives and justified withholding, evaluating the
+implemented model for its target and inputs. Separate scientific defects,
+instruction violations and uncertain adequacy; additional substantive defects can
+be recorded outside the rubric.
 
-For identified defects, record whether the issue was left unaddressed, addressed
-incorrectly, or cannot be classified, with evidence from source and notes. These are
-observable descriptions, not claims about internal reasoning. Recognising an issue
-in prose does not establish that the code handles it, and a correct package default
-can handle it without an accompanying explanation.
+For defects, record unaddressed, addressed incorrectly or unclassifiable, with source
+and note evidence. These describe observable behaviour, not internal understanding.
+Prose acknowledgements and implemented handling are assessed separately; correct
+package defaults count even without an explanation.
 
 Use task-specific caps of 20 minutes for 1b, 30 for 2 and 40 for 3. Six submissions
 per task take at most 120+180+240=540 minutes, leaving one hour per reviewer for
-briefing and rubric familiarisation within ten hours. A time-limited or unclear assessment
-cannot count as error-free. Conceal agent model, run identity, scores, truth,
-detector outputs and the other reviewer's ratings; package identity may be obvious.
-Retain independent ratings and a separately recorded project-lead adjudication.
-Record adjudication time separately; it is additional to the reviewer budget.
-See [the review protocol](evaluation/review_protocol.md) for operational rules.
+briefing and familiarisation within ten hours. Time-limited or unclear assessments
+with no confirmed defect remain unresolved. Mask agent/run identity, truth, scores,
+detector/probe flags and other ratings; package identity may be apparent. Preserve independent ratings and
+project-lead adjudication, with adjudication time recorded outside this budget.
+The [review protocol](evaluation/review_protocol.md) specifies operational rules.
 
 Report confirmed substantive-error counts, no-error-found and unresolved counts,
 per component and overall, by condition and task. Standardise to equal task weights
-for a pooled descriptive contrast, accounting for the stratified sample. The
-condition sample is at most nine implementations: show sampling fractions and
-unresolved-case bounds, and do not claim precision from counting components or
-reviewers as independent implementations. No-error-found means the assessed
-components passed this limited review, not that the code is certified correct.
+for a pooled descriptive contrast, accounting for the stratified sample. Show
+sampling fractions and unresolved-case bounds for at most nine implementations
+per condition; components and reviewers are correlated observations. No-error-found
+is limited to assessed components.
 
 Freeze targeted numerical and static checks using independent references and known
 mistakes, including omitted delays, incorrect daily probabilities and boundary
-indexing. Keep checks hidden from agents. A failed targeted check is evidence about
-that check; successful checks do not certify a whole model. Existing detectors need
-adaptation and calibration. Report their flag rates separately from human-confirmed
-error rates. Agreement, sensitivity and specificity use raw counts with unclear
-cases excluded and reported; with few reviewed defects, calibration is descriptive.
-Do not extrapolate detector-based error reduction as confirmed scientific benefit
-when calibration is weak. The mutation catalogue is not part of the core allocation.
+indexing. Keep checks hidden from agents and calibrate adapted detectors. Report
+flag rates separately from confirmed errors. Agreement, sensitivity and specificity
+use raw counts, with unclear cases excluded and reported; calibration is descriptive.
+The core excludes the full mutation catalogue.
 
 Freeze materiality rules by rubric item, separating wrong scientific meaning from
 negligible numerical approximations. For discretisation, tail truncation and weekly
@@ -858,15 +863,12 @@ $$D_{T,b}=\frac1{12}\sum_{t,m,p}(T_{j,btmp}-T_{c,btmp}),\qquad
 \widehat\Delta_T=\frac1{10}\sum_bD_{T,b}.$$
 
 There are twelve task–deployment–wording pairs per block, and every allocated slot
-contributes. This equals the previously specified equally weighted token contrast.
-Report all ten block differences. Paired-block interval candidates must pass the
-precision/coverage checks below; arithmetic averaging alone does not make them exact.
+contributes. Report all ten block differences. Paired-block interval candidates
+must pass the precision/coverage checks below.
 
-H_R remains a conditional recovery estimand. Requiring interior estimates removes
-selection on recent withholding, but execution failure and interior withholding
-remain. Replacing cell medians with per-block means would not create missing WIS
-values or remove that selection. Retain the stated six-cell estimand; matched
-complete-output comparisons are secondary and report their selected population.
+H_R is the stated six-cell conditional recovery estimand, with selection through
+execution and availability of interior estimates. Matched complete-output
+comparisons are secondary and report their selected population.
 
 Preserve matching when estimating uncertainty. A candidate procedure resamples
 the ten outbreak blocks with replacement, keeping all datasets, all conditions,
@@ -876,30 +878,18 @@ do not condition on fixed success counts or resample days as independent units.
 An empty recovery cell in a bootstrap draw makes that draw undefined. Record this
 frequency; do not silently discard such draws or renormalise cells.
 
-A ten-block sign-flip test has two-sided resolution $2/2^{10}$, but exactness needs
-the relevant sign-exchangeability or an appropriate randomised assignment under a
-sharp null. A zero average condition effect alone does not imply this, especially
-with heterogeneous effects or outcome-dependent eligibility. Random scheduling
-does not supply the missing assumption. See
-[Winkler et al. on permutation and sign-flip assumptions](https://pmc.ncbi.nlm.nih.gov/articles/PMC4010955/).
-Do not substitute a sign-flip p-value for the stated mean-effect interval merely
-because its minimum attainable p-value is small. Any adoption must specify its
-null, assignment mechanism and interpretation before registration.
-
 Ten blocks, sparse successes and heavy-tailed tokens may make this bootstrap
 inadequate. Before registration, validate interval coverage and precision under
 nulls, plausible effects, dependence and sparse-success settings, including
 undefined draws. Freeze the final interval construction and its failure rules
 only after these checks. If no procedure supports the advertised coverage at this
 allocation, amend the allocation or label the affected contrast estimation-only
-before evaluation starts. The current draft does not claim that percentile
-bootstrap intervals have already passed validation.
+before evaluation starts. Interval validation remains outstanding.
 
 Report constituent task/deployment/wording results and resource distributions.
 A resource saving accompanied by worse recovery or execution is a trade-off.
-Interior WIS improvement alone supports retrospective recovery, not an improved
-answer about current transmission. Interpret that claim using current/recent
-availability, accuracy, uncertainty, lag and sampled scientific review together.
+Interpret current-transmission performance using availability, accuracy, uncertainty,
+lag and sampled scientific review together.
 Lower WIS with unchanged direct error evidence supports a recovery benefit;
 it does not establish the proposed error-prevention mechanism. H_E remains
 uncertain when limited review cannot resolve it, even if H_T and H_R are supported.
@@ -913,7 +903,6 @@ reported checks, not evidence that fitting passed them.
 
 ## Secondary benchmarks and extensions
 
-These answer practical questions and do not dilute the controlled core contrast.
 Before any extension runs, freeze its task subset, agent deployment, prompt,
 seeds, sample size, resources and analysis. No secondary run count is committed
 by the 240-run core allocation.
@@ -957,11 +946,11 @@ an optimal level of software flexibility or the best use of expert time.
 | Validate scientific specification | Independent trajectory family draws; instantaneous generator; proposed 1,000/day initial level and prehistory; stream-count/extinction checks; mean-one weekly factors and supplied ascertainment scale; scoring boundaries |
 | Validate independent references | Julia/Turing and composable models with the same inputs, calibration criteria, inference diagnostics and development report |
 | Separate development and evaluation | Prior-use audit of proposed master seed and distinct generation/held-out/diagnostic manifests; hashes and block allocation |
-| Update prompts and code contract | Twelve broad current-R requests without methodological checklists; independent neutrality/equivalence audit; quantiles, withholding statuses/reasons, dated current-assessment summaries and method notes; parameterised refit pilot |
+| Update prompts and code contract | Twelve broad current-R requests without methodological checklists; independent neutrality/equivalence audit; quantiles, withholding statuses/reasons, dated current-assessment summaries and method notes; parameterised refit pilot including delay location/support |
 | Implement allocation and isolation | Drivers for ten blocks and both phases; tested filesystem/network restrictions; allowed-package enforcement; no truth or reference access |
 | Stabilise execution | Preinstalled environments, resource/cache policy, adequate computation, fixed session/retry limits and blinded infrastructure-rerun rule |
 | Reconcile usage records | Complete per-call token telemetry, cache/reasoning accounting, deduplication, failed-run totals and monetary/compute accounting |
-| Implement and validate analysis | `evaluation/analyse.R` with interior H_R, all-attempt current/earlier/withheld categories, both lags, day-150 and recent recovery/uncertainty/availability, explicit block-level H_T, both token totals and cap-hit rates; clustered intervals and precision report under selection/failure |
+| Implement and validate analysis | `evaluation/analyse.R` with interior H_R, all-attempt current/earlier/withheld categories, both lags, day-150 and recent recovery/uncertainty/availability, task-standardised probe response proportions, explicit block-level H_T, both token totals and cap-hit rates; clustered intervals and precision report under selection/failure |
 | Freeze error assessment | Two reviewers with 20/30/40-minute task caps; Gostic-informed omission/error rubric, materiality table, accepted weekly-smoothing example and sampling; hidden checks and calibrated input probes with false-positive controls |
 | Agree practical effect benchmarks | Development-based recovery threshold and token-saving benchmark with rationale, before evaluation data or results are inspected |
 
@@ -970,11 +959,10 @@ reference checker provide recorded checks outside their own authorship where
 possible. Recruit reviewers before freezing the rubric. Registration records
 names, roles, package contributions and outstanding conflicts of interest.
 
-This document remains the authoritative plan. Existing tools are development
-implementations until they pass the above checks. In particular, the current
-`evaluation/analyse.R`, detectors and drivers do not become compliant merely
-because the plan has changed. Record prospective amendments in this file and
-preserve earlier versions in git history.
+This document remains authoritative. Existing tools, including
+`evaluation/analyse.R`, detectors and drivers, remain development implementations
+until they pass these checks. Record prospective amendments here; git history
+preserves earlier versions.
 
 ## Reporting and limits
 

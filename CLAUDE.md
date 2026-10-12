@@ -29,7 +29,7 @@ identify retrieval versus composition, or the best use of live human supervision
   to the 2/3 generator; agents choose its handling. Legacy task IDs do not imply
   the old scientific instructions. Track protocol versions explicitly.
 - Proposed allocation: 2 conditions × 3 tasks × 2 deployments (Sonnet/Haiku,
-  candidate 5.5 versions, exact choices and lifecycle coverage to freeze) × 2
+  proposed 5.5 versions; Haiku 4.5 excluded; lifecycle coverage to freeze) × 2
   wordings × 10 outbreak blocks = 240 agent runs. Generation and held-out data
   have independently drawn R trajectories. A third dataset supports data-use checks.
   There are 240 primary refits and up to 1,120 additional repeat/probe refits, whose
@@ -47,9 +47,8 @@ identify retrieval versus composition, or the best use of live human supervision
   Interior H_R alone cannot establish better current assessment. Recent days
   144–150 and withholding do not determine H_R eligibility. Execution failures and
   interior withholding still cause selection. These are the two confirmatory
-  contrasts. Clustered interval coverage requires validation; sign-flip exactness
-  is not implied by a zero mean contrast or by random scheduling. Do not reuse the
-  previous fixed-dataset bootstrap or Hoeffding interval.
+  contrasts. Clustered intervals require validation under ten blocks, heavy-tailed
+  tokens and sparse recovery eligibility, including undefined resamples.
 - H_E: fewer substantive omissions and implementation errors, assessed directly
   by two modellers reviewing the same 18 randomly sampled implementations (three per task–condition
   cell). Budget: 10 hours each, using 20/30/40-minute caps for tasks 1b/2/3 plus
@@ -57,8 +56,13 @@ identify retrieval versus composition, or the best use of live human supervision
   explicit; detector calibration is a second use.
   Gostic informs the hidden rubric; correct package defaults and defensible methods
   need no named adjustment. Review method notes and justification of withholding.
+  The supplied estimand/date definition is assessed for compliance, rather than
+  spontaneous recognition of that distinction.
   Input-use probes support selected omission checks but unchanged estimates are
   not universally proof of non-use. Freeze materiality rules and examples first.
+  The delay probe translates all delay laws exactly three days, extending support
+  to 0–33 via the location parameter. Summarise response proportions by probe and
+  condition with equal task weights, assessability/failure counts and block grouping.
 - `no-spec`, EpiNow2, Gostic guidance, explicit scientific checklists, other
   deployments and stress panels are secondary extensions with prospective
   allocation. Unsupported package features are coverage limits; do not silently
@@ -93,7 +97,8 @@ See the plan's work table for the full requirements. In particular:
   isolated execution and infrastructure-rerun rules in the drivers.
 - Reconcile per-call token records, including caching, reasoning and resumed
   sessions; implement the token and held-out recovery analyses in `analyse.R`,
-  including current-assessment categories, recency and conditional day-150 scores.
+  including current-assessment categories, recency, conditional day-150 scores and
+  task-standardised probe response summaries.
 - Validate clustered interval coverage and precision at ten blocks, handle sparse
   successes explicitly, and agree practical effect benchmarks on development data.
 - Recruit two scientific reviewers and freeze the omission/error rubric, sampling and targeted
