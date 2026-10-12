@@ -1,34 +1,74 @@
 # LLM Epidemiological Code Composition
 
-How do unrestricted tool choice, Julia with Turing, and Julia with ComposableTuringIDModels.jl compare in statistical performance, implementation errors and execution success when LLM agents generate epidemic model code?
+Do validated epidemiological modelling components help AI agents avoid the
+methodological pitfalls of estimating transmission, while using fewer tokens?
 
 ## Status
 
-Phase 2 is in development. The [analysis plan](analysis_plan.md) is an unregistered draft. It compares unrestricted tool choice, Julia with Turing, and Julia with [ComposableTuringIDModels.jl](https://composableturingidmodels.epiaware.org/dev/) across four epidemiological tasks. The new `composable` condition replaces EpiAware in the planned study; existing `epiaware` prompts, references and harness settings still need migration and validation. Legacy development runs retain their original identity.
+The [analysis plan](analysis_plan.md) is an unregistered draft, revised on
+2026-10-12. It tests one way of supplying human expertise to AI: reusable modelling
+components. The controlled core compares Julia/Turing with Julia/Turing plus
+[ComposableTuringIDModels.jl](https://composableturingidmodels.epiaware.org/dev/),
+using three tasks spanning simple cases, richer case observations and multiple
+surveillance streams. Agents receive broad requests to assess current instantaneous
+R and provide its trajectory, uncertainty and limitations, with data and external
+inputs, and choose the scientific analysis. Gostic's
+practical considerations inform the hidden evaluation rubric; core prompts do
+not prescribe delay adjustments, likelihoods or a renewal model.
 
-Before confirmatory runs, the plan requires aligning the simulated reproduction number with the estimation target, constraining ascertainment in primary recovery tasks, distinguishing process from observation variation, and freezing independent evaluation data and analysis rules. Existing code and prompts still implement the development design. The plan retains the compact allocation and specifies two hypotheses on probabilistic recovery and valid outputs, with explicit effect benchmarks and inference rules. Additional datasets and a common time cap are optional extensions.
+The proposed allocation is 240 code-generation runs: two software conditions,
+three tasks, two agent deployments, two prompt wordings and ten independent
+outbreak blocks. Each block has separate generation and unseen evaluation data.
+Frozen code is refitted on unseen data with independently drawn transmission
+trajectories, in clean directories without cached fitted results. Total agent
+tokens and held-out weighted interval score are the two confirmatory outcomes.
+H_R scores interior days 25–125 as a technical recovery check. The central practical
+question is what R is now, at the observation cut-off. Report current, explicitly
+dated earlier and withheld assessments across all attempts, alongside current/recent
+recovery, uncertainty, availability and estimate age. These scientific outcomes
+are descriptive; interior recovery alone cannot establish better current assessment.
+Execution and fitting diagnostics accompany scores.
 
-Implementation errors are measured by automated detectors, validated against two independent human reviewers on the same 18 submissions (up to 10 hours each), with inter-rater agreement and an adjudicated consensus; see the [review protocol](evaluation/review_protocol.md).
+The proposed input-use checks bring machine-only refits to at most 1,360, including
+unchanged repeats and data/delay/GI/ascertainment probes. Their computing feasibility
+and calibration must be established before registration. No-response flags are
+distinct from confirmed scientific errors.
 
-Phase 1 was not carried through to analysis. Tracked materials remain in git history; its gitignored run outputs were not retained. Phase 2 pilots and reference calibration must be documented as development work preceding registration.
+Two independent modellers directly assess scientific implementation errors in
+18 sampled implementations for omissions and incorrect handling, within ten hours
+per reviewer, using task caps of 20/30/40 minutes. The same reviews also calibrate
+automated checks; the small sample permits a coarse error comparison.
+See the [review protocol](evaluation/review_protocol.md). Smaller unrestricted
+choice, EpiNow2 and supplied-Gostic-guidance benchmarks are secondary and require
+prospective allocation and compatibility checks.
+
+Existing code and prompts still implement parts of the development design.
+Registration requires a validated instantaneous-R generator, known ascertainment
+inputs, pinned and preinstalled environments, isolated agent execution, the
+frozen-code refit interface, complete token accounting and validated analysis.
+Migration from EpiAware remains pending. Legacy `epiaware` runs keep their identity.
+
+Phase 1 was not carried through to analysis. Tracked materials remain in git
+history; its gitignored outputs were not retained. Phase 2 pilots and reference
+calibration must be documented as development work preceding registration.
 
 ## Repository layout
 
 ```
-analysis_plan.md                 # Analysis protocol (unregistered draft)
-data/                            # Real data (retained as secondary realism check)
+analysis_plan.md                 # Authoritative analysis plan (unregistered draft)
+data/                            # Real data for a possible secondary demonstration
 evaluation/
-  run_agentic.sh                 # Agentic run harness (Claude Code CLI)
-  detectors.py                   # Automated component-correctness detectors
-  mutation_catalogue.md          # Injected-defect catalogue (not used in current design)
-  review_protocol.md             # Detector validation review protocol
-  generate_paraphrases.py        # LLM paraphrase generation for slots 02–04
-prompts/                         # Base prompts (slot 01) and paraphrases; API docs bundles
-reference_solutions/             # Development references; EpiAware migration pending
-runs/                            # Per-run output directories (agent code, conversation, metadata)
+  run_agentic.sh                 # Development agent harness (Claude Code CLI)
+  detectors.py                   # Automated component flags; adaptation pending
+  mutation_catalogue.md          # Injected-defect catalogue; outside the core
+  review_protocol.md             # Direct scientific error review and calibration
+  generate_paraphrases.py        # Development paraphrase generator
+prompts/                         # Prompts and API bundles; revision pending
+reference_solutions/             # Development references; migration pending
+runs/                            # Code, conversations, outputs and metadata
 scripts/                         # Data download and utilities
-setup/                           # Language environment setup (R, Python, Julia)
-simulations/                     # DGP variants with truth/ and data/ subdirs
+setup/                           # Language environment setup
+simulations/                     # Development generator and data/truth directories
 ```
 
 ## Licence
