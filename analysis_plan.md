@@ -188,8 +188,7 @@ models are `claude-sonnet-5-5` and `claude-haiku-5-5`. **Haiku 4.5 is excluded f
 the Haiku slot.** As checked on 2026-10-12, the
 [official lifecycle table](https://platform.claude.com/docs/en/about-claude/model-deprecations)
 gives earliest retirement dates of 2027-09-28 and 2027-10-07 for the proposed models.
-Haiku 4.5's 2026-10-15 date is an earliest-retirement bound, not an announced
-retirement date. Record the checked source snapshot. Any other model choice
+Record the checked source snapshot. Any other model choice
 requires a prospective protocol amendment and the same lifecycle checks.
 
 Freeze the actual choices after compatible development pilots and an account-level
@@ -496,6 +495,11 @@ restrictions, including access to unapproved domain packages, before launch.
 Require a documented script entry point accepting observed data, supplied
 scientific configuration, inference seed and output directory. It must run ordinary
 inference for that task without editing source or requesting agent assistance.
+The agent-facing contract states that any supplied configuration value may change
+on refit within the published schema and task, including delay location and support.
+Read values from the supplied configuration on every refit; only fields explicitly
+declared invariant may be fixed in source. Define each field's meaning and allowed
+range without disclosing probe values or expected responses.
 Validate this interface on development references before freezing prompts.
 
 After generation, freeze source and inference settings and hash the artefacts.
@@ -563,7 +567,18 @@ primary inputs and three days for this probe, with unchanged base log-normal
 parameters and extended support. Validate that applying the frozen daily
 integration and normalisation reproduces the translated PMF. Both conditions
 receive the same continuous-law metadata; no discretisation recipe or supplied
-PMF is added to core prompts. Pilot this parameterised interface in both references.
+PMF is added to core prompts. Pilot this parameterised interface in both references,
+including how the pinned package or custom components implement the location.
+
+Record delay-location/support handling separately as supported, unsupported or
+unresolved, using frozen static data-flow or executable provenance checks. Confirmed
+non-handling is an **interface failure**, not a no-response result or evidence that
+baseline delays were ignored. Unresolved handling makes this probe indeterminate.
+A field-name search or evidence that a value was read is insufficient to establish
+its use in the delay calculation; trace forwarded configuration through package
+calls where needed. Validate these checks on development examples with correct,
+ignored and indirectly forwarded location values. Remaining uncertainty stays
+unresolved, without increasing the human-review sample or time caps.
 
 Away from boundaries, shifting every stream's delays later is compatible with
 infections and instantaneous R moving approximately three days earlier. Use this
@@ -578,10 +593,11 @@ ignored-input controls. Validate positive controls on trajectories where the
 input change is expected to matter; an unchanged repeat alone does not estimate
 all Monte Carlo uncertainty. Do not choose thresholds from agent-condition results.
 
-Classify each check as responsive, no detectable response, indeterminate, execution
-failure or not applicable. With no comparable estimates, numerical sensitivity is
-indeterminate, even if withholding reasons change. Failure of a diagnostic refit is
-not failure of the primary fit. Excessive repeat variability also makes sensitivity
+Classify each check as responsive, no detectable response, indeterminate, interface
+failure, execution failure or not applicable. With no comparable estimates,
+numerical sensitivity is indeterminate, even if withholding reasons change.
+Failure of a diagnostic refit is not failure of the primary fit. Excessive repeat
+variability also makes sensitivity
 indeterminate under the frozen rule. Preserve denominators for all allocated code,
 executable code and applicable/assessable probes separately.
 
@@ -600,9 +616,10 @@ descriptively, with no pooled score across probe types or additional confirmator
 test. A task with no assessable checks makes its standardised summary unavailable.
 
 Alongside each response proportion, report allocated, applicable, executable and
-assessable counts, and no-response, indeterminate and failure proportions among
-all scientifically applicable allocated checks. The unchanged repeat has a separate
-reproducibility/instability summary. Show block-specific counts and preserve whole
+assessable counts, and no-response, indeterminate, interface-failure and
+execution-failure proportions among all scientifically applicable allocated checks.
+The unchanged repeat has a separate reproducibility/instability summary.
+Show block-specific counts and preserve whole
 outbreak blocks and all linked refits for any uncertainty estimates, using the
 validated clustered procedure below. Report undefined resamples. These response
 proportions are conditional on assessability and are not scientific-error rates.
@@ -811,8 +828,9 @@ Use task-specific caps of 20 minutes for 1b, 30 for 2 and 40 for 3. Six submissi
 per task take at most 120+180+240=540 minutes, leaving one hour per reviewer for
 briefing and familiarisation within ten hours. Time-limited or unclear assessments
 with no confirmed defect remain unresolved. Mask agent/run identity, truth, scores,
-detector/probe flags and other ratings; package identity may be apparent. Preserve independent ratings and
-project-lead adjudication, with adjudication time recorded outside this budget.
+detector/probe flags and other ratings; package identity may be apparent. Preserve
+independent ratings and project-lead adjudication, with adjudication time recorded
+outside this budget.
 The [review protocol](evaluation/review_protocol.md) specifies operational rules.
 
 Report confirmed substantive-error counts, no-error-found and unresolved counts,
@@ -951,7 +969,7 @@ an optimal level of software flexibility or the best use of expert time.
 | Stabilise execution | Preinstalled environments, resource/cache policy, adequate computation, fixed session/retry limits and blinded infrastructure-rerun rule |
 | Reconcile usage records | Complete per-call token telemetry, cache/reasoning accounting, deduplication, failed-run totals and monetary/compute accounting |
 | Implement and validate analysis | `evaluation/analyse.R` with interior H_R, all-attempt current/earlier/withheld categories, both lags, day-150 and recent recovery/uncertainty/availability, task-standardised probe response proportions, explicit block-level H_T, both token totals and cap-hit rates; clustered intervals and precision report under selection/failure |
-| Freeze error assessment | Two reviewers with 20/30/40-minute task caps; Gostic-informed omission/error rubric, materiality table, accepted weekly-smoothing example and sampling; hidden checks and calibrated input probes with false-positive controls |
+| Freeze error assessment | Two reviewers with 20/30/40-minute task caps; Gostic-informed omission/error rubric, materiality table, accepted weekly-smoothing example and sampling; hidden checks and calibrated input probes with false-positive controls; validated delay-interface checks and separate failure classification |
 | Agree practical effect benchmarks | Development-based recovery threshold and token-saving benchmark with rationale, before evaluation data or results are inspected |
 
 The project lead coordinates these tasks; the documentation auditor and independent

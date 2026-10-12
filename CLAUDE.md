@@ -61,7 +61,11 @@ identify retrieval versus composition, or the best use of live human supervision
   Input-use probes support selected omission checks but unchanged estimates are
   not universally proof of non-use. Freeze materiality rules and examples first.
   The delay probe translates all delay laws exactly three days, extending support
-  to 0–33 via the location parameter. Summarise response proportions by probe and
+  to 0–33 via the location parameter. The refit contract permits all supplied fields
+  to change; confirmed non-handling of location/support is a separate interface
+  failure, unresolved handling is indeterminate, and neither establishes omission
+  of baseline delays. Validate static/provenance checks without extra human review.
+  Summarise response proportions by probe and
   condition with equal task weights, assessability/failure counts and block grouping.
 - `no-spec`, EpiNow2, Gostic guidance, explicit scientific checklists, other
   deployments and stress panels are secondary extensions with prospective

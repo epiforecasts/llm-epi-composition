@@ -198,6 +198,15 @@ counts and keep all linked refits together in any clustered uncertainty analysis
 The unchanged repeat has a separate reproducibility summary. These summaries are
 conditional response measures, distinct from human-confirmed error rates.
 
+The refit contract permits changes to every supplied configuration field, including
+delay location and support. Confirmed non-handling of those fields is an interface
+failure, excluded from assessable response denominators and reported separately
+from execution failure. Unresolved handling makes the delay probe indeterminate.
+Frozen static/provenance checks require data-flow evidence; merely reading the
+field or finding its name does not establish use. An interface failure does not
+show that baseline delays were omitted. Human judgements about baseline scientific
+adequacy remain within the existing sample and task caps.
+
 Compare automated flags against adjudicated component ratings. Incorrect and
 required-but-absent are defects; correct is no detected defect. Exclude unclear,
 not applicable and unassessed rows and report their counts. Show true/false
