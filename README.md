@@ -44,6 +44,10 @@ choice, EpiNow2 and supplied-Gostic-guidance benchmarks are secondary and requir
 prospective allocation and compatibility checks.
 
 Existing code and prompts still implement parts of the development design.
+The instantaneous renewal generator is implemented for development in
+[simulations/renewal.jl](simulations/renewal.jl). It creates separate generation,
+held-out and diagnostic datasets with task-specific inputs and concealed truth.
+The legacy cohort generator and datasets retain their identity.
 Registration requires a validated instantaneous-R generator, known ascertainment
 inputs, pinned and preinstalled environments, isolated agent execution, the
 frozen-code refit interface, complete token accounting and validated analysis.
@@ -52,6 +56,29 @@ Migration from EpiAware remains pending. Legacy `epiaware` runs keep their ident
 Phase 1 was not carried through to analysis. Tracked materials remain in git
 history; its gitignored outputs were not retained. Phase 2 pilots and reference
 calibration must be documented as development work preceding registration.
+
+## Generator development
+
+Use the pinned simulation environment. A project-local depot keeps dependency
+installation and compilation within this checkout:
+
+```sh
+export JULIA_DEPOT_PATH="$PWD/.julia_depot"
+julia --project=simulations -e 'using Pkg; Pkg.instantiate()'
+julia --project=simulations simulations/test/runtests.jl
+julia --project=simulations simulations/generate.jl --development simulations/development-renewal/pilot 2026101201 10
+julia --project=simulations simulations/validate_generator.jl simulations/development-renewal/validation 2026101203 100
+```
+
+Outputs are development artefacts and refuse overwriting existing directories.
+The generator records separate seeds for trajectories, infections and observation
+streams, the Julia/RNG version and source hashes. Agent inputs live under each
+task's `data/` directory; latent truth and numerical discretisations live outside
+it. The validation command reports stream counts, zero-count frequencies and
+longer-prehistory checks. These checks precede reference fitting and interval
+validation; they do not establish inferential calibration.
+The [development record](simulations/development_validation.json) contains the
+143-assertion test result, 300-dataset count summaries, seeds and source hashes.
 
 ## Repository layout
 

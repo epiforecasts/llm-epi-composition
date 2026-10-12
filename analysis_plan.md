@@ -73,6 +73,12 @@ Phase 2 development included simulated data, reference calibration, prompt chang
 and agent/harness pilots. Earlier designs and hypothesis changes remain in git
 history and belong in the development inventory.
 
+Generator development on 2026-10-12 passed 143 structural assertions and a
+300-dataset stream-count/prehistory check. Ten pilot blocks used master seed
+2026101201; 100 count-validation blocks used 2026101203. Test seeds and source
+hashes are recorded in [the development record](simulations/development_validation.json).
+These are development data; reference recovery and interval validation remain pending.
+
 The correspondence in `context/s41591-026-04350-5.pdf` motivates safeguards against
 prompt selection, development/evaluation leakage and selective reporting:
 independent prompt checking, wording variation, preregistration, unused evaluation
@@ -205,10 +211,12 @@ optional secondary comparisons, with cross-harness differences reported.
 
 ### Reproduction-number target and infection process
 
-The current `simulations/generate.jl` is an individual-level branching process.
-Expected offspring are assigned at the parent's infection time. Its saved
-trajectory is therefore a cohort reproduction number. It is a development
-implementation and does not supply the instantaneous truth required here.
+`simulations/generate.jl` generates development data through the daily renewal
+implementation in `simulations/renewal.jl`. The legacy individual-level process
+is retained in `simulations/generate_cohort.jl`; its multiplier is indexed by the
+parent's infection time and targets cohort R. Existing legacy datasets retain
+that interpretation and remain separate from instantaneous-R development data.
+Generator implementation does not establish reference recovery or interval coverage.
 
 The confirmatory target is instantaneous $R(d)$. Use a daily renewal generator
 with GI masses $g_s$, $s\geq1$, and infectiousness
@@ -305,8 +313,9 @@ a day:
 
 $$P(D=e)=\int_0^1\{F(e+1-p)-F(\max(e-p,0))\}\,dp,$$
 
-followed by renormalisation on finite support. Freeze the GI discretisation and
-positive-lag convention separately in the simulation record. Input metadata in
+followed by renormalisation on finite support. The development GI uses the same
+daily integration, conditioned on lags 1–30; record this convention with the data
+and validate it before registration. Input metadata in
 both conditions describe continuous delay distributions, support and daily date
 bins; they do not provide a discretisation formula or instruct agents to correct
 interval censoring. The rubric accepts defensible approximations and alternative

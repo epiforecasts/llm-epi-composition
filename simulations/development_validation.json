@@ -1,0 +1,226 @@
+{
+  "status": "development structural and count checks; reference recovery and interval validation pending",
+  "date": "2026-10-12",
+  "structural_test_assertions": 143,
+  "pilot_master_seed": 2026101201,
+  "pilot_blocks": 10,
+  "test_master_seeds": [
+    2026101201,
+    2026101202
+  ],
+  "fixed_structural_test_seeds": [
+    501,
+    502,
+    503,
+    504,
+    505,
+    506
+  ],
+  "count_validation": {
+    "validation_source_sha256": "5a64c6167fd4897db1272d1dab273dba4815701050305d6e7250c1b1a225351d",
+    "renewal_source_sha256": "b161749addd703a7c79eb91e5f9abd5f38b0cb19eda1532c3044bc3a20a7bf6b",
+    "julia_version": "1.12.6",
+    "final_day_extinction_fraction": 0,
+    "purpose": "development",
+    "rng": "MersenneTwister",
+    "blocks": 100,
+    "manifest_sha256": "a686dc2a4f126c35f39722da94d3d1cb2c3237fd7339ee66f06a0f5dbed294d6",
+    "longer_prehistory_matches": true,
+    "master_seed": 2026101203,
+    "datasets": 300
+  },
+  "count_summary": [
+    {
+      "stream": "simple_cases",
+      "window": "all",
+      "minimum_expected_total": 50956.068658642405,
+      "median_expected_total": 266538.8760543554,
+      "median_observed_total": 266485.5,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "simple_cases",
+      "window": "interior",
+      "minimum_expected_total": 41328.70334275757,
+      "median_expected_total": 192463.93106402713,
+      "median_observed_total": 192678.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "simple_cases",
+      "window": "recent",
+      "minimum_expected_total": 89.32444788115247,
+      "median_expected_total": 9807.894124288232,
+      "median_observed_total": 9753.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "simple_cases",
+      "window": "current",
+      "minimum_expected_total": 9.287868258323439,
+      "median_expected_total": 1256.707656213864,
+      "median_observed_total": 1261.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "cases",
+      "window": "all",
+      "minimum_expected_total": 53880.47290476035,
+      "median_expected_total": 216390.54900734345,
+      "median_observed_total": 216721.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "cases",
+      "window": "interior",
+      "minimum_expected_total": 43005.75875679865,
+      "median_expected_total": 167173.63804861833,
+      "median_observed_total": 167300.5,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "cases",
+      "window": "recent",
+      "minimum_expected_total": 84.07197809124897,
+      "median_expected_total": 9177.565114970916,
+      "median_observed_total": 9077.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "cases",
+      "window": "current",
+      "minimum_expected_total": 10.835846301377345,
+      "median_expected_total": 1466.1589322495079,
+      "median_observed_total": 1442.5,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "hospitalisations",
+      "window": "all",
+      "minimum_expected_total": 4805.036334686593,
+      "median_expected_total": 21321.028503875445,
+      "median_observed_total": 21243.5,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "hospitalisations",
+      "window": "interior",
+      "minimum_expected_total": 3184.349287986165,
+      "median_expected_total": 12656.091395709263,
+      "median_observed_total": 12654.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "hospitalisations",
+      "window": "recent",
+      "minimum_expected_total": 20.682915094288067,
+      "median_expected_total": 1421.7060005712844,
+      "median_observed_total": 1430.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "hospitalisations",
+      "window": "current",
+      "minimum_expected_total": 2.607693582215179,
+      "median_expected_total": 241.46214916051014,
+      "median_observed_total": 231.0,
+      "zero_total_fraction": 0.006666666666666667,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "deaths",
+      "window": "all",
+      "minimum_expected_total": 1101.5062766835606,
+      "median_expected_total": 3259.363741531084,
+      "median_observed_total": 3279.5,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.02666666666666667
+    },
+    {
+      "stream": "deaths",
+      "window": "interior",
+      "minimum_expected_total": 669.1821654385986,
+      "median_expected_total": 2221.254043184227,
+      "median_observed_total": 2190.5,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.0
+    },
+    {
+      "stream": "deaths",
+      "window": "recent",
+      "minimum_expected_total": 5.019688187989365,
+      "median_expected_total": 171.44679375866906,
+      "median_observed_total": 165.0,
+      "zero_total_fraction": 0.0,
+      "fraction_with_expected_day_below_one": 0.02666666666666667
+    },
+    {
+      "stream": "deaths",
+      "window": "current",
+      "minimum_expected_total": 0.6679884385399473,
+      "median_expected_total": 27.607214637680237,
+      "median_observed_total": 28.5,
+      "zero_total_fraction": 0.01,
+      "fraction_with_expected_day_below_one": 0.006666666666666667
+    }
+  ],
+  "tail_counts": [
+    {
+      "phase": "diagnostic",
+      "tail": -1,
+      "count": 47
+    },
+    {
+      "phase": "diagnostic",
+      "tail": 1,
+      "count": 53
+    },
+    {
+      "phase": "generation",
+      "tail": -1,
+      "count": 27
+    },
+    {
+      "phase": "generation",
+      "tail": 0,
+      "count": 38
+    },
+    {
+      "phase": "generation",
+      "tail": 1,
+      "count": 35
+    },
+    {
+      "phase": "heldout",
+      "tail": -1,
+      "count": 34
+    },
+    {
+      "phase": "heldout",
+      "tail": 0,
+      "count": 34
+    },
+    {
+      "phase": "heldout",
+      "tail": 1,
+      "count": 32
+    }
+  ],
+  "pilot_and_count_manifest_seeds_distinct": 1980,
+  "commands": [
+    "julia --project=simulations simulations/test/runtests.jl",
+    "julia --project=simulations simulations/generate.jl --development simulations/development-renewal/pilot 2026101201 10",
+    "julia --project=simulations simulations/validate_generator.jl simulations/development-renewal/validation 2026101203 100"
+  ]
+}

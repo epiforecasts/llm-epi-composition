@@ -74,10 +74,15 @@ identify retrieval versus composition, or the best use of live human supervision
 - Preinstalled, tested environments and adequate inference time are prerequisites.
   Retain the developed session/retry/wait policy, preserve failures, and distinguish
   infrastructure errors from agent code errors. Enforce actual agent isolation.
-- **Development only:** the current generator produces cohort R, existing prompts
-  use older output/ascertainment requirements, and legacy EpiAware references and
-  harness settings need migration. The plan specifies nine R quantiles and an
-  instantaneous daily renewal generator; these changes are not implemented yet.
+- **Development only:** `simulations/generate.jl` uses the instantaneous daily
+  renewal implementation in `simulations/renewal.jl`; `generate_cohort.jl` and
+  existing datasets retain the legacy cohort target. The new CLI requires
+  `--development OUTPUT SEED [BLOCKS]`, refuses existing output directories and
+  reserves the proposed evaluation master seed. Existing prompts, EpiAware
+  references, harness settings and agent-output requirements still need migration.
+  Structural tests (143 assertions) and 300 development count/prehistory checks
+  passed; `simulations/development_validation.json` records seeds and source hashes.
+  Reference recovery and interval validation remain outstanding.
   The new output contract also includes estimated/withheld statuses, reasons and
   a short method note, plus a dated `current_assessment.json` regenerated on each
   refit and referencing a trajectory row or declaring withholding. Declared

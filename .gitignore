@@ -26,6 +26,8 @@ venv/
 # Julia
 *.jl.cov
 *.jl.mem
+.julia_depot/
+simulations/development-renewal/
 # The Julia env under evaluation/julia_env/ IS tracked for reproducibility;
 # ignore any other Manifest.toml (e.g. transient tool envs).
 /simulations/Manifest.toml
