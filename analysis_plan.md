@@ -597,9 +597,9 @@ Classify each check as responsive, no detectable response, indeterminate, interf
 failure, execution failure or not applicable. With no comparable estimates,
 numerical sensitivity is indeterminate, even if withholding reasons change.
 Failure of a diagnostic refit is not failure of the primary fit. Excessive repeat
-variability also makes sensitivity
-indeterminate under the frozen rule. Preserve denominators for all allocated code,
-executable code and applicable/assessable probes separately.
+variability also makes sensitivity indeterminate under the frozen rule. Preserve
+denominators for all allocated code, executable code and applicable/assessable
+probes separately.
 
 For each input probe $p$ and condition $c$, report the task-standardised response
 proportion
